@@ -7,6 +7,8 @@ const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 const searchForm = document.getElementById('search-form');
 const searchInput = document.getElementById('search-input');
 const newReleasesGrid = document.getElementById('new-releases-grid');
+const popularTvGrid = document.getElementById('popular-tv-grid');
+const popularMoviesGrid = document.getElementById('popular-movies-grid');
 const favoritesGrid = document.getElementById('favorites-grid');
 const favoritesSection = document.getElementById('favorites');
 const movieDetailModal = document.getElementById('movie-detail-modal');
@@ -35,73 +37,31 @@ function fetchMovies(query) {
         displayMovies(allResults, newReleasesGrid);
     });
 }
-// ... (предыдущий код)
 
-const sliderContainer = document.querySelector('.slider-container');
-const prevButton = document.querySelector('.slider-button.prev');
-const nextButton = document.querySelector('.slider-button.next');
-
-let currentIndex = 0;
-
-function updateSlider() {
-  const movieWidth = 210; // Ширина фильма + отступ
-  sliderContainer.style.transform = `translateX(${-currentIndex * movieWidth}px)`;
-}
-
-prevButton.addEventListener('click', () => {
-  if (currentIndex > 0) {
-    currentIndex--;
-    updateSlider();
-  }
-});
-
-nextButton.addEventListener('click', () => {
-  if (currentIndex < sliderContainer.children.length - 5) { // Показываем по 5 фильмов
-    currentIndex++;
-    updateSlider();
-  }
-});
-
-// Обновляем функцию displayMovies
-function displayMovies(movies, container) {
-  container.innerHTML = '';
-  movies.forEach(movie => {
-    const movieTile = createMovieTile(movie);
-    container.appendChild(movieTile);
-  });
-  currentIndex = 0;
-  updateSlider();
-}
-
-// Обновляем функцию createMovieTile
-function createMovieTile(movie) {
-  const movieTile = document.createElement('div');
-  movieTile.className = 'movie-tile';
-
-  const movieImage = document.createElement('img');
-  movieImage.src = `${IMG_URL}${movie.poster_path}`;
-  movieImage.alt = getTitle(movie);
-
-  const movieTitleElem = document.createElement('h3');
-  movieTitleElem.innerText = getTitle(movie);
-
-  const movieRating = document.createElement('div');
-  movieRating.className = 'rating';
-  movieRating.innerText = movie.vote_average.toFixed(1);
-
-  movieTile.appendChild(movieImage);
-  movieTile.appendChild(movieTitleElem);
-  movieTile.appendChild(movieRating);
-
-  movieTile.onclick = () => showMovieDetailsFromTile(movie);
-  return movieTile;
-}
 // Функция для получения новинок
 function fetchNewReleases() {
     fetch(`${BASE_URL}/movie/now_playing?api_key=${API_KEY}&language=ru-RU`)
         .then(response => response.json())
         .then(data => {
             displayMovies(data.results, newReleasesGrid);
+        });
+}
+
+// Функция для получения популярных сериалов
+function fetchPopularTVShows() {
+    fetch(`${BASE_URL}/tv/popular?api_key=${API_KEY}&language=ru-RU`)
+        .then(response => response.json())
+        .then(data => {
+            displayMovies(data.results.map(show => ({...show, media_type: 'tv', title: show.name})), popularTvGrid);
+        });
+}
+
+// Функция для получения популярных фильмов
+function fetchPopularMovies() {
+    fetch(`${BASE_URL}/movie/popular?api_key=${API_KEY}&language=ru-RU`)
+        .then(response => response.json())
+        .then(data => {
+            displayMovies(data.results.map(movie => ({...movie, media_type: 'movie'})), popularMoviesGrid);
         });
 }
 
@@ -112,6 +72,7 @@ function displayMovies(movies, container) {
         const movieTile = createMovieTile(movie);
         container.appendChild(movieTile);
     });
+    initializeSlider(container.parentElement);
 }
 
 // Вспомогательная функция для получения правильного заголовка
@@ -125,7 +86,7 @@ function createMovieTile(movie) {
     movieTile.className = 'movie-tile';
 
     const movieImage = document.createElement('img');
-    movieImage.src = `${IMG_URL}${movie.poster_path}`;
+    movieImage.src = movie.poster_path ? `${IMG_URL}${movie.poster_path}` : 'placeholder.jpg';
     movieImage.alt = getTitle(movie);
 
     const movieTitleElem = document.createElement('h3');
@@ -133,9 +94,13 @@ function createMovieTile(movie) {
 
     const movieRating = document.createElement('div');
     movieRating.className = 'rating';
-    movieRating.innerText = movie.vote_average;
-    if (movie.vote_average >= 6) {
+    movieRating.innerText = movie.vote_average.toFixed(1);
+    if (movie.vote_average >= 7) {
         movieRating.classList.add('green');
+    } else if (movie.vote_average >= 5) {
+        movieRating.classList.add('orange');
+    } else {
+        movieRating.classList.add('red');
     }
 
     movieTile.appendChild(movieImage);
@@ -144,6 +109,35 @@ function createMovieTile(movie) {
 
     movieTile.onclick = () => showMovieDetailsFromTile(movie);
     return movieTile;
+}
+
+// Функция для инициализации слайдера
+function initializeSlider(sliderContainer) {
+    const container = sliderContainer.querySelector('.slider-container');
+    const prevButton = sliderContainer.querySelector('.slider-button.prev');
+    const nextButton = sliderContainer.querySelector('.slider-button.next');
+    let currentIndex = 0;
+
+    function updateSlider() {
+        const movieWidth = 210; // Ширина фильма + отступ
+        container.style.transform = `translateX(${-currentIndex * movieWidth}px)`;
+    }
+
+    prevButton.addEventListener('click', () => {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateSlider();
+        }
+    });
+
+    nextButton.addEventListener('click', () => {
+        if (currentIndex < container.children.length - 5) { // Показываем по 5 фильмов
+            currentIndex++;
+            updateSlider();
+        }
+    });
+
+    updateSlider();
 }
 
 // Функция для получения трейлеров фильма
@@ -158,9 +152,9 @@ function fetchMovieTrailer(movieId, mediaType = 'movie') {
 
 // Функция для отображения деталей фильма с плеером Kinobox
 function showMovieDetails(movie) {
-    moviePoster.src = `${IMG_URL}${movie.poster_path}`;
+    moviePoster.src = movie.poster_path ? `${IMG_URL}${movie.poster_path}` : 'placeholder.jpg';
     movieTitle.innerText = getTitle(movie);
-    movieDescription.innerText = movie.overview;
+    movieDescription.innerText = movie.overview || 'Описание отсутствует';
 
     // Получение трейлера
     fetchMovieTrailer(movie.id, movie.media_type).then(trailerKey => {
@@ -170,15 +164,8 @@ function showMovieDetails(movie) {
     // Удаление предыдущего плеера Kinobox (если есть)
     const existingPlayer = document.querySelector('.kinobox_player');
     if (existingPlayer) {
-        existingPlayer.remove();
+        existingPlayer.innerHTML = '';
     }
-
-    // Создание контейнера для Kinobox плеера
-    const kinoboxPlayer = document.createElement('div');
-    kinoboxPlayer.className = 'kinobox_player';
-
-    // Вставка Kinobox плеера ниже трейлера
-    movieTrailer.parentNode.insertBefore(kinoboxPlayer, movieTrailer.nextSibling);
 
     // Инициализация плеера Kinobox.tv для данного фильма по TMDB ID
     const script = document.createElement('script');
@@ -237,7 +224,7 @@ closeDetailButton.onclick = () => {
 
 // Открытие и закрытие вкладки избранных фильмов
 openFavoritesButton.onclick = () => {
-    document.querySelector('section:not(.hidden)').classList.add('hidden');
+    document.querySelectorAll('section:not(.hidden)').forEach(section => section.classList.add('hidden'));
     favoritesSection.classList.remove('hidden');
 };
 
@@ -250,8 +237,10 @@ searchForm.onsubmit = (e) => {
     }
 };
 
-// Загрузка новинок при загрузке страницы
+// Загрузка данных при загрузке страницы
 fetchNewReleases();
+fetchPopularTVShows();
+fetchPopularMovies();
 
 // Загрузка избранных фильмов из localStorage
 const savedFavorites = JSON.parse(localStorage.getItem('favoriteMovies')) || [];
