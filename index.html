@@ -5,40 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Кино +</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&display=swap">
 </head>
 <body>
     <header>
         <div class="header-content">
             <h1>Кино +</h1>
             <form id="search-form">
-                <input type="text" id="search-input" placeholder="Поиск фильмов">
+                <input type="text" id="search-input" placeholder="Поиск фильмов, сериалов, мультфильмов">
                 <button type="submit">Поиск</button>
             </form>
-            <button id="open-favorites" class="favorite-button">Открыть избранное</button>
+            <button id="open-favorites">Открыть избранное</button>
         </div>
     </header>
 
-    <section id="new-releases">
-        <h2>Новинки</h2>
-        <div id="new-releases-grid" class="movies-grid"></div>
-    </section>
+    <main>
+        <section id="new-releases" class="section">
+            <h2>Новинки</h2>
+            <div id="movie-slider" class="movie-slider">
+                <button class="slider-button prev">&lt;</button>
+                <div id="new-releases-grid" class="slider-container">
+                    <!-- Здесь будут располагаться карточки фильмов -->
+                </div>
+                <button class="slider-button next">&gt;</button>
+            </div>
+        </section>
 
-    <section id="favorites" class="hidden">
-        <h2>Избранное</h2>
-        <div id="favorites-grid" class="movies-grid"></div>
-    </section>
+        <section id="favorites" class="section hidden">
+            <h2>Избранное</h2>
+            <div id="favorites-grid" class="movies-grid">
+                <!-- Здесь будут располагаться избранные фильмы -->
+            </div>
+        </section>
+    </main>
 
-    <!-- Модальное окно -->
     <div id="movie-detail-modal" class="modal">
         <div class="modal-content">
             <span id="close-detail-button" class="close-button">&times;</span>
             <img id="movie-poster" src="" alt="Постер фильма">
             <h2 id="movie-title"></h2>
             <p id="movie-description"></p>
-            <iframe id="movie-trailer" src="" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <iframe id="movie-trailer" width="560" height="315" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            <div class="kinobox_player"></div>
             <button id="add-to-favorites" class="favorite-button">Добавить в избранное</button>
- </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
