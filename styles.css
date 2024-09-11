@@ -8,14 +8,17 @@ body {
 
 header {
     position: fixed;
-    top: 0;
+    top: 8px; /* Отступ сверху 5px */
     left: 0;
-    width: 100%;
+    width: calc(100% - 100px); /* Ширина 100%, минус 50px с каждой стороны */
+    margin-left: 50px; /* Отступ слева 50px */
+    margin-right: 50px; /* Отступ справа 50px */
     padding: 10px;
     background: rgba(17, 17, 17, 0.8);
     backdrop-filter: blur(25px);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     z-index: 1000;
+    border-radius: 25px;
 }
 
 .header-content {
@@ -26,8 +29,10 @@ header {
 
 .header-content h1 {
     margin: 0;
-    color: #fff;
+    padding: 0 15px; /* Отступы по бокам 15px */
+    color: #ffffff;
     flex: 1;
+    font-size: 25px; /* Уменьшение размера шрифта, значение можно настроить по необходимости */
 }
 
 header form {
@@ -38,21 +43,24 @@ header input[type="text"] {
     padding: 10px;
     font-size: 16px;
     border: none;
-    border-radius: 5px;
+    border-radius: 25px;
 }
 
 header button {
     padding: 10px 20px;
     font-size: 16px;
     border: none;
-    border-radius: 5px;
-    background-color: #ffa900;
+    border-radius: 25px;
+    background-color: #697753;
     color: #fff;
     cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Плавные переходы для трансформации и тени */
 }
 
 header button:hover {
-    background-color: #ff8c00;
+    background-color: #464c3c; /* Изменение фона при наведении */
+    transform: scale(1.05); /* Легкий эффект приближения */
+    box-shadow: 0 4px 30px #697753; /* Легкая тень */
 }
 
 main {
@@ -78,20 +86,22 @@ main {
 .movie-tile {
     flex: 0 0 auto;
     width: 200px;
-    margin-right: 10px;
+    margin-top: 10px; /* Отступ сверху 10px */
+    margin-left: 8px; /* Отступ слева 8px */
     position: relative;
     cursor: pointer;
     transition: transform 0.3s ease;
 }
 
 .movie-tile:hover {
-    transform: scale(1.05);
+    transform: scale(1.03);
 }
 
 .movie-tile img {
     width: 100%;
     height: auto;
     border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14); /* Тонкая прозрачная обводка */
 }
 
 .movie-tile h3 {
@@ -103,13 +113,16 @@ main {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px); /* Добавлен эффект размытия */
     color: white;
-    border: none;
-    padding: 10px 15px;
-    font-size: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Тонкая прозрачная обводка */
+    padding: 20px 15px;
+    font-size: 25px;
     cursor: pointer;
     z-index: 10;
+    border-radius: 8px;
+    transition: transform 0.3s ease; /* Плавный переход для трансформации */
 }
 
 .slider-button.prev {
@@ -124,7 +137,8 @@ main {
     position: absolute;
     top: 10px;
     left: 10px;
-    background-color: #4CAF50;
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
     color: white;
     padding: 5px 10px;
     border-radius: 5px;
@@ -210,4 +224,14 @@ main {
 
 .hidden {
     display: none;
+}
+
+.slider-button:hover {
+    transform: translateY(-50%) scale(1.1); /* Эффект увеличения при наведении */
+}
+
+ {
+}
+
+header button:hover {
 }
