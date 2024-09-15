@@ -5,145 +5,119 @@ const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 const BACKDROP_URL = 'https://image.tmdb.org/t/p/original';
 
 // DOM Elements
-const searchForm = document.getElementById('search-form');
-const searchInput = document.getElementById('search-input');
 const newReleasesGrid = document.getElementById('new-releases-grid');
 const popularMoviesGrid = document.getElementById('popular-movies-grid');
 const topRatedTvGrid = document.getElementById('top-rated-tv-grid');
 const animatedMoviesGrid = document.getElementById('animated-movies-grid');
-const favoritesGrid = document.getElementById('favorites-grid');
-const favoritesModal = document.getElementById('favorites');
-const openFavoritesButton = document.getElementById('open-favorites');
-const closeFavoritesButton = document.querySelector('#favorites .close-modal');
-const searchResultsModal = document.getElementById('search-results');
-const searchResultsGrid = document.getElementById('search-results-grid');
-const closeSearchButton = document.querySelector('#search-results .close-modal');
+const searchForm = document.querySelector('header form');
+const searchInput = document.querySelector('header input[type="text"]');
 const movieInfoModal = document.getElementById('movie-info-modal');
 const closeMovieInfoButton = document.querySelector('#movie-info-modal .close-modal');
+const favoritesModal = document.getElementById('favorites');
+const closeFavoritesButton = document.querySelector('#favorites .close-modal');
+const favoritesGrid = document.getElementById('favorites-grid');
+const openFavoritesButton = document.getElementById('open-favorites');
+const searchResultsModal = document.getElementById('search-results');
+const closeSearchButton = document.querySelector('#search-results .close-modal');
+const searchResultsGrid = document.getElementById('search-results-grid');
 
-// Global variables
-let currentNewReleases = [];
-let currentNewReleaseIndex = 0;
-let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+// Variables for slider offsets
 let popularMoviesOffset = 0;
 let topRatedTvOffset = 0;
 let animatedMoviesOffset = 0;
 
-// Function to fetch movies with retry and timeout
-function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries = 3, timeout = 10000) {
-    return new Promise((resolve, reject) => {
-        const fetchWithTimeout = () => {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), timeout);
+// Load favorites from localStorage
+let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
-            fetch(`${BASE_URL}${endpoint}`, { signal: controller.signal })
-                .then(response => {
-                    clearTimeout(timeoutId);
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (isFullscreen) {
-                        currentNewReleases = data.results;
-                        displayFullscreenMovies(currentNewReleases, container);
-                    } else {
-                        displayMovies(data.results, container);
-                    }
-                    resolve();
-                })
-                .catch(error => {
-                    console.error('Error fetching movies:', error);
-                    if (retries > 0) {
-                        setTimeout(() => fetchWithTimeout(), 1000);
-                    } else {
-                        container.innerHTML = '<p>Произошла ошибка при загрузке фильмов. Пожалуйста, попробуйте позже.</p>';
-                        reject(error);
-                    }
-                });
-        };
-
-        fetchWithTimeout();
-    });
+// Function to fetch movies with retry
+function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries = 3) {
+    return fetch(BASE_URL + endpoint)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            container.innerHTML = '';
+            data.results.forEach(movie => {
+                const movieTile = createMovieTile(movie, isFullscreen);
+                container.appendChild(movieTile);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            if (retries > 0) {
+                console.log(`Retrying... (${retries} attempts left)`);
+                return fetchMoviesWithRetry(endpoint, container, isFullscreen, retries - 1);
+            } else {
+                container.innerHTML = '<p>Не удалось загрузить фильмы. Пожалуйста, попробуйте позже.</p>';
+            }
+        });
 }
 
-// Function to display fullscreen movie cards
-function displayFullscreenMovies(movies, container) {
-    container.innerHTML = '';
-    movies.forEach((movie, index) => {
-        const movieTile = createFullscreenMovieTile(movie, index);
-        container.appendChild(movieTile);
-    });
-    showFullscreenMovie(0);
+// Function to fetch movie info with retry
+function fetchMovieInfoWithRetry(url, movie, retries = 3) {
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            getKinopoiskId(data).then(kinopoiskId => {
+                displayMovieInfo(data, movie, kinopoiskId);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            if (retries > 0) {
+                console.log(`Retrying... (${retries} attempts left)`);
+                fetchMovieInfoWithRetry(url, movie, retries - 1);
+            } else {
+                displayMovieInfoError();
+            }
+        });
 }
 
-// Function to create a fullscreen movie tile
-function createFullscreenMovieTile(movie, index) {
-    const movieTile = document.createElement('div');
-    movieTile.className = 'fullscreen-tile';
-    movieTile.style.backgroundImage = movie.backdrop_path 
-        ? `url(${BACKDROP_URL}${movie.backdrop_path})`
-        : 'url(icons/poster.png)';
+// Function to get Kinopoisk ID
+function getKinopoiskId(movieData) {
+    const mediaType = movieData.media_type || (movieData.first_air_date ? 'tv' : 'movie');
+    const externalIdsUrl = `${BASE_URL}/${mediaType}/${movieData.id}/external_ids?api_key=${API_KEY}`;
 
-    const content = document.createElement('div');
-    content.className = 'fullscreen-content';
-
-    const title = document.createElement('h3');
-    title.className = 'fullscreen-title';
-    title.textContent = movie.title || movie.name;
-
-    const watchButton = document.createElement('button');
-    watchButton.className = 'watch-button';
-    watchButton.textContent = 'Смотреть';
-    watchButton.onclick = () => showMovieInfo(movie);
-
-    content.appendChild(title);
-    content.appendChild(watchButton);
-    movieTile.appendChild(content);
-
-    return movieTile;
+    return fetch(externalIdsUrl)
+        .then(response => response.json())
+        .then(data => data.kinopoisk_id || null)
+        .catch(error => {
+            console.error('Error fetching Kinopoisk ID:', error);
+            return null;
+        });
 }
 
-// Function to show fullscreen movie
-function showFullscreenMovie(index) {
-    currentNewReleaseIndex = index;
-    const offset = index * 100;
-    newReleasesGrid.style.transform = `translateX(-${offset}%)`;
-}
+// Function to create a movie tile
+function createMovieTile(movie, isFullscreen = false) {
+    const tile = document.createElement('div');
+    tile.className = isFullscreen ? 'fullscreen-tile' : 'movie-tile';
 
-// Function to display regular movie cards
-function displayMovies(movies, container) {
-    container.innerHTML = '';
-    movies.forEach(movie => {
-        const movieTile = createMovieTile(movie);
-        container.appendChild(movieTile);
-    });
-}
+    if (isFullscreen) {
+        tile.style.backgroundImage = `url(${BACKDROP_URL}${movie.backdrop_path})`;
+        const content = document.createElement('div');
+        content.className = 'fullscreen-content';
+        content.innerHTML = `
+            <h2 class="fullscreen-title">${movie.title || movie.name}</h2>
+            <button class="watch-button">Смотреть</button>
+        `;
+        tile.appendChild(content);
+    } else {
+        tile.innerHTML = `
+            <img src="${movie.poster_path ? IMG_URL + movie.poster_path : 'icons/poster.png'}" alt="${movie.title || movie.name}">
+            <h3>${movie.title || movie.name}</h3>
+        `;
+    }
 
-// Function to create a regular movie tile
-function createMovieTile(movie) {
-    const movieTile = document.createElement('div');
-    movieTile.className = 'movie-tile';
-
-    const movieImage = document.createElement('img');
-    movieImage.src = movie.poster_path 
-        ? `${IMG_URL}${movie.poster_path}` 
-        : 'icons/poster.png';
-    movieImage.alt = movie.title || movie.name;
-    movieImage.onerror = () => {
-        movieImage.src = 'icons/poster.png';
-    };
-
-    const movieTitle = document.createElement('h3');
-    movieTitle.textContent = movie.title || movie.name;
-
-    movieTile.appendChild(movieImage);
-    movieTile.appendChild(movieTitle);
-
-    movieTile.onclick = () => showMovieInfo(movie);
-
-    return movieTile;
+    tile.onclick = () => showMovieInfo(movie);
+    return tile;
 }
 
 // Function to display movie information
@@ -158,71 +132,53 @@ function showMovieInfo(movie) {
     fetchMovieInfoWithRetry(fetchUrl, movie);
 }
 
-// Function to fetch movie info with retry and timeout
-function fetchMovieInfoWithRetry(url, movie, retries = 3, timeout = 10000) {
-    return new Promise((resolve, reject) => {
-        const fetchWithTimeout = () => {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-            fetch(url, { signal: controller.signal })
-                .then(response => {
-                    clearTimeout(timeoutId);
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    displayMovieInfo(data, movie);
-                    resolve();
-                })
-                .catch(error => {
-                    console.error('Error fetching movie info:', error);
-                    if (retries > 0) {
-                        setTimeout(() => fetchWithTimeout(), 1000);
-                    } else {
-                        displayMovieInfoError();
-                        reject(error);
-                    }
-                });
-        };
-
-        fetchWithTimeout();
-    });
-}
-
-// Function to display movie info
-function displayMovieInfo(data, movie) {
+// Функция для отображения информации о фильме
+function displayMovieInfo(data, movie, kinopoiskId) {
     const modalContent = movieInfoModal.querySelector('.modal-content');
     
     modalContent.style.backgroundImage = data.backdrop_path 
         ? `url(${BACKDROP_URL}${data.backdrop_path})`
         : 'url(icons/poster.png)';
     
+    const title = data.title || data.name;
+    const releaseDate = data.release_date || data.first_air_date || 'Нет данных';
+    const overview = data.overview || 'Описание отсутствует.';
+    const voteAverage = data.vote_average ? data.vote_average.toFixed(1) : 'Нет данных';
+
     modalContent.innerHTML = `
-        <img src="${data.poster_path ? IMG_URL + data.poster_path : 'icons/poster.png'}" alt="${data.title || data.name}" class="movie-poster">
-        <h2>${data.title || data.name}</h2>
-        <p>${data.overview || 'Описание отсутствует.'}</p>
-        <p>Рейтинг: ${data.vote_average ? data.vote_average.toFixed(1) : 'Нет данных'}</p>
-        <p>Дата выхода: ${data.release_date || data.first_air_date || 'Нет данных'}</p>
+        <img src="${data.poster_path ? IMG_URL + data.poster_path : 'icons/poster.png'}" alt="${title}" class="movie-poster">
+        <h2>${title}</h2>
+        <p>${overview}</p>
+        <p>Рейтинг: ${voteAverage}</p>
+        <p>Дата выхода: ${releaseDate}</p>
         <div id="kinobox-player"></div>
         <button id="add-to-favorites">${isFavorite(data) ? 'Удалить из избранного' : 'Добавить в избранное'}</button>
         <button id="close-modal">Закрыть</button>
     `;
     
-    // Initialize Kinobox player
+    // Обновленная инициализация Kinobox player с правильно добавленным Vibix
+    const mediaType = data.media_type || (data.first_air_date ? 'tv' : 'movie');
+
     new Kinobox('#kinobox-player', {
         search: {
-            query: `${data.title || data.name} ${data.release_date || data.first_air_date || ''}`.trim(),
-            imdb: data.imdb_id,
-            kinopoisk: data.kinopoisk_id
+            kinopoisk: kinopoiskId,
+            title: title,
+            type: mediaType === 'tv' ? 'serial' : 'movie'
         },
         players: {
-            bazon: true,
-            alloha: true,
-            kodik: true,
-            videocdn: true
+            'alloha': true,
+            'hdvb': true,
+			'videocdn': true,
+            'collaps': true,
+            'videoapi': true,
+            'vibix':true, 
+        },
+        params: {
+            season: data.season_number || 1,
+            episode: data.episode_number || 1
+        },
+        ui: {
+            mobile: true
         }
     }).init();
     
@@ -353,7 +309,6 @@ document.querySelector('#top-rated-tv .slider-button.next').onclick = () => move
 document.querySelector('#animated-movies .slider-button.prev').onclick = () => moveSlider('animated-movies', -1);
 document.querySelector('#animated-movies .slider-button.next').onclick = () => moveSlider('animated-movies', 1);
 
-
 // Loading data when the page loads
 window.addEventListener('load', () => {
     Promise.all([
@@ -366,7 +321,6 @@ window.addEventListener('load', () => {
         alert('Произошла ошибка при загрузке данных. Пожалуйста, обновите страницу или попробуйте позже.');
     });
 });
-
 // Function to retry failed requests
 function retryFailedRequests() {
     const failedSections = document.querySelectorAll('.section:empty');
