@@ -46,7 +46,7 @@ header form {
 }
 
 header input[type="text"] {
-    padding: 10px 5px;
+    padding: 10px;
     font-size: 16px;
     border: 0.5px solid rgba(255, 255, 255, 0.34);
 
@@ -62,10 +62,10 @@ header input[type="text"] {
 
 header button,
 .close-modal {
-    padding: 5px  5px;
+    padding: 4.5px  1.5px;
     font-size: 0px;
     border: none;
-    border-radius: 50px;
+    border-radius: 10px;
     background: #000000;
     color: #fff;
     cursor: pointer;
@@ -77,12 +77,9 @@ header button,
 
 header button,
 .close-modal {
-    background: url('gradients/gradient.png') no-repeat center center;
-    background-size: cover;
-
-    /* Покрыть весь элемент */
+    background-color: #7937fa;
     border: 0.5px solid rgba(255, 255, 255, 0.34);
-    margin-left: -25px;
+    margin-left: -15px;
 }
 
 main {
@@ -305,58 +302,27 @@ main {
     cursor: pointer;
 } */
 #add-to-favorites {
-    background-color: rgba(255, 255, 255, 0.23);
-
-    /* Фоновый цвет */
-    border: 1px solid rgba(255, 255, 255, 0.034);
-
-    /* Граница */
-    color: rgb(255, 255, 255);
-
-    /* Цвет текста */
-    position: absolute;
-
-    /* Абсолютное позиционирование */
-    top: 10px;
-
-    /* Расстояние от верхнего края */
-    right: 55px;
-
-    /* Расстояние от правого края */
-    width: 40px;
-
-    /* Ширина элемента */
-    height: 40px;
-
-    /* Высота элемента */
-    display: flex;
-
-    /* Для центрирования содержимого */
-    justify-content: center;
-
-    /* Выравнивание по горизонтали */
-    align-items: center;
-
-    /* Выравнивание по вертикали */
-    border-radius: 20px;
-
-    /* Округлые углы для кнопки */
-    cursor: pointer;
-
-    /* Курсор указывающий на кликабельность */
-    backdrop-filter: blur(5px);
-
-    /* Размытие фона */
-    transition: transform 0.3s ease;
-
-    /* Плавный переход для трансформации */
+    background-color: rgba(255, 255, 255, 0.23); /* Фоновый цвет */
+    border: 1px solid rgba(255, 255, 255, 0.034); /* Граница */
+    color: rgb(255, 255, 255); /* Цвет текста */
+    position: absolute; /* Абсолютное позиционирование */
+    top: 10px; /* Расстояние от верхнего края */
+    right: 55px; /* Расстояние от правого края */
+    width: 40px; /* Ширина элемента */
+    height: 40px; /* Высота элемента */
+    display: flex; /* Для центрирования содержимого */
+    justify-content: center; /* Выравнивание по горизонтали */
+    align-items: center; /* Выравнивание по вертикали */
+    border-radius: 20px; /* Округлые углы для кнопки */
+    cursor: pointer; /* Курсор указывающий на кликабельность */
+    backdrop-filter: blur(5px); /* Размытие фона */
+    transition: transform 0.3s ease; /* Плавный переход для трансформации */
 }
 
 #add-to-favorites:hover {
-    transform: scale(1.05);
-
-    /* Увеличение элемента при наведении */
+    transform: scale(1.05); /* Увеличение элемента при наведении */
 }
+
 
 #close-modal {
     background-color: rgba(255, 255, 255, 0.23);

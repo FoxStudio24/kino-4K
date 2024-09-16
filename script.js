@@ -152,11 +152,15 @@ function displayMovieInfo(data, movie, kinopoiskId) {
         <p>Рейтинг: ${voteAverage}</p>
         <p>Дата выхода: ${releaseDate}</p>
         <div id="kinobox-player"></div>
-        <button id="add-to-favorites">${isFavorite(data) ? 'Удалить из избранного' : 'Добавить в избранное'}</button>
-        <button id="close-modal">Закрыть</button>
+        <button id="add-to-favorites">
+            <img src="${isFavorite(data) ? 'icons/delete.png' : 'icons/add.png'}" alt="${isFavorite(data) ? 'Удалить из избранного' : 'Добавить в избранное'}" class="favorites-icon"/>
+        </button>
+        <button id="close-modal" class="close-button">
+            <img src="icons/close24.png" alt="Закрыть" class="close-icon"/>
+        </button>
     `;
     
-    // Обновленная инициализация Kinobox player с правильно добавленным Vibix
+    // Обновленная инициализация Kinobox с правильно добавленным Vibix
     const mediaType = data.media_type || (data.first_air_date ? 'tv' : 'movie');
 
     new Kinobox('#kinobox-player', {
@@ -168,7 +172,7 @@ function displayMovieInfo(data, movie, kinopoiskId) {
         players: {
             'alloha': true,
             'hdvb': true,
-			'videocdn': true,
+            'videocdn': true,
             'collaps': true,
             'videoapi': true,
             'vibix':true, 
@@ -224,12 +228,11 @@ function toggleFavorite(movie) {
         alert('Фильм удален из избранного');
     }
     localStorage.setItem('favorites', JSON.stringify(favorites));
-    updateFavorites();
-    document.getElementById('add-to-favorites').textContent = isFavorite(movie) ? 'Удалить из избранного' : 'Добавить в избранное';
+    updateFavoritesGrid();
 }
 
-// Function to update the list of favorite movies
-function updateFavorites() {
+// Function to update the favorites grid
+function updateFavoritesGrid() {
     favoritesGrid.innerHTML = '';
     favorites.forEach(movie => {
         const movieTile = createMovieTile(movie);
@@ -237,111 +240,60 @@ function updateFavorites() {
     });
 }
 
-// Search handler
-searchForm.onsubmit = (e) => {
-    e.preventDefault();
+// Function to open the favorites modal
+function openFavorites() {
+    favoritesModal.style.display = 'flex';
+    updateFavoritesGrid();
+}
+
+// Function to close the favorites modal
+function closeFavorites() {
+    favoritesModal.style.display = 'none';
+}
+
+// Event listeners
+openFavoritesButton.onclick = openFavorites;
+closeFavoritesButton.onclick = closeFavorites;
+closeMovieInfoButton.onclick = closeMovieInfo;
+searchForm.onsubmit = function (event) {
+    event.preventDefault();
     const query = searchInput.value.trim();
     if (query) {
-        fetchMoviesWithRetry(`/search/multi?api_key=${API_KEY}&language=ru-RU&query=${query}`, searchResultsGrid);
-        searchResultsModal.style.display = 'flex';
+        searchMovies(query);
     }
 };
 
-// Closing modal windows
-closeSearchButton.onclick = () => {
+// Function to search for movies
+function searchMovies(query) {
+    const searchUrl = `${BASE_URL}/search/multi?api_key=${API_KEY}&language=ru-RU&query=${encodeURIComponent(query)}`;
+    
+    fetch(searchUrl)
+        .then(response => response.json())
+        .then(data => {
+            searchResultsGrid.innerHTML = '';
+            data.results.forEach(result => {
+                const movieTile = createMovieTile(result);
+                searchResultsGrid.appendChild(movieTile);
+            });
+            searchResultsModal.style.display = 'flex';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            searchResultsGrid.innerHTML = '<p>Не удалось выполнить поиск. Пожалуйста, попробуйте позже.</p>';
+            searchResultsModal.style.display = 'flex';
+        });
+}
+
+// Function to close the search results modal
+function closeSearchResults() {
     searchResultsModal.style.display = 'none';
-};
-
-closeMovieInfoButton.onclick = closeMovieInfo;
-
-// Opening/closing favorites
-openFavoritesButton.onclick = () => {
-    favoritesModal.style.display = 'flex';
-    updateFavorites();
-};
-closeFavoritesButton.onclick = () => {
-    favoritesModal.style.display = 'none';
-};
-
-// Function to handle slider movement
-function moveSlider(sectionId, direction) {
-    const container = document.querySelector(`#${sectionId} .slider-container`);
-    const movieWidth = 220; // 200px width + 20px margin
-    const visibleWidth = container.offsetWidth;
-    const maxOffset = container.scrollWidth - visibleWidth;
-    
-    let currentOffset;
-    switch(sectionId) {
-        case 'popular-movies':
-            currentOffset = popularMoviesOffset;
-            break;
-        case 'top-rated-tv':
-            currentOffset = topRatedTvOffset;
-            break;
-        case 'animated-movies':
-            currentOffset = animatedMoviesOffset;
-            break;
-    }
-    
-    let newOffset = currentOffset + (direction * visibleWidth);
-    newOffset = Math.max(0, Math.min(newOffset, maxOffset));
-    
-    container.style.transform = `translateX(-${newOffset}px)`;
-    
-    switch(sectionId) {
-        case 'popular-movies':
-            popularMoviesOffset = newOffset;
-            break;
-        case 'top-rated-tv':
-            topRatedTvOffset = newOffset;
-            break;
-        case 'animated-movies':
-            animatedMoviesOffset = newOffset;
-            break;
-    }
 }
 
-// Slider button event listeners
-document.querySelector('#popular-movies .slider-button.prev').onclick = () => moveSlider('popular-movies', -1);
-document.querySelector('#popular-movies .slider-button.next').onclick = () => moveSlider('popular-movies', 1);
-document.querySelector('#top-rated-tv .slider-button.prev').onclick = () => moveSlider('top-rated-tv', -1);
-document.querySelector('#top-rated-tv .slider-button.next').onclick = () => moveSlider('top-rated-tv', 1);
-document.querySelector('#animated-movies .slider-button.prev').onclick = () => moveSlider('animated-movies', -1);
-document.querySelector('#animated-movies .slider-button.next').onclick = () => moveSlider('animated-movies', 1);
+// Event listener for closing the search results modal
+closeSearchButton.onclick = closeSearchResults;
 
-// Loading data when the page loads
-window.addEventListener('load', () => {
-    Promise.all([
-        fetchMoviesWithRetry(`/movie/now_playing?api_key=${API_KEY}&language=ru-RU`, newReleasesGrid, true),
-        fetchMoviesWithRetry(`/movie/popular?api_key=${API_KEY}&language=ru-RU`, popularMoviesGrid),
-        fetchMoviesWithRetry(`/tv/top_rated?api_key=${API_KEY}&language=ru-RU`, topRatedTvGrid),
-        fetchMoviesWithRetry(`/discover/movie?api_key=${API_KEY}&language=ru-RU&with_genres=16`, animatedMoviesGrid)
-    ]).catch(error => {
-        console.error('Error loading initial data:', error);
-        alert('Произошла ошибка при загрузке данных. Пожалуйста, обновите страницу или попробуйте позже.');
-    });
-});
-// Function to retry failed requests
-function retryFailedRequests() {
-    const failedSections = document.querySelectorAll('.section:empty');
-    failedSections.forEach(section => {
-        const sectionId = section.id;
-        switch(sectionId) {
-            case 'new-releases-grid':
-                fetchMoviesWithRetry(`/movie/now_playing?api_key=${API_KEY}&language=ru-RU`, section, true);
-                break;
-            case 'popular-movies-grid':
-                fetchMoviesWithRetry(`/movie/popular?api_key=${API_KEY}&language=ru-RU`, section);
-                break;
-            case 'top-rated-tv-grid':
-                fetchMoviesWithRetry(`/tv/top_rated?api_key=${API_KEY}&language=ru-RU`, section);
-                break;
-            case 'animated-movies-grid':
-                fetchMoviesWithRetry(`/discover/movie?api_key=${API_KEY}&language=ru-RU&with_genres=16`, section);
-                break;
-        }
-    });
-}
-
-// Retry failed requests every 5 minutes
-setInterval(retryFailedRequests, 5 * 60 * 1000);
+// Initial movie fetches
+fetchMoviesWithRetry('/movie/now_playing?api_key=' + API_KEY + '&language=ru-RU', newReleasesGrid, true);
+fetchMoviesWithRetry('/movie/popular?api_key=' + API_KEY + '&language=ru-RU', popularMoviesGrid);
+fetchMoviesWithRetry('/tv/top_rated?api_key=' + API_KEY + '&language=ru-RU', topRatedTvGrid);
+fetchMoviesWithRetry('/genre/16/movies?api_key=' + API_KEY + '&language=ru-RU', animatedMoviesGrid);

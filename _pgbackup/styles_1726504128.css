@@ -1,0 +1,338 @@
+body {
+    font-family: 'Unbounded', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #fff;
+    background-color: #000;
+}
+
+header {
+    position: fixed;
+    top: 10px; /* Отступ сверху */
+    left: 50px; /* Отступ слева */
+    right: 50px; /* Отступ справа */
+    width: calc(100% - 100px); /* Ширина учитывает отступы по бокам */
+    padding: 5px 5px; /* Внутренние отступы */
+    background: rgba(0, 0, 0, 0.87);
+    backdrop-filter: blur(25px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    border-radius: 15px; /* Закругления углов */
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+header form {
+    display: flex;
+    align-items: center;
+}
+
+header input[type="text"] {
+    padding: 10px;
+    font-size: 16px;
+    border: 0.5px solid rgba(255, 255, 255, 0.34); /* Белая обводка с прозрачностью */
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.1); /* Прозрачный белый фон */
+    color: #fff; /* Белый текст */
+}
+
+header button,
+.close-modal {
+    padding: 4.5px 1.5px;
+    font-size: 0px;
+    border: none;
+    border-radius: 10px;
+    background: #000000;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    float: right; /* Размещает кнопки справа */
+}
+
+header button,
+.close-modal {
+    background-color: #7937fa;
+    border: 0.5px solid rgba(255, 255, 255, 0.34);
+    margin-left: -15px;
+}
+
+main {
+    margin-top: 80px; /* Отступ сверху для основного контента, чтобы не перекрывал заголовок */
+    padding: 20px; /* Отступы вокруг основного контента */
+}
+
+.section {
+    margin-bottom: 40px; /* Отступ снизу между секциями */
+}
+
+.fullscreen-section {
+    height: 700px;
+    overflow: hidden;
+}
+
+.fullscreen-slider {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.fullscreen-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    transition: transform 0.3s ease-in-out;
+}
+
+.fullscreen-tile {
+    flex: 0 0 100%;
+    height: 100%;
+    position: relative;
+    background-size: cover;
+    background-position: center;
+}
+
+.fullscreen-tile::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+}
+
+.fullscreen-content {
+    position: absolute;
+    bottom: 50px;
+    left: 50px;
+    right: 50px;
+    z-index: 2;
+}
+
+.fullscreen-title {
+    font-size: 36px;
+    margin-bottom: 20px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+}
+
+.watch-button {
+    display: inline-block;
+    padding: 15px 60px;
+    font-size: 18px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    background-color: white;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.watch-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.watch-button:active {
+    transform: scale(0.95);
+}
+
+.slider-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.23);
+    color: white;
+    border: none;
+    padding: 20px 15px;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 10;
+    transition: background-color 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+}
+
+.slider-button:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+.slider-button.prev {
+    left: 20px;
+}
+
+.slider-button.next {
+    right: 20px;
+}
+
+.movie-slider {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.slider-container {
+    display: flex;
+    transition: transform 0.3s ease-in-out;
+}
+
+.movie-tile {
+    flex: 0 0 auto;
+    width: 200px;
+    margin: 8px 20px 0 8px; /* Отступы сверху и слева по 8px, справа 20px, снизу 0 */
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.movie-tile:hover {
+    transform: scale(1.02);
+}
+
+.movie-tile img {
+    width: 100%;
+    height: auto;
+    border-radius: 15px;
+    border: 1px solid #ffffff42; /* Обводка для картинки */
+}
+
+.movie-tile h3 {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    margin: auto;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 900px;
+    width: 100%;
+    max-height: 900vh;
+    overflow-y: auto;
+    z-index: 1;
+}
+
+.modal-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.466);
+    z-index: 10000;
+}
+
+.movie-poster {
+    max-width: 200px;
+    float: left;
+    margin-right: 20px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+}
+
+#kinobox-player {
+    clear: both;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border: 0.5px solid rgba(255, 255, 255, 0.13);
+    border-radius: 10px;
+    background-color: black;
+    position: relative;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+#add-to-favorites {
+    background-color: #697753;
+    color: white;
+}
+
+#close-modal {
+    background-color: rgba(255, 255, 255, 0.23); /* Фоновый цвет */
+    border: 1px solid rgba(255, 255, 255, 0.034); /* Граница */
+    color: rgb(255, 255, 255); /* Цвет текста */
+    position: absolute; /* Абсолютное позиционирование */
+    top: 10px; /* Расстояние от верхнего края */
+    right: 10px; /* Расстояние от правого края */
+    width: 40px; /* Ширина элемента */
+    height: 40px; /* Высота элемента */
+    display: flex; /* Для центрирования содержимого */
+    justify-content: center; /* Выравнивание по горизонтали */
+    align-items: center; /* Выравнивание по вертикали */
+    border-radius: 20px; /* Округлые углы для кнопки */
+    cursor: pointer; /* Курсор указывающий на кликабельность */
+    transition: background-color 0.3s ease; /* Плавное изменение фона */
+}
+
+#close-modal:hover {
+    background-color: rgba(255, 255, 255, 0.34);
+}
+
+.movies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    padding: 20px;
+}
+
+.movies-grid .movie-card {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.movies-grid .movie-card:hover {
+    transform: scale(1.03);
+}
+
+.movies-grid .movie-card img {
+    width: 100%;
+    height: auto;
+}
+
+.movies-grid .movie-card .title {
+    padding: 10px;
+    font-size: 16px;
+    color: #fff;
+}
+
+#favorites-section,
+#search-results {
+    margin-top: 60px; /* Отступ сверху для секций, чтобы разместить их ниже заголовка */
+    margin-bottom: 60px; /* Отступ снизу для секций */
+}
+
+#genres_list a {
+    color: #fff;
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 900;
+}

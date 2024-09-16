@@ -62,10 +62,10 @@ header input[type="text"] {
 
 header button,
 .close-modal {
-    padding: 5px  5px;
+    padding: 4.5px  1.5px;
     font-size: 0px;
     border: none;
-    border-radius: 50px;
+    border-radius: 10px;
     background: #000000;
     color: #fff;
     cursor: pointer;
@@ -77,12 +77,12 @@ header button,
 
 header button,
 .close-modal {
-    background: url('gradients/gradient.png') no-repeat center center;
+    background: url('gradients/gradient1.jpg') no-repeat center center;
     background-size: cover;
 
     /* Покрыть весь элемент */
     border: 0.5px solid rgba(255, 255, 255, 0.34);
-    margin-left: -25px;
+    margin-left: -15px;
 }
 
 main {
