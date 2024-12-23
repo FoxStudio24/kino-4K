@@ -5,6 +5,7 @@ body {
     color: #fff;
     background-color: #000;
 }
+
 header {
     position: fixed;
     top: 10px;
@@ -268,6 +269,16 @@ main {
     box-sizing: border-box;
 }
 
+#add-to-favorites,
+#close-modal {
+    padding: 10px 20px;
+    margin: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
 #add-to-favorites {
     background-color: rgba(255, 255, 255, 0.23);
     border: 1px solid rgba(255, 255, 255, 0.034);
@@ -281,7 +292,6 @@ main {
     justify-content: center;
     align-items: center;
     border-radius: 20px;
-    cursor: pointer;
     backdrop-filter: blur(5px);
     transition: transform 0.3s ease;
 }
@@ -303,18 +313,12 @@ main {
     justify-content: center;
     align-items: center;
     border-radius: 20px;
-    cursor: pointer;
     backdrop-filter: blur(5px);
     transition: transform 0.3s ease;
 }
 
 #close-modal:hover {
     transform: scale(1.05);
-}
-
-#add-to-favorites:hover,
-#close-modal:hover {
-    opacity: 0.8;
 }
 
 .movies-grid {
@@ -343,4 +347,8 @@ main {
 .favorites-icon {
     width: 30px;
     height: 30px;
+}
+
+.menu_list ul {
+    display: none;
 }
