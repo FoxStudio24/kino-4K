@@ -48,19 +48,51 @@ header button,
     font-size: 0px;
     border: none;
     border-radius: 50px;
-    background: #000000;
     color: #fff;
     cursor: pointer;
     transition: background-color 0.3s ease;
     float: right;
+    position: relative;
+    background: rgba(94, 94, 94, .18);
+    overflow: hidden;
+    transition: outline 0.3s ease, transform 0.2s ease;
+}
+
+header button::after,
+.close-modal::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(101.06% 100% at 50% 100%, rgb(94 94 94 / 23%) 0%, rgba(94, 94, 94, 0) 73.85%),
+                radial-gradient(100% 100% at 50% 100%, hsla(0, 0%, 100%, 0.07) 0%, hsla(0, 0%, 100%, 0) 55.59%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 999999px;
 }
 
 header button,
 .close-modal {
-    background: url('gradients/gradient.png') no-repeat center center;
-    background-size: cover;
     border: 0.5px solid rgba(255, 255, 255, 0.34);
     margin-left: -25px;
+}
+
+header button:hover,
+.close-modal:hover {
+    outline: 0px solid #666;
+    outline-offset: 10px;
+}
+
+header button:hover::after,
+.close-modal:hover::after {
+    opacity: 1;
+}
+
+header button:active,
+.close-modal:active {
+    transform: scale(0.95);
 }
 
 main {
