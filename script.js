@@ -1,10 +1,8 @@
-// Constants for API
 const API_KEY = '06936145fe8e20be28b02e26b55d3ce6';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 const BACKDROP_URL = 'https://image.tmdb.org/t/p/original';
 
-// DOM Elements
 const newReleasesGrid = document.getElementById('new-releases-grid');
 const popularMoviesGrid = document.getElementById('popular-movies-grid');
 const topRatedTvGrid = document.getElementById('top-rated-tv-grid');
@@ -21,15 +19,12 @@ const searchResultsModal = document.getElementById('search-results');
 const closeSearchButton = document.querySelector('#search-results .close-modal');
 const searchResultsGrid = document.getElementById('search-results-grid');
 
-// Variables for slider offsets
 let popularMoviesOffset = 0;
 let topRatedTvOffset = 0;
 let animatedMoviesOffset = 0;
 
-// Load favorites from localStorage
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
-// Function to fetch movies with retry
 function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries = 3) {
     return fetch(BASE_URL + endpoint)
         .then(response => {
@@ -56,7 +51,6 @@ function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries
         });
 }
 
-// Function to fetch movie info with retry
 function fetchMovieInfoWithRetry(url, movie, retries = 3) {
     fetch(url)
         .then(response => {
@@ -66,9 +60,7 @@ function fetchMovieInfoWithRetry(url, movie, retries = 3) {
             return response.json();
         })
         .then(data => {
-            getKinopoiskId(data).then(kinopoiskId => {
-                displayMovieInfo(data, movie, kinopoiskId);
-            });
+            displayMovieInfo(data, movie);
         })
         .catch(error => {
             console.error('Error:', error);
@@ -81,21 +73,6 @@ function fetchMovieInfoWithRetry(url, movie, retries = 3) {
         });
 }
 
-// Function to get Kinopoisk ID
-function getKinopoiskId(movieData) {
-    const mediaType = movieData.media_type || (movieData.first_air_date ? 'tv' : 'movie');
-    const externalIdsUrl = `${BASE_URL}/${mediaType}/${movieData.id}/external_ids?api_key=${API_KEY}`;
-
-    return fetch(externalIdsUrl)
-        .then(response => response.json())
-        .then(data => data.kinopoisk_id || null)
-        .catch(error => {
-            console.error('Error fetching Kinopoisk ID:', error);
-            return null;
-        });
-}
-
-// Function to create a movie tile
 function createMovieTile(movie, isFullscreen = false) {
     const tile = document.createElement('div');
     tile.className = isFullscreen ? 'fullscreen-tile' : 'movie-tile';
@@ -120,7 +97,6 @@ function createMovieTile(movie, isFullscreen = false) {
     return tile;
 }
 
-// Function to show movie info
 function showMovieInfo(movie) {
     const modalContent = movieInfoModal.querySelector('.modal-content');
     modalContent.innerHTML = '<p>Загрузка информации...</p>';
@@ -132,8 +108,7 @@ function showMovieInfo(movie) {
     fetchMovieInfoWithRetry(fetchUrl, movie);
 }
 
-// Function to display movie information
-function displayMovieInfo(data, movie, kinopoiskId) {
+function displayMovieInfo(data, movie) {
     const modalContent = movieInfoModal.querySelector('.modal-content');
     
     modalContent.style.backgroundImage = data.backdrop_path 
@@ -144,7 +119,6 @@ function displayMovieInfo(data, movie, kinopoiskId) {
     const releaseDate = data.release_date || data.first_air_date || 'Нет данных';
     const overview = data.overview || 'Описание отсутствует.';
     const voteAverage = data.vote_average ? data.vote_average.toFixed(1) : 'Нет данных';
-    const releaseYear = releaseDate ? new Date(releaseDate).getFullYear() : null;
 
     modalContent.innerHTML = `
         <img src="${data.poster_path ? IMG_URL + data.poster_path : 'icons/poster.png'}" alt="${title}" class="movie-poster">
@@ -165,11 +139,7 @@ function displayMovieInfo(data, movie, kinopoiskId) {
 
     new Kinobox('#kinobox-player', {
         search: {
-            kinopoisk: kinopoiskId || null,
-            title: {
-                title: title,
-                year: releaseYear
-            },
+            tmdb: data.id,
             type: mediaType === 'tv' ? 'serial' : 'movie'
         },
         players: {
@@ -193,7 +163,6 @@ function displayMovieInfo(data, movie, kinopoiskId) {
     document.getElementById('close-modal').onclick = closeMovieInfo;
 }
 
-// Function to display movie info error
 function displayMovieInfoError() {
     const modalContent = movieInfoModal.querySelector('.modal-content');
     modalContent.innerHTML = `
@@ -204,17 +173,14 @@ function displayMovieInfoError() {
     document.getElementById('close-modal').onclick = closeMovieInfo;
 }
 
-// Function to close the movie info modal
 function closeMovieInfo() {
     movieInfoModal.style.display = 'none';
 }
 
-// Function to check if a movie is in favorites
 function isFavorite(movie) {
     return favorites.some(fav => fav.id === movie.id);
 }
 
-// Function to add/remove a movie from favorites
 function toggleFavorite(movie) {
     const index = favorites.findIndex(fav => fav.id === movie.id);
     if (index === -1) {
@@ -234,7 +200,6 @@ function toggleFavorite(movie) {
     updateFavoritesGrid();
 }
 
-// Function to update the favorites grid
 function updateFavoritesGrid() {
     favoritesGrid.innerHTML = '';
     favorites.forEach(movie => {
@@ -243,18 +208,15 @@ function updateFavoritesGrid() {
     });
 }
 
-// Function to open the favorites modal
 function openFavorites() {
     favoritesModal.style.display = 'flex';
     updateFavoritesGrid();
 }
 
-// Function to close the favorites modal
 function closeFavorites() {
     favoritesModal.style.display = 'none';
 }
 
-// Function to search for movies
 function searchMovies(query) {
     const searchUrl = `${BASE_URL}/search/multi?api_key=${API_KEY}&language=ru-RU&query=${encodeURIComponent(query)}`;
     
@@ -275,12 +237,10 @@ function searchMovies(query) {
         });
 }
 
-// Function to close the search results modal
 function closeSearchResults() {
     searchResultsModal.style.display = 'none';
 }
 
-// Event listeners
 openFavoritesButton.onclick = openFavorites;
 closeFavoritesButton.onclick = closeFavorites;
 closeMovieInfoButton.onclick = closeMovieInfo;
@@ -293,7 +253,6 @@ searchForm.onsubmit = function(event) {
     }
 };
 
-// Initial movie fetches
 fetchMoviesWithRetry('/movie/now_playing?api_key=' + API_KEY + '&language=ru-RU', newReleasesGrid, true);
 fetchMoviesWithRetry('/movie/popular?api_key=' + API_KEY + '&language=ru-RU', popularMoviesGrid);
 fetchMoviesWithRetry('/tv/top_rated?api_key=' + API_KEY + '&language=ru-RU', topRatedTvGrid);
