@@ -128,21 +128,19 @@ main {
     font-size: 18px;
     font-family: 'Montserrat', sans-serif;
     font-weight: 600;
-    background-color: white;
-    color: black;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: radial-gradient(101.06% 100% at 50% 100%, rgb(94 94 94 / 23%) 0%, rgba(94, 94, 94, 0) 73.85%), radial-gradient(100% 100% at 50% 100%, hsla(0, 0%, 100%, 0.07) 0%, hsla(0, 0%, 100%, 0) 55.59%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 10px;
 }
 
 .watch-button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    outline: 0px solid #666;
+    outline-offset: 10px;
 }
 
 .watch-button:active {
-    transform: scale(0.95);
+    opacity: 1;
 }
 
 .slider-button {
