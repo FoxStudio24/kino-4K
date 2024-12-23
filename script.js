@@ -120,7 +120,7 @@ function createMovieTile(movie, isFullscreen = false) {
     return tile;
 }
 
-// Function to display movie information
+// Function to show movie info
 function showMovieInfo(movie) {
     const modalContent = movieInfoModal.querySelector('.modal-content');
     modalContent.innerHTML = '<p>Загрузка информации...</p>';
@@ -132,7 +132,7 @@ function showMovieInfo(movie) {
     fetchMovieInfoWithRetry(fetchUrl, movie);
 }
 
-// Функция для отображения информации о фильме
+// Function to display movie information
 function displayMovieInfo(data, movie, kinopoiskId) {
     const modalContent = movieInfoModal.querySelector('.modal-content');
     
@@ -144,6 +144,7 @@ function displayMovieInfo(data, movie, kinopoiskId) {
     const releaseDate = data.release_date || data.first_air_date || 'Нет данных';
     const overview = data.overview || 'Описание отсутствует.';
     const voteAverage = data.vote_average ? data.vote_average.toFixed(1) : 'Нет данных';
+    const releaseYear = releaseDate ? new Date(releaseDate).getFullYear() : null;
 
     modalContent.innerHTML = `
         <img src="${data.poster_path ? IMG_URL + data.poster_path : 'icons/poster.png'}" alt="${title}" class="movie-poster">
@@ -159,14 +160,16 @@ function displayMovieInfo(data, movie, kinopoiskId) {
             <img src="icons/close24.png" alt="Закрыть" class="close-icon"/>
         </button>
     `;
-    
-    // Обновленная инициализация Kinobox с правильно добавленным Vibix
+
     const mediaType = data.media_type || (data.first_air_date ? 'tv' : 'movie');
 
     new Kinobox('#kinobox-player', {
         search: {
-            kinopoisk: kinopoiskId,
-            title: title,
+            kinopoisk: kinopoiskId || null,
+            title: {
+                title: title,
+                year: releaseYear
+            },
             type: mediaType === 'tv' ? 'serial' : 'movie'
         },
         players: {
@@ -175,7 +178,7 @@ function displayMovieInfo(data, movie, kinopoiskId) {
             'videocdn': true,
             'collaps': true,
             'videoapi': true,
-            'vibix':true, 
+            'vibix': true
         },
         params: {
             season: data.season_number || 1,
@@ -251,18 +254,6 @@ function closeFavorites() {
     favoritesModal.style.display = 'none';
 }
 
-// Event listeners
-openFavoritesButton.onclick = openFavorites;
-closeFavoritesButton.onclick = closeFavorites;
-closeMovieInfoButton.onclick = closeMovieInfo;
-searchForm.onsubmit = function (event) {
-    event.preventDefault();
-    const query = searchInput.value.trim();
-    if (query) {
-        searchMovies(query);
-    }
-};
-
 // Function to search for movies
 function searchMovies(query) {
     const searchUrl = `${BASE_URL}/search/multi?api_key=${API_KEY}&language=ru-RU&query=${encodeURIComponent(query)}`;
@@ -289,8 +280,18 @@ function closeSearchResults() {
     searchResultsModal.style.display = 'none';
 }
 
-// Event listener for closing the search results modal
+// Event listeners
+openFavoritesButton.onclick = openFavorites;
+closeFavoritesButton.onclick = closeFavorites;
+closeMovieInfoButton.onclick = closeMovieInfo;
 closeSearchButton.onclick = closeSearchResults;
+searchForm.onsubmit = function(event) {
+    event.preventDefault();
+    const query = searchInput.value.trim();
+    if (query) {
+        searchMovies(query);
+    }
+};
 
 // Initial movie fetches
 fetchMoviesWithRetry('/movie/now_playing?api_key=' + API_KEY + '&language=ru-RU', newReleasesGrid, true);
