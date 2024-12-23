@@ -256,4 +256,4 @@ searchForm.onsubmit = function(event) {
 fetchMoviesWithRetry('/movie/now_playing?api_key=' + API_KEY + '&language=ru-RU', newReleasesGrid, true);
 fetchMoviesWithRetry('/movie/popular?api_key=' + API_KEY + '&language=ru-RU', popularMoviesGrid);
 fetchMoviesWithRetry('/tv/top_rated?api_key=' + API_KEY + '&language=ru-RU', topRatedTvGrid);
-fetchMoviesWithRetry('/genre/16/movies?api_key=' + API_KEY + '&language=ru-RU', animatedMoviesGrid);
+fetchMoviesWithRetry('/discover/movie?api_key=' + API_KEY + '&with_genres=16&language=ru-RU', animatedMoviesGrid);
