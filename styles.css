@@ -136,6 +136,7 @@ main {
     overflow: hidden;
     transition: outline 0.3s ease, transform 0.2s ease;
     position: relative;
+    backdrop-filter: blur(25px);
 }
 
 .watch-button::after {
