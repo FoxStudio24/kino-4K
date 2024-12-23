@@ -5,31 +5,18 @@ body {
     color: #fff;
     background-color: #000;
 }
-
 header {
     position: fixed;
     top: 10px;
-
-    /* Отступ сверху */
     left: 50px;
-
-    /* Отступ слева */
     right: 50px;
-
-    /* Отступ справа */
     width: calc(100% - 100px);
-
-    /* Ширина учитывает отступы по бокам */
     padding: 5px 5px;
-
-    /* Внутренние отступы */
     background: rgba(0, 0, 0, 0.87);
     backdrop-filter: blur(25px);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     z-index: 1000;
     border-radius: 15px;
-
-    /* Закругления углов */
 }
 
 .header-content {
@@ -49,20 +36,14 @@ header input[type="text"] {
     padding: 10px 5px;
     font-size: 16px;
     border: 0.5px solid rgba(255, 255, 255, 0.34);
-
-    /* Белая обводка с прозрачностью */
     border-radius: 10px;
     background-color: rgba(255, 255, 255, 0.1);
-
-    /* Прозрачный белый фон */
     color: #fff;
-
-    /* Белый текст */
 }
 
 header button,
 .close-modal {
-    padding: 5px  5px;
+    padding: 5px 5px;
     font-size: 0px;
     border: none;
     border-radius: 50px;
@@ -71,16 +52,12 @@ header button,
     cursor: pointer;
     transition: background-color 0.3s ease;
     float: right;
-
-    /* Размещает кнопки справа */
 }
 
 header button,
 .close-modal {
     background: url('gradients/gradient.png') no-repeat center center;
     background-size: cover;
-
-    /* Покрыть весь элемент */
     border: 0.5px solid rgba(255, 255, 255, 0.34);
     margin-left: -25px;
 }
@@ -126,7 +103,7 @@ main {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
 }
 
 .fullscreen-content {
@@ -211,8 +188,6 @@ main {
     flex: 0 0 auto;
     width: 200px;
     margin: 8px 20px 0 8px;
-
-    /* Отступы сверху и слева по 8px, справа 20px, снизу 0 */
     cursor: pointer;
     transition: transform 0.3s ease;
 }
@@ -225,9 +200,7 @@ main {
     width: 100%;
     height: auto;
     border-radius: 15px;
-    border: 1px solid#ffffff42;
-
-    /* Обводка для картинки */
+    border: 1px solid #ffffff42;
 }
 
 .movie-tile h3 {
@@ -295,156 +268,49 @@ main {
     box-sizing: border-box;
 }
 
-/* #add-to-favorites,
-#close-modal {
-    padding: 10px 20px;
-    margin: 10px;
-    font-size: 16px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-} */
 #add-to-favorites {
     background-color: rgba(255, 255, 255, 0.23);
-
-    /* Фоновый цвет */
     border: 1px solid rgba(255, 255, 255, 0.034);
-
-    /* Граница */
     color: rgb(255, 255, 255);
-
-    /* Цвет текста */
     position: absolute;
-
-    /* Абсолютное позиционирование */
     top: 10px;
-
-    /* Расстояние от верхнего края */
     right: 55px;
-
-    /* Расстояние от правого края */
     width: 40px;
-
-    /* Ширина элемента */
     height: 40px;
-
-    /* Высота элемента */
     display: flex;
-
-    /* Для центрирования содержимого */
     justify-content: center;
-
-    /* Выравнивание по горизонтали */
     align-items: center;
-
-    /* Выравнивание по вертикали */
     border-radius: 20px;
-
-    /* Округлые углы для кнопки */
     cursor: pointer;
-
-    /* Курсор указывающий на кликабельность */
     backdrop-filter: blur(5px);
-
-    /* Размытие фона */
     transition: transform 0.3s ease;
-
-    /* Плавный переход для трансформации */
 }
 
 #add-to-favorites:hover {
     transform: scale(1.05);
-
-    /* Увеличение элемента при наведении */
 }
 
 #close-modal {
     background-color: rgba(255, 255, 255, 0.23);
-
-    /* Фоновый цвет */
     border: 1px solid rgba(255, 255, 255, 0.034);
-
-    /* Граница */
     color: rgb(255, 255, 255);
-
-    /* Цвет текста */
     position: absolute;
-
-    /* Абсолютное позиционирование */
     top: 10px;
-
-    /* Расстояние от верхнего края */
     right: 10px;
-
-    /* Расстояние от правого края */
     width: 40px;
-
-    /* Ширина элемента */
     height: 40px;
-
-    /* Высота элемента */
     display: flex;
-
-    /* Для центрирования содержимого */
     justify-content: center;
-
-    /* Выравнивание по горизонтали */
     align-items: center;
-
-    /* Выравнивание по вертикали */
     border-radius: 20px;
-
-    /* Округлые углы для кнопки */
     cursor: pointer;
-
-    /* Курсор указывающий на кликабельность */
     backdrop-filter: blur(5px);
-
-    /* Эффект размытия фона */
     transition: transform 0.3s ease;
-
-    /* Плавный переход для увеличения */
 }
 
 #close-modal:hover {
     transform: scale(1.05);
-
-    /* Увеличение кнопки при наведении */
 }
-
-/* Фоновый цвет */
-color: rgb(255, 255, 255);
-
-/* Цвет текста */
-position: absolute;
-
-/* Используем абсолютное позиционирование */
-top: 10px;
-
-/* Расстояние от верхнего края */
-right: 10px;
-
-/* Расстояние от правого края */
-width: 40px;
-
-/* Ширина элемента */
-height: 40px;
-
-/* Высота элемента */
-display: flex;
-
-/* Для центрирования содержимого */
-justify-content: center;
-
-/* Выравнивание по горизонтали */
-align-items: center;
-
-/* Выравнивание по вертикали */
-border-radius: 20px;
-
-/* Округлые углы для кнопки */
-cursor: pointer;
-backdrop-filter: blur(5px);
 
 #add-to-favorites:hover,
 #close-modal:hover {
@@ -471,19 +337,10 @@ backdrop-filter: blur(5px);
 
 .search-icon {
     width: 30px;
-
-    /* Размер иконки */
     height: 30px;
-
-    /* Размер иконки */
 }
 
 .favorites-icon {
     width: 30px;
-
-    /* Размер иконки */
     height: 30px;
-
-    /* Размер иконки */
-}
 }
