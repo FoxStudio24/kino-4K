@@ -144,8 +144,8 @@ function displayMovieInfo(data, movie) {
         },
         players: {
             'alloha': true,
-            'hdvb': true,
-            'videocdn': true,
+            'turbo': true,
+            'videocdn': false,
             'collaps': true,
             'videoapi': true,
             'vibix': true
