@@ -6,6 +6,9 @@
         <title>Кино+</title>
         <link href="css/theme.css" rel="stylesheet" type="text/css">
         <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=BioRhyme+Expanded:wght@800&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Prosto+One&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.css">
         <link rel="stylesheet" href="styles.css">
 
        <!-- Yandex.Metrika counter -->
@@ -72,7 +75,34 @@
                     <button class="slider-button next">❯</button>
                 </div>
             </section>
+
+            <!-- Landing Page Section -->
+            <section id="featured-movie" class="landing-section">
+                <div class="container">
+                    <div class="content">
+                        <div class="header">
+                            <img src="logo/logo.png" alt="Logo" class="logo">
+                            <div class="info-block">
+                                <span class="rating">8.4</span>
+                                <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg" 
+                                     alt="TMDB Logo" 
+                                     class="tmdb-logo">
+                            </div>
+                        </div>
+                        <div class="description">
+                            <p>После кораблекрушения, умный робот по имени Роз оказывается на необитаемом острове. Чтобы выжить в суровых условиях, Роз налаживает связь с животными острова и заботится об одиноком гусенке-сироте..</p>
+                        </div>
+                    </div>
+
+                    <div class="player-wrapper">
+                        <video id="player" playsinline controls>
+                            <source src="https://indigo.femeretes.org/8b31bcd642116bc83ab0845bbc64e0f4:2024122617:VU91SENWL2ZjbVRRcXE1YnY1QjJFTlVaZTNzT2d1NVEyMjE2Qk9oZG9uT1NiZUlnOC9kSXRXMzFjZXZOdVBaT2VyQUVDT3pCKzB3NnZnRXBhc3hRK045VklrMnQrVDVUVDF1am53QkhNMGc9/1/1/5/7/1/0/6/5le3n.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+            </section>
         </main>
+
         <div id="movie-info-modal" class="modal">
             <div class="modal-content">
                 <span class="close-modal">
@@ -99,7 +129,15 @@
                 <div id="search-results-grid" class="movies-grid"></div>
             </div>
         </div>
+        
         <script src="https://kinobox.tv/kinobox.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.min.js"></script>
         <script src="script.js"></script>
+        <script>
+            const player = new Plyr('#player', {
+                controls: ['play-large', 'play', 'progress', 'current-time', 'fullscreen', 'speed']
+            });
+            player.speed = 1;
+        </script>
     </body>
 </html>
