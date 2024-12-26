@@ -83,7 +83,7 @@ function createMovieTile(movie, isFullscreen = false) {
         content.className = 'fullscreen-content';
         content.innerHTML = `
             <h2 class="fullscreen-title">${movie.title || movie.name}</h2>
-            <button class="watch-button">Смотреть</button>
+            <button class="watch-button">▶          Смотреть</button>
         `;
         tile.appendChild(content);
     } else {
