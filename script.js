@@ -99,7 +99,7 @@ function createMovieTile(movie, isFullscreen = false) {
 
 function showMovieInfo(movie) {
     const modalContent = movieInfoModal.querySelector('.modal-content');
-    modalContent.innerHTML = '<p>Загрузка информации...</p>';
+    modalContent.innerHTML = '<p>📤 Загрузка </p>';
     movieInfoModal.style.display = 'flex';
 
     const mediaType = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
