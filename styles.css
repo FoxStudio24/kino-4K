@@ -1,5 +1,5 @@
 body {
-    font-family: 'Unbounded', sans-serif;
+    font-family: 'Tenor Sans', sans-serif;
     margin: 0;
     padding: 0;
     color: #fff;
@@ -7,26 +7,39 @@ body {
 }
 
 header {
-    position: fixed;
-    top: 10px;
-    left: 50px;
-    right: 50px;
-    width: calc(100% - 100px);
-    padding: 5px 5px;
+    width: 80%;  /* Увеличиваем ширину элемента */
+    max-width: 1200px;  /* Ограничиваем максимальную ширину */
+    padding: 15px;  /* Увеличиваем отступы для большего размера */
     background: rgba(0, 0, 0, 0.87);
     backdrop-filter: blur(25px);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     z-index: 1000;
     border-radius: 15px;
+    margin: 10px auto;  /* Центрируем по горизонтали */
+    position: static;  /* Убираем фиксированное позиционирование */
 }
 
 .header-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    max-width: 12000px;
+    width: 100%;  /* На всю ширину родительского элемента */
     margin: 0 auto;
 }
+
+/* Добавленные стили для логотипа */
+.header-logo {
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+}
+
+.header-logo img {
+    height: 60px;  /* Увеличиваем размер логотипа */
+    width: auto;
+    border-radius: 8px;
+}
+
 
 header form {
     display: flex;
@@ -64,7 +77,7 @@ header button,
 }
 
 main {
-    margin-top: 80px;
+    margin-top: 0px;
 }
 
 .section {
@@ -83,11 +96,46 @@ main {
 }
 
 .fullscreen-container {
+    width: calc(100% - 40px); /* Уменьшаем ширину на 40px (по 20px с каждой стороны) */
+    height: calc(100% - 40px); /* Уменьшаем высоту на 40px (по 20px с каждой стороны) */
+    margin: 20px; /* Отступы со всех сторон по 20px */
+    display: flex;
+    transition: transform 0.3s ease-in-out; /* Плавное изменение масштаба */
+    border-radius: 15px; /* Закругление со всех сторон */
+    overflow: hidden; /* Опционально, чтобы содержимое не выходило за границы */
+    position: relative;
+}
+
+.fullscreen-container::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    display: flex;
-    transition: transform 0.3s ease-in-out;
+    background: radial-gradient(101.06% 100% at 50% 100%, rgb(94 94 94 / 23%) 0%, rgba(94, 94, 94, 0) 73.85%),
+                radial-gradient(100% 100% at 50% 100%, hsla(0, 0%, 100%, 0.07) 0%, hsla(0, 0%, 100%, 0) 55.59%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 15px;
 }
+
+.fullscreen-container:hover {
+    transform: scale(1.005); /* Увеличение размера при наведении (на 0.5%) */
+}
+
+.fullscreen-container:hover::after {
+    opacity: 1; /* Показать эффект на фоне при наведении */
+}
+
+.fullscreen-slider .slider-button {
+    display: none; /* Скрытие кнопки внутри блока .new-releases */
+}
+
+
+
+
+
 
 .fullscreen-tile {
     flex: 0 0 100%;
@@ -118,7 +166,7 @@ main {
 .fullscreen-title {
     font-size: 36px;
     margin-bottom: 20px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Tenor Sans', sans-serif;
     font-weight: 700;
 }
 
@@ -373,7 +421,6 @@ main {
 .menu_list ul {
     display: none;
 }
-/* Добавьте эти стили в ваш существующий файл styles.css */
 
 .landing-section {
     min-height: 100vh;
@@ -403,7 +450,7 @@ main {
     display: flex;
     flex-direction: column;
     gap: 30px;
-    font-family: 'Prosto One', sans-serif;
+    font-family: 'Tenor Sans', sans-serif;
 }
 
 .landing-section .header {
@@ -446,13 +493,11 @@ main {
 }
 
 .landing-section .description {
-    background: rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: linear-gradient(to right, rgb(1, 4, 9),rgb(0, 11, 15), transparent);  
     padding: 10px;
     border-radius: 15px;
     font-family: 'Tenor Sans', sans-serif;
-   font-size: 20px;
+    font-size: 20px;
 }
 
 .landing-section .player-wrapper {
@@ -471,6 +516,20 @@ main {
     aspect-ratio: 16/9;
 }
 
+footer {
+    background: linear-gradient(to right, rgb(1, 4, 9), rgb(0, 11, 15), transparent);
+    padding: 10px;
+    border-radius: 15px;
+    font-size: 20px;
+}
+
+footer p {
+    color: #fff;
+    margin: 0;
+    font-family: 'Tenor Sans', sans-serif;
+    font-size: 20px;
+}
+
 /* Медиа-запрос для мобильных устройств */
 @media (max-width: 768px) {
     .landing-section .container {
@@ -484,5 +543,9 @@ main {
     
     .landing-section .player-wrapper {
         max-width: 100%;
+    }
+
+    .header-logo img {
+        height: 30px;
     }
 }
