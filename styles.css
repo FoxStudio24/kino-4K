@@ -131,9 +131,10 @@ main {
 .fullscreen-slider .slider-button {
     display: none; /* Скрытие кнопки внутри блока .new-releases */
 }
-
-
-
+.header-logo {
+    user-select: none; /* Отключает выделение */
+    pointer-events: none; /* Запрещает взаимодействие */
+}
 
 
 
