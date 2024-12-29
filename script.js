@@ -3,6 +3,9 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 const BACKDROP_URL = 'https://image.tmdb.org/t/p/original';
 
+let initialLoadComplete = false;
+const loadingScreen = document.querySelector('.loading-screen');
+
 const newReleasesGrid = document.getElementById('new-releases-grid');
 const popularMoviesGrid = document.getElementById('popular-movies-grid');
 const topRatedTvGrid = document.getElementById('top-rated-tv-grid');
@@ -25,6 +28,25 @@ let animatedMoviesOffset = 0;
 
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
+function hideLoadingScreen() {
+    if (initialLoadComplete) {
+        loadingScreen.classList.add('hidden');
+        setTimeout(() => {
+            loadingScreen.style.display = 'none';
+        }, 500);
+    }
+}
+
+function checkAllLoaded() {
+    if (newReleasesGrid.children.length > 0 && 
+        popularMoviesGrid.children.length > 0 && 
+        topRatedTvGrid.children.length > 0 && 
+        animatedMoviesGrid.children.length > 0) {
+        initialLoadComplete = true;
+        hideLoadingScreen();
+    }
+}
+
 function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries = 3) {
     return fetch(BASE_URL + endpoint)
         .then(response => {
@@ -39,6 +61,7 @@ function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries
                 const movieTile = createMovieTile(movie, isFullscreen);
                 container.appendChild(movieTile);
             });
+            checkAllLoaded();
         })
         .catch(error => {
             console.error('Error:', error);
@@ -253,7 +276,16 @@ searchForm.onsubmit = function(event) {
     }
 };
 
-fetchMoviesWithRetry('/movie/now_playing?api_key=' + API_KEY + '&language=ru-RU', newReleasesGrid, true);
-fetchMoviesWithRetry('/movie/popular?api_key=' + API_KEY + '&language=ru-RU', popularMoviesGrid);
-fetchMoviesWithRetry('/tv/top_rated?api_key=' + API_KEY + '&language=ru-RU', topRatedTvGrid);
-fetchMoviesWithRetry('/discover/movie?api_key=' + API_KEY + '&with_genres=16&language=ru-RU', animatedMoviesGrid);
+// Initial load with Promise.all
+Promise.all([
+    fetchMoviesWithRetry('/movie/now_playing?api_key=' + API_KEY + '&language=ru-RU', newReleasesGrid, true),
+    fetchMoviesWithRetry('/movie/popular?api_key=' + API_KEY + '&language=ru-RU', popularMoviesGrid),
+    fetchMoviesWithRetry('/tv/top_rated?api_key=' + API_KEY + '&language=ru-RU', topRatedTvGrid),
+    fetchMoviesWithRetry('/discover/movie?api_key=' + API_KEY + '&with_genres=16&language=ru-RU', animatedMoviesGrid)
+]).then(() => {
+    initialLoadComplete = true;
+    hideLoadingScreen();
+}).catch(error => {
+    console.error('Error in initial load:', error);
+    hideLoadingScreen();
+});

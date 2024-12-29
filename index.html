@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ru">
     <head>
@@ -11,7 +12,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Prosto+One&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.css">
         <link rel="stylesheet" href="styles.css">
-
+        
         <!-- Yandex.Metrika counter -->
         <script type="text/javascript" >
            (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
@@ -31,11 +32,18 @@
         <!-- /Yandex.Metrika counter -->
     </head>
     <body>
+        <!-- Loading Screen -->
+        <div class="loading-screen">
+            <div class="header-logo">
+                <img src="logo.webp" alt="Kino Plus Logo">
+            </div>
+        </div>
+
         <header>
             <div class="header-content">
                 <div class="header-logo">
-    <img src="logo.webp" alt="Kino Plus Logo">
-</div>
+                    <img src="logo.webp" alt="Kino Plus Logo">
+                </div>
                 <form id="search-form">
                     <input id="search-input" type="text" placeholder="Ведите запрос"/>
                     <button type="submit" class="search-button">
@@ -47,6 +55,7 @@
                 </button>
             </div>
         </header>
+
         <main>
             <section id="new-releases" class="section fullscreen-section">
                 <div class="fullscreen-slider">
@@ -55,6 +64,7 @@
                     <button class="slider-button next">❯</button>
                 </div>
             </section>
+            
             <section id="popular-movies" class="section">
                 <h2>Популярные фильмы</h2>
                 <div class="movie-slider">
@@ -63,6 +73,7 @@
                     <button class="slider-button next">❯</button>
                 </div>
             </section>
+
             <section id="top-rated-tv" class="section">
                 <h2>Лучшие сериалы</h2>
                 <div class="movie-slider">
@@ -71,6 +82,7 @@
                     <button class="slider-button next">❯</button>
                 </div>
             </section>
+
             <section id="animated-movies" class="section">
                 <h2>Мультфильмы</h2>
                 <div class="movie-slider">
@@ -115,6 +127,7 @@
                 <div id="movie-info-content"></div>
             </div>
         </div>
+
         <div id="favorites" class="modal">
             <div class="modal-content">
                 <span class="close-modal">
@@ -124,6 +137,7 @@
                 <div id="favorites-grid" class="movies-grid"></div>
             </div>
         </div>
+
         <div id="search-results" class="modal">
             <div class="modal-content">
                 <span class="close-modal">
