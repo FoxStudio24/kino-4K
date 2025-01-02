@@ -55,25 +55,66 @@ header input[type="text"] {
     color: #fff;
 }
 
-header button,
-.close-modal {
-    padding: 5px 5px;
-    font-size: 0px;
-    border: none;
-    border-radius: 50px;
-    background: #000000;
-    color: #fff;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    float: right;
+header button, .close-modal {
+  position: relative;
+  display: inline-block;
+  border: 0.5px solid rgba(255, 255, 255, 0.34);
+  width: 50px;
+  height: 50px;
+  text-align: center;
+  line-height: 60px;
+  font-size: 24px;
+  color: #fff;
+  text-transform: uppercase;
+  text-decoration: none;
+  font-family: sans-serif;
+  background: linear-gradient(90deg, #03a9f4, #f441a5, #ffeb3b, #03a9f4);
+  background-size: 400%;
+  border-radius: 30px;
+  border: none;
+  cursor: pointer;
+  z-index: 1;
 }
 
-header button,
+header button:hover, .close-modal:hover {
+  animation: animate 8s linear infinite;
+}
+
+header button:before, .close-modal:before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  bottom: -5px;
+  left: -5px;
+  background: linear-gradient(90deg, #03a9f4, #f441a5, #ffeb3b, #03a9f4);
+  background-size: 400%;
+  border-radius: 40px;
+  opacity: 0;
+  transition: 0.5s;
+  z-index: -1;
+}
+
+header button:hover:before, .close-modal:hover:before {
+  filter: blur(20px);
+  opacity: 1;
+  animation: animate 8s linear infinite;
+}
+
+@keyframes animate {
+  0% {
+    background-position: 0%;
+  }
+  100% {
+    background-position: 400%;
+  }
+}
+.search-button {
+  margin-left: -25px;
+}
 .close-modal {
-    background: url('gradients/gradient.png') no-repeat center center;
-    background-size: cover;
-    border: 0.5px solid rgba(255, 255, 255, 0.34);
-    margin-left: -25px;
+  float: right;
+  margin-left: 0;
 }
 
 main {
@@ -82,6 +123,7 @@ main {
 
 .section {
     margin-bottom: 4px;
+	margin-left: 20px;
 }
 
 .fullscreen-section {
@@ -261,23 +303,74 @@ main {
     font-size: 20px;
     cursor: pointer;
     z-index: 10;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.3s ease;
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
     backdrop-filter: blur(8px);
 }
 
+/* Add the hover effect */
 .slider-button:hover {
-    background-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-50%) scale(1.1);  /* Slightly enlarge the button */
+    background: rgba(255, 255, 255, 0.35);  /* Change background color on hover */
 }
 
+
+/* Default styles for the previous button */
 .slider-button.prev {
-    left: 20px;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-align: center;
+  align-items: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  padding: 0;
+  top: 50%;  /* Vertically center the button */
+  left: 5px;  /* Fix it to the left with a 5px margin */
+  transform: translateY(-50%);
+  width: 50px;
+  height: 70px;
+  color: rgba(255, 255, 255, 0.78);
+  transition: transform 0.3s ease, background-color 0.3s ease;  /* Add smooth transitions */
 }
 
-.slider-button.next {
-    right: 20px;
+/* Hover effect for the previous button */
+.slider-button.prev:hover {
+  transform: translateY(-50%) scale(1.1);  /* Enlarge on hover */
+  background: rgb(0 0 0 / 35%);  /* Change background color on hover */
 }
+
+/* Default styles for the next button */
+.slider-button.next {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-align: center;
+  align-items: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  padding: 0;
+  top: 50%;  /* Vertically center the button */
+  right: 5px;  /* Fix it to the right with a 5px margin */
+  transform: translateY(-50%);
+  width: 50px;
+  height: 70px;
+  color: rgba(255, 255, 255, 0.78);
+  transition: transform 0.3s ease, background-color 0.3s ease;  /* Add smooth transitions */
+}
+
+/* Hover effect for the next button */
+.slider-button.next:hover {
+  transform: translateY(-50%) scale(1.1);  /* Enlarge on hover */
+  background: rgb(0 0 0 / 35%);  /* Change background color on hover */
+}
+
+
 
 .movie-slider {
     position: relative;
@@ -291,15 +384,40 @@ main {
 }
 
 .movie-tile {
+    position: relative;
     flex: 0 0 auto;
     width: 200px;
     margin: 8px 20px 0 8px;
     cursor: pointer;
     transition: transform 0.3s ease;
+    z-index: 2;  /* Ensure the tile itself is above the pseudo-element */
 }
 
 .movie-tile:hover {
     transform: scale(1.02);
+}
+
+/* Псевдо-элемент для размытого изображения */
+.movie-tile::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://i.gifer.com/3ww9.gif');  /* Используем пустую строку, чтобы взять изображение из <img> */
+    background-size: cover;
+    background-position: center;
+    filter: blur(25px);  /* Размытие */
+    transform: scale(0.7);  /* Увеличиваем изображение */
+    z-index: 1;  /* Псевдо-элемент находится под изображением */
+    opacity: 0;  /* Скрыто по умолчанию */
+    transition: opacity 0.5s ease;  /* Плавный переход */
+}
+
+/* Когда мы наводим на .movie-tile, псевдо-элемент становится видимым */
+.movie-tile:hover::before {
+    opacity: 1;  /* Показываем размазанную версию изображения */
 }
 
 .movie-tile img {
@@ -307,11 +425,19 @@ main {
     height: auto;
     border-radius: 15px;
     border: 1px solid #ffffff42;
+    position: relative;
+    z-index: 1;  /* Изображение будет выше псевдо-элемента */
 }
 
 .movie-tile h3 {
     margin: 10px 0;
     font-size: 16px;
+}
+
+
+.fullscreen-slider .slider-button.prev,
+.fullscreen-slider .slider-button.next {
+    display: none;
 }
 
 .modal {
@@ -497,7 +623,7 @@ main {
 }
 
 .landing-section .logo {
-    max-width: 300px;
+    max-width: 600px;
     height: auto;
 }
 
@@ -566,7 +692,7 @@ footer p {
     font-size: 20px;
 }
 
-/* Медиа-запрос для мобильных устройств */
+/*для мобильных устройств  типо на весь экран вроде как */
 @media (max-width: 768px) {
     .landing-section .container {
         width: 95%;
@@ -584,4 +710,46 @@ footer p {
     .header-logo img {
         height: 30px;
     }
+.kinobox_wrapper, 
+.kinobox_wrapper * {
+    font-family: 'Tenor Sans', sans-serif !important; /* Применение шрифта ко всем элементам */
+    all: unset; /* Сбрасывает все стили для дочерних элементов */
+    font-family: 'Tenor Sans', sans-serif !important; /* Снова задаёт шрифт */
+}
+.slider-container {
+    display: flex;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: 20px;
+    padding: 10px 0;
+}
+
+.movie-tile {
+    flex: 0 0 auto;
+    width: 200px;
+    margin-right: 20px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 1;
+}
+
+.movie-tile:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+
+.movie-slider:hover .slider-button {
+    opacity: 1;
+}
+
+.slider-button:hover {
+    transform: translateY(-50%) scale(1.1);
+    background-color: rgba(255, 255, 255, 0.4);
+}
+.movie-tile {
+    transition: opacity 0.3s ease-in-out;
+}
+
+
+
 }

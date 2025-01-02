@@ -28,6 +28,45 @@ let animatedMoviesOffset = 0;
 
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
+let currentSlidePositions = {
+    'popular-movies': 0,
+    'top-rated-tv': 0,
+    'animated-movies': 0
+};
+
+function initializeSliderControls(sectionId, grid) {
+    const section = document.getElementById(sectionId);
+    const prevButton = section.querySelector('.slider-button.prev');
+    const nextButton = section.querySelector('.slider-button.next');
+    const container = grid;
+
+    function updateSliderVisibility() {
+        const visibleWidth = container.parentElement.offsetWidth;
+        const totalWidth = container.scrollWidth;
+        const position = currentSlidePositions[sectionId];
+
+        prevButton.style.display = position > 0 ? 'block' : 'none';
+        nextButton.style.display = position < totalWidth - visibleWidth ? 'block' : 'none';
+    }
+
+    function slide(direction) {
+        const visibleWidth = container.parentElement.offsetWidth;
+        const position = currentSlidePositions[sectionId];
+        const moveAmount = direction === 'next' ? 800 : -800;
+        const newPosition = Math.max(0, Math.min(position + moveAmount, container.scrollWidth - visibleWidth));
+        
+        currentSlidePositions[sectionId] = newPosition;
+        container.style.transform = `translateX(-${newPosition}px)`;
+        updateSliderVisibility();
+    }
+
+    prevButton.onclick = () => slide('prev');
+    nextButton.onclick = () => slide('next');
+
+    updateSliderVisibility();
+    window.addEventListener('resize', updateSliderVisibility);
+}
+
 function hideLoadingScreen() {
     if (initialLoadComplete) {
         loadingScreen.classList.add('hidden');
@@ -44,6 +83,10 @@ function checkAllLoaded() {
         animatedMoviesGrid.children.length > 0) {
         initialLoadComplete = true;
         hideLoadingScreen();
+        
+        initializeSliderControls('popular-movies', popularMoviesGrid);
+        initializeSliderControls('top-rated-tv', topRatedTvGrid);
+        initializeSliderControls('animated-movies', animatedMoviesGrid);
     }
 }
 
@@ -171,7 +214,7 @@ function displayMovieInfo(data, movie) {
             'videocdn': false,
             'collaps': true,
             'videoapi': true,
-            'vibix': true
+            'hddb': true
         },
         params: {
             season: data.season_number || 1,
@@ -276,7 +319,6 @@ searchForm.onsubmit = function(event) {
     }
 };
 
-// Initial load with Promise.all
 Promise.all([
     fetchMoviesWithRetry('/movie/now_playing?api_key=' + API_KEY + '&language=ru-RU', newReleasesGrid, true),
     fetchMoviesWithRetry('/movie/popular?api_key=' + API_KEY + '&language=ru-RU', popularMoviesGrid),
