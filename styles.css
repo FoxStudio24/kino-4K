@@ -235,8 +235,8 @@ main {
 
 .fullscreen-content {
     position: absolute;
-    bottom: 50px;
-    left: 50px;
+    bottom: 60px;
+    left: 25px;
     right: 50px;
     z-index: 2;
 }
@@ -248,6 +248,7 @@ main {
     font-weight: 700;
 }
 
+
 .watch-button {
     display: inline-block;
     padding: 15px 60px;
@@ -257,12 +258,17 @@ main {
     color: #fff;
     background: rgba(94, 94, 94, .18);
     border: none;
-    border-radius: 999999px;
+    border-radius: 99px;
     cursor: pointer;
     overflow: hidden;
     transition: outline 0.3s ease, transform 0.2s ease;
     position: relative;
     backdrop-filter: blur(25px);
+	position: absolute; /* Изменено для позиционирования */
+    left: 0px; /* Отступ от левого края */
+    top: 50%; /* Центрирование по вертикали */
+	margin-top: 50px;
+	margin-bottom: 20px; /* Отступ снизу (20px) */
 }
 
 .watch-button::after {

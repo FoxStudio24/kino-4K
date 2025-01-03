@@ -22,17 +22,23 @@ const searchResultsModal = document.getElementById('search-results');
 const closeSearchButton = document.querySelector('#search-results .close-modal');
 const searchResultsGrid = document.getElementById('search-results-grid');
 
-let popularMoviesOffset = 0;
-let topRatedTvOffset = 0;
-let animatedMoviesOffset = 0;
-
-let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-
 let currentSlidePositions = {
     'popular-movies': 0,
     'top-rated-tv': 0,
     'animated-movies': 0
 };
+
+// Add CSS for movie logo
+const style = document.createElement('style');
+style.textContent = `
+    .movie-logo {
+        max-width: 400px;
+        max-height: 200px;
+        margin-bottom: 20px;
+        filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5));
+    }
+`;
+document.head.appendChild(style);
 
 function initializeSliderControls(sectionId, grid) {
     const section = document.getElementById(sectionId);
@@ -90,6 +96,57 @@ function checkAllLoaded() {
     }
 }
 
+async function createMovieTile(movie, isFullscreen = false) {
+    const tile = document.createElement('div');
+    tile.className = isFullscreen ? 'fullscreen-tile' : 'movie-tile';
+
+    if (isFullscreen) {
+        tile.style.backgroundImage = `url(${BACKDROP_URL}${movie.backdrop_path})`;
+        const content = document.createElement('div');
+        content.className = 'fullscreen-content';
+
+        try {
+            const response = await fetch(`${BASE_URL}/movie/${movie.id}/images?api_key=${API_KEY}`);
+            const data = await response.json();
+            const logos = data.logos.filter(logo => logo.iso_639_1 === 'ru');
+
+            if (logos.length > 0) {
+                const logoImg = document.createElement('img');
+                logoImg.src = `${IMG_URL}${logos[0].file_path}`;
+                logoImg.alt = movie.title || movie.name;
+                logoImg.className = 'movie-logo';
+                content.appendChild(logoImg);
+            } else {
+                const title = document.createElement('h2');
+                title.className = 'fullscreen-title';
+                title.textContent = movie.title || movie.name;
+                content.appendChild(title);
+            }
+        } catch (error) {
+            console.error('Error fetching movie logos:', error);
+            const title = document.createElement('h2');
+            title.className = 'fullscreen-title';
+            title.textContent = movie.title || movie.name;
+            content.appendChild(title);
+        }
+
+        const watchButton = document.createElement('button');
+        watchButton.className = 'watch-button';
+        watchButton.innerHTML = '▶          Смотреть';
+        content.appendChild(watchButton);
+        
+        tile.appendChild(content);
+    } else {
+        tile.innerHTML = `
+            <img src="${movie.poster_path ? IMG_URL + movie.poster_path : 'icons/poster.png'}" alt="${movie.title || movie.name}">
+            <h3>${movie.title || movie.name}</h3>
+        `;
+    }
+
+    tile.onclick = () => showMovieInfo(movie);
+    return tile;
+}
+
 function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries = 3) {
     return fetch(BASE_URL + endpoint)
         .then(response => {
@@ -98,12 +155,12 @@ function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries
             }
             return response.json();
         })
-        .then(data => {
+        .then(async data => {
             container.innerHTML = '';
-            data.results.forEach(movie => {
-                const movieTile = createMovieTile(movie, isFullscreen);
+            for (const movie of data.results) {
+                const movieTile = await createMovieTile(movie, isFullscreen);
                 container.appendChild(movieTile);
-            });
+            }
             checkAllLoaded();
         })
         .catch(error => {
@@ -137,30 +194,6 @@ function fetchMovieInfoWithRetry(url, movie, retries = 3) {
                 displayMovieInfoError();
             }
         });
-}
-
-function createMovieTile(movie, isFullscreen = false) {
-    const tile = document.createElement('div');
-    tile.className = isFullscreen ? 'fullscreen-tile' : 'movie-tile';
-
-    if (isFullscreen) {
-        tile.style.backgroundImage = `url(${BACKDROP_URL}${movie.backdrop_path})`;
-        const content = document.createElement('div');
-        content.className = 'fullscreen-content';
-        content.innerHTML = `
-            <h2 class="fullscreen-title">${movie.title || movie.name}</h2>
-            <button class="watch-button">▶          Смотреть</button>
-        `;
-        tile.appendChild(content);
-    } else {
-        tile.innerHTML = `
-            <img src="${movie.poster_path ? IMG_URL + movie.poster_path : 'icons/poster.png'}" alt="${movie.title || movie.name}">
-            <h3>${movie.title || movie.name}</h3>
-        `;
-    }
-
-    tile.onclick = () => showMovieInfo(movie);
-    return tile;
 }
 
 function showMovieInfo(movie) {
@@ -243,6 +276,8 @@ function closeMovieInfo() {
     movieInfoModal.style.display = 'none';
 }
 
+let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+
 function isFavorite(movie) {
     return favorites.some(fav => fav.id === movie.id);
 }
@@ -268,8 +303,8 @@ function toggleFavorite(movie) {
 
 function updateFavoritesGrid() {
     favoritesGrid.innerHTML = '';
-    favorites.forEach(movie => {
-        const movieTile = createMovieTile(movie);
+    favorites.forEach(async movie => {
+        const movieTile = await createMovieTile(movie);
         favoritesGrid.appendChild(movieTile);
     });
 }
@@ -288,12 +323,12 @@ function searchMovies(query) {
     
     fetch(searchUrl)
         .then(response => response.json())
-        .then(data => {
+        .then(async data => {
             searchResultsGrid.innerHTML = '';
-            data.results.forEach(result => {
-                const movieTile = createMovieTile(result);
+            for (const result of data.results) {
+                const movieTile = await createMovieTile(result);
                 searchResultsGrid.appendChild(movieTile);
-            });
+            }
             searchResultsModal.style.display = 'flex';
         })
         .catch(error => {
