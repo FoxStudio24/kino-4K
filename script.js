@@ -116,7 +116,6 @@ async function createMovieTile(movie, isFullscreen = false) {
             const response = await fetch(`${BASE_URL}/movie/${movie.id}/images?api_key=${API_KEY}`);
             const data = await response.json();
             
-            // Prioritize Russian logos first, then fallback to English
             const ruLogo = data.logos.find(logo => logo.iso_639_1 === 'ru');
             const enLogo = data.logos.find(logo => logo.iso_639_1 === 'en');
             const logo = ruLogo || enLogo;
@@ -219,7 +218,6 @@ function displayMovieInfo(data, movie, logoData) {
     const overview = data.overview || 'Описание отсутствует.';
     const voteAverage = data.vote_average ? data.vote_average.toFixed(1) : 'Нет данных';
 
-    // Prioritize Russian logos first, then fallback to English
     const ruLogo = logoData.logos?.find(logo => logo.iso_639_1 === 'ru');
     const enLogo = logoData.logos?.find(logo => logo.iso_639_1 === 'en');
     const logo = ruLogo || enLogo;
@@ -228,6 +226,11 @@ function displayMovieInfo(data, movie, logoData) {
         ? `<img src="${IMG_URL}${logo.file_path}" alt="${title}" class="movie-title-logo">` 
         : `<h2 class="movie-title">${title}</h2>`;
 
+    // Videoseed API configuration
+    const videoseedToken = '1f19f4548dd771963d05b29a9ed8763e';
+    const mediaType = data.media_type || (data.first_air_date ? 'tv' : 'movie');
+    const videoseedEmbedUrl = `https://tv-1-kinoserial.net/embed/${data.id}/?token=${videoseedToken}&autostart=0`;
+
     modalContent.innerHTML = `
         <img src="${data.poster_path ? IMG_URL + data.poster_path : 'icons/poster.png'}" alt="${title}" class="movie-poster">
         ${titleHTML}
@@ -235,6 +238,9 @@ function displayMovieInfo(data, movie, logoData) {
         <p>Рейтинг: ${voteAverage}</p>
         <p>Дата выхода: ${releaseDate}</p>
         <div id="kinobox-player"></div>
+        <div id="videoseed-player" class="video-player">
+            <iframe src="${videoseedEmbedUrl}" frameborder="0" allowfullscreen allow="autoplay *; fullscreen *"></iframe>
+        </div>
         <button id="add-to-favorites">
             <img src="${isFavorite(data) ? 'icons/delete.png' : 'icons/add.png'}" alt="${isFavorite(data) ? 'Удалить из избранного' : 'Добавить в избранное'}" class="favorites-icon"/>
         </button>
@@ -242,8 +248,6 @@ function displayMovieInfo(data, movie, logoData) {
             <img src="icons/close24.png" alt="Закрыть" class="close-icon"/>
         </button>
     `;
-
-    const mediaType = data.media_type || (data.first_air_date ? 'tv' : 'movie');
 
     new Kinobox('#kinobox-player', {
         search: {
