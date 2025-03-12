@@ -37,6 +37,13 @@ style.textContent = `
         margin-bottom: 20px;
         filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5));
     }
+    
+    .movie-title-logo {
+        max-width: 300px;
+        max-height: 120px;
+        margin-bottom: 15px;
+        filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5));
+    }
 `;
 document.head.appendChild(style);
 
@@ -108,11 +115,15 @@ async function createMovieTile(movie, isFullscreen = false) {
         try {
             const response = await fetch(`${BASE_URL}/movie/${movie.id}/images?api_key=${API_KEY}`);
             const data = await response.json();
-            const logos = data.logos.filter(logo => logo.iso_639_1 === 'ru');
-
-            if (logos.length > 0) {
+            
+            // Prioritize Russian logos first, then fallback to English
+            const ruLogo = data.logos.find(logo => logo.iso_639_1 === 'ru');
+            const enLogo = data.logos.find(logo => logo.iso_639_1 === 'en');
+            const logo = ruLogo || enLogo;
+            
+            if (logo) {
                 const logoImg = document.createElement('img');
-                logoImg.src = `${IMG_URL}${logos[0].file_path}`;
+                logoImg.src = `${IMG_URL}${logo.file_path}`;
                 logoImg.alt = movie.title || movie.name;
                 logoImg.className = 'movie-logo';
                 content.appendChild(logoImg);
@@ -174,40 +185,29 @@ function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries
         });
 }
 
-function fetchMovieInfoWithRetry(url, movie, retries = 3) {
-    fetch(url)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            displayMovieInfo(data, movie);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            if (retries > 0) {
-                console.log(`Retrying... (${retries} attempts left)`);
-                fetchMovieInfoWithRetry(url, movie, retries - 1);
-            } else {
-                displayMovieInfoError();
-            }
-        });
-}
-
-function showMovieInfo(movie) {
+async function showMovieInfo(movie) {
     const modalContent = movieInfoModal.querySelector('.modal-content');
     modalContent.innerHTML = '<p>📤 Загрузка </p>';
     movieInfoModal.style.display = 'flex';
 
     const mediaType = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
     const fetchUrl = `${BASE_URL}/${mediaType}/${movie.id}?api_key=${API_KEY}&language=ru-RU`;
+    const logoUrl = `${BASE_URL}/${mediaType}/${movie.id}/images?api_key=${API_KEY}`;
 
-    fetchMovieInfoWithRetry(fetchUrl, movie);
+    try {
+        const [movieData, logoData] = await Promise.all([
+            fetch(fetchUrl).then(res => res.json()),
+            fetch(logoUrl).then(res => res.json())
+        ]);
+
+        displayMovieInfo(movieData, movie, logoData);
+    } catch (error) {
+        console.error('Error fetching movie data:', error);
+        displayMovieInfoError();
+    }
 }
 
-function displayMovieInfo(data, movie) {
+function displayMovieInfo(data, movie, logoData) {
     const modalContent = movieInfoModal.querySelector('.modal-content');
     
     modalContent.style.backgroundImage = data.backdrop_path 
@@ -219,9 +219,18 @@ function displayMovieInfo(data, movie) {
     const overview = data.overview || 'Описание отсутствует.';
     const voteAverage = data.vote_average ? data.vote_average.toFixed(1) : 'Нет данных';
 
+    // Prioritize Russian logos first, then fallback to English
+    const ruLogo = logoData.logos?.find(logo => logo.iso_639_1 === 'ru');
+    const enLogo = logoData.logos?.find(logo => logo.iso_639_1 === 'en');
+    const logo = ruLogo || enLogo;
+
+    const titleHTML = logo 
+        ? `<img src="${IMG_URL}${logo.file_path}" alt="${title}" class="movie-title-logo">` 
+        : `<h2 class="movie-title">${title}</h2>`;
+
     modalContent.innerHTML = `
         <img src="${data.poster_path ? IMG_URL + data.poster_path : 'icons/poster.png'}" alt="${title}" class="movie-poster">
-        <h2>${title}</h2>
+        ${titleHTML}
         <p>${overview}</p>
         <p>Рейтинг: ${voteAverage}</p>
         <p>Дата выхода: ${releaseDate}</p>
@@ -342,6 +351,7 @@ function closeSearchResults() {
     searchResultsModal.style.display = 'none';
 }
 
+// Event Listeners
 openFavoritesButton.onclick = openFavorites;
 closeFavoritesButton.onclick = closeFavorites;
 closeMovieInfoButton.onclick = closeMovieInfo;
