@@ -221,6 +221,22 @@ async function displayMovieInfo(data, movie, logoData) {
 
     const mediaType = data.media_type || (data.first_air_date ? 'tv' : 'movie');
 
+    // Дополнительный запрос для сериалов
+    let season = 1;
+    let episode = 1;
+    if (mediaType === 'tv') {
+        try {
+            const seasonData = await fetch(`${BASE_URL}/tv/${data.id}/season/1?api_key=${API_KEY}&language=ru-RU`);
+            const seasonJson = await seasonData.json();
+            if (seasonJson.episodes && seasonJson.episodes.length > 0) {
+                season = seasonJson.season_number || 1;
+                episode = seasonJson.episodes[0].episode_number || 1;
+            }
+        } catch (error) {
+            console.error('Ошибка при загрузке данных о сезоне:', error);
+        }
+    }
+
     modalContent.innerHTML = `
         <img src="${data.poster_path ? IMG_URL + data.poster_path : 'icons/poster.png'}" alt="${title}" class="movie-poster">
         ${titleHTML}
@@ -236,12 +252,27 @@ async function displayMovieInfo(data, movie, logoData) {
         </button>
     `;
 
-    new Kinobox('#kinobox-player', {
+    // Инициализация Kinobox
+    const kinobox = new Kinobox('#kinobox-player', {
         search: { tmdb: data.id, type: mediaType === 'tv' ? 'serial' : 'movie' },
-        players: { 'alloha': true, 'turbo': true, 'videocdn': false, 'collaps': true, 'videoapi': true, 'hddb': true },
-        params: { season: data.season_number || 1, episode: data.episode_number || 1 },
+        players: { 
+            'alloha': true, 
+            'turbo': true, 
+            'videocdn': true, 
+            'collaps': true, 
+            'videoapi': true, 
+            'hddb': true 
+        },
+        params: { season: season, episode: episode },
         ui: { mobile: true }
-    }).init();
+    });
+
+    try {
+        await kinobox.init();
+    } catch (error) {
+        console.error('Ошибка инициализации Kinobox:', error);
+        document.getElementById('kinobox-player').innerHTML = '<p>Не удалось загрузить плеер. Попробуйте позже.</p>';
+    }
 
     document.getElementById('add-to-favorites').onclick = () => toggleFavorite(data);
     document.getElementById('close-modal').onclick = closeMovieInfo;
