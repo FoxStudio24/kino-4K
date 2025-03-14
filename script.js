@@ -2,8 +2,6 @@ const API_KEY = '06936145fe8e20be28b02e26b55d3ce6';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 const BACKDROP_URL = 'https://image.tmdb.org/t/p/original';
-const VIDEOSEED_API_URL = 'https://api.videoseed.tv/apiv2.php';
-const VIDEOSEED_TOKEN = '1f19f4548dd771963d05b29a9ed8763e';
 
 let initialLoadComplete = false;
 const loadingScreen = document.querySelector('.loading-screen');
@@ -44,12 +42,6 @@ style.textContent = `
         margin-bottom: 15px;
         filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5));
     }
-    .player-buttons {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 10px;
-        justify-content: flex-start; /* Привязка к левому краю */
-    }
     .player-button {
         padding: 8px 16px;
         background-color: #333;
@@ -58,30 +50,47 @@ style.textContent = `
         border-radius: 5px;
         cursor: pointer;
         transition: background-color 0.3s;
-    }
-    .player-button.active {
-        background-color: #555;
+        margin-top: 10px;
     }
     .player-button:hover {
         background-color: #444;
     }
     .video-player {
-        display: none;
-        width: 100%; /* Одинаковая ширина для обоих плееров */
-        height: 500px; /* Фиксированная высота (можно настроить) */
-        max-width: 800px; /* Максимальная ширина для больших экранов */
-        margin: 0 auto; /* Центрируем плеер */
-        border-radius: 10px; /* Закругление углов для всех плееров */
-        overflow: hidden; /* Убедимся, что iframe не выходит за границы */
-    }
-    .video-player.active {
-        display: block;
+        width: 100%;
+        height: 500px;
+        max-width: 800px;
+        margin: 0 auto;
+        border-radius: 10px;
+        overflow: hidden;
     }
     .video-player iframe {
         width: 100%;
         height: 100%;
-        border: none; /* Убираем стандартную рамку iframe */
-        border-radius: 10px; /* Закругление для iframe, чтобы соответствовало контейнеру */
+        border: none;
+        border-radius: 10px;
+    }
+    .rating-span {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 15px;
+        color: white;
+        font-weight: bold;
+    }
+    .rating-green {
+        background-color: #28a745;
+    }
+    .rating-yellow {
+        background-color: #d39e00;
+    }
+    .rating-red {
+        background-color: #dc3545;
+    }
+    .overview-text {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 `;
 document.head.appendChild(style);
@@ -223,39 +232,6 @@ function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries
         });
 }
 
-async function getVideoseedId(tmdbId, mediaType) {
-    // Используем Videoseed только для фильмов
-    if (mediaType !== 'movie') return null;
-
-    const baseUrl = `${VIDEOSEED_API_URL}?item=movie&token=${VIDEOSEED_TOKEN}&tmdb=${tmdbId}`;
-    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-    const url = proxyUrl + baseUrl;
-    
-    try {
-        const response = await fetch(url, {
-            headers: {
-                'Origin': window.location.origin
-            }
-        });
-        if (!response.ok) {
-            console.error(`Videoseed API returned status: ${response.status} - ${response.statusText}`);
-            throw new Error('Videoseed API request failed');
-        }
-        const data = await response.json();
-        console.log(`Videoseed API response for movie (TMDB ID: ${tmdbId}):`, data);
-        
-        if (data.status === 'success' && data.data && data.data.length > 0) {
-            return data.data[0].id;
-        } else {
-            console.warn(`No matching content found in Videoseed API response for movie (TMDB ID: ${tmdbId})`);
-            return null;
-        }
-    } catch (error) {
-        console.error('Error fetching Videoseed ID:', error.message);
-        return null;
-    }
-}
-
 async function showMovieInfo(movie) {
     const modalContent = movieInfoModal.querySelector('.modal-content');
     modalContent.innerHTML = '<p>📤 Загрузка </p>';
@@ -286,9 +262,9 @@ async function displayMovieInfo(data, movie, logoData) {
         : 'url(icons/poster.png)';
     
     const title = data.title || data.name;
-    const releaseDate = data.release_date || data.first_air_date || 'Нет данных';
     const overview = data.overview || 'Описание отсутствует.';
     const voteAverage = data.vote_average ? data.vote_average.toFixed(1) : 'Нет данных';
+    const ratingClass = voteAverage >= 7 ? 'rating-green' : voteAverage >= 5 ? 'rating-yellow' : 'rating-red';
 
     const ruLogo = logoData.logos?.find(logo => logo.iso_639_1 === 'ru');
     const enLogo = logoData.logos?.find(logo => logo.iso_639_1 === 'en');
@@ -299,30 +275,14 @@ async function displayMovieInfo(data, movie, logoData) {
         : `<h2 class="movie-title">${title}</h2>`;
 
     const mediaType = data.media_type || (data.first_air_date ? 'tv' : 'movie');
-    const videoseedId = await getVideoseedId(data.id, mediaType);
-    const videoseedEmbedUrl = videoseedId 
-        ? `https://tv-1-kinoserial.net/embed/${videoseedId}/?token=${VIDEOSEED_TOKEN}&autostart=0`
-        : null;
 
-    // HTML с двумя кнопками и плеерами
     modalContent.innerHTML = `
         <img src="${data.poster_path ? IMG_URL + data.poster_path : 'icons/poster.png'}" alt="${title}" class="movie-poster">
         ${titleHTML}
-        <p>${overview}</p>
-        <p>Рейтинг: ${voteAverage}</p>
-        <p>Дата выхода: ${releaseDate}</p>
-        <div class="player-buttons">
-            <button class="player-button active" data-player="kinobox">Плеер 1</button>
-            ${mediaType === 'movie' && videoseedId 
-                ? `<button class="player-button" data-player="videoseed">Плеер 2</button>`
-                : ''}
-        </div>
-        <div id="kinobox-player" class="video-player active"></div>
-        ${mediaType === 'movie' && videoseedId 
-            ? `<div id="videoseed-player" class="video-player">
-                   <iframe src="${videoseedEmbedUrl}" frameborder="0" allowfullscreen allow="autoplay *; fullscreen *"></iframe>
-               </div>`
-            : ''}
+        <p class="overview-text">${overview}</p>
+        <p>Рейтинг: <span class="rating-span ${ratingClass}">${voteAverage}</span></p>
+        <div id="kinobox-player" class="video-player"></div>
+        <button class="player-button">Плеер 1</button>
         <button id="add-to-favorites">
             <img src="${isFavorite(data) ? 'icons/delete.png' : 'icons/add.png'}" alt="${isFavorite(data) ? 'Удалить из избранного' : 'Добавить в избранное'}" class="favorites-icon"/>
         </button>
@@ -331,7 +291,6 @@ async function displayMovieInfo(data, movie, logoData) {
         </button>
     `;
 
-    // Инициализация Kinobox
     new Kinobox('#kinobox-player', {
         search: {
             tmdb: data.id,
@@ -353,24 +312,6 @@ async function displayMovieInfo(data, movie, logoData) {
             mobile: true
         }
     }).init();
-
-    // Логика переключения плееров
-    const playerButtons = modalContent.querySelectorAll('.player-button');
-    playerButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            // Удаляем класс active у всех кнопок и плееров
-            playerButtons.forEach(btn => btn.classList.remove('active'));
-            modalContent.querySelectorAll('.video-player').forEach(player => player.classList.remove('active'));
-
-            // Добавляем класс active выбранной кнопке и плееру
-            button.classList.add('active');
-            const playerId = button.getAttribute('data-player');
-            const selectedPlayer = modalContent.querySelector(`#${playerId}-player`);
-            if (selectedPlayer) {
-                selectedPlayer.classList.add('active');
-            }
-        });
-    });
 
     document.getElementById('add-to-favorites').onclick = () => toggleFavorite(data);
     document.getElementById('close-modal').onclick = closeMovieInfo;
