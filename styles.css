@@ -494,17 +494,6 @@ main {
     border-radius: 10px;
 }
 
-#kinobox-player {
-    clear: both;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    border: 0.5px solid rgba(255, 255, 255, 0.13);
-    border-radius: 10px;
-    background-color: black;
-    position: relative;
-    padding: 5px;
-    box-sizing: border-box;
-}
 
 #add-to-favorites,
 #close-modal {

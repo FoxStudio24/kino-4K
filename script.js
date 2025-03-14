@@ -1,11 +1,20 @@
+// Константы
 const API_KEY = '06936145fe8e20be28b02e26b55d3ce6';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 const BACKDROP_URL = 'https://image.tmdb.org/t/p/original';
 
+// Переменные состояния
 let initialLoadComplete = false;
-const loadingScreen = document.querySelector('.loading-screen');
+let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+let currentSlidePositions = {
+    'popular-movies': 0,
+    'top-rated-tv': 0,
+    'animated-movies': 0
+};
 
+// DOM элементы
+const loadingScreen = document.querySelector('.loading-screen');
 const newReleasesGrid = document.getElementById('new-releases-grid');
 const popularMoviesGrid = document.getElementById('popular-movies-grid');
 const topRatedTvGrid = document.getElementById('top-rated-tv-grid');
@@ -22,79 +31,25 @@ const searchResultsModal = document.getElementById('search-results');
 const closeSearchButton = document.querySelector('#search-results .close-modal');
 const searchResultsGrid = document.getElementById('search-results-grid');
 
-let currentSlidePositions = {
-    'popular-movies': 0,
-    'top-rated-tv': 0,
-    'animated-movies': 0
-};
-
+// Динамические стили
 const style = document.createElement('style');
 style.textContent = `
-    .movie-logo {
-        max-width: 400px;
-        max-height: 200px;
-        margin-bottom: 20px;
-        filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5));
-    }
-    .movie-title-logo {
-        max-width: 300px;
-        max-height: 120px;
-        margin-bottom: 15px;
-        filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5));
-    }
-    .player-button {
-        padding: 8px 16px;
-        background-color: #333;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-        margin-top: 10px;
-    }
-    .player-button:hover {
-        background-color: #444;
-    }
-    .video-player {
-        width: 100%;
-        height: 500px;
-        max-width: 800px;
-        margin: 0 auto;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-    .video-player iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-        border-radius: 10px;
-    }
-    .rating-span {
-        display: inline-block;
-        padding: 5px 10px;
-        border-radius: 15px;
-        color: white;
-        font-weight: bold;
-    }
-    .rating-green {
-        background-color: #28a745;
-    }
-    .rating-yellow {
-        background-color: #d39e00;
-    }
-    .rating-red {
-        background-color: #dc3545;
-    }
-    .overview-text {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+    .movie-logo { max-width: 300px; max-height: 200px; margin-bottom: 20px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5)); }
+    .movie-title-logo { max-width: 300px; max-height: 120px; margin-bottom: 15px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5)); }
+    .button-container { display: flex; justify-content: flex-end; }
+    .player-button { float: right; padding: 7px 25px; background-color: #333; color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; margin-top: 7px; }
+    .player-button:hover { background-color: #444; }
+    .video-player { width: 100%; height: 500px; max-width: 800px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
+    .video-player iframe { width: 100%; height: 100%; border: none; border-radius: 10px; }
+    .rating-span { display: inline-block; padding: 5px 10px; border-radius: 15px; color: white; font-weight: bold; }
+    .rating-green { background-color: #28a745; }
+    .rating-yellow { background-color: #d39e00; }
+    .rating-red { background-color: #dc3545; }
+    .overview-text { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
 `;
 document.head.appendChild(style);
 
+// Функции управления слайдером
 function initializeSliderControls(sectionId, grid) {
     const section = document.getElementById(sectionId);
     const prevButton = section.querySelector('.slider-button.prev');
@@ -105,7 +60,6 @@ function initializeSliderControls(sectionId, grid) {
         const visibleWidth = container.parentElement.offsetWidth;
         const totalWidth = container.scrollWidth;
         const position = currentSlidePositions[sectionId];
-
         prevButton.style.display = position > 0 ? 'block' : 'none';
         nextButton.style.display = position < totalWidth - visibleWidth ? 'block' : 'none';
     }
@@ -115,7 +69,6 @@ function initializeSliderControls(sectionId, grid) {
         const position = currentSlidePositions[sectionId];
         const moveAmount = direction === 'next' ? 800 : -800;
         const newPosition = Math.max(0, Math.min(position + moveAmount, container.scrollWidth - visibleWidth));
-        
         currentSlidePositions[sectionId] = newPosition;
         container.style.transform = `translateX(-${newPosition}px)`;
         updateSliderVisibility();
@@ -123,17 +76,15 @@ function initializeSliderControls(sectionId, grid) {
 
     prevButton.onclick = () => slide('prev');
     nextButton.onclick = () => slide('next');
-
     updateSliderVisibility();
     window.addEventListener('resize', updateSliderVisibility);
 }
 
+// Управление экраном загрузки
 function hideLoadingScreen() {
     if (initialLoadComplete) {
         loadingScreen.classList.add('hidden');
-        setTimeout(() => {
-            loadingScreen.style.display = 'none';
-        }, 500);
+        setTimeout(() => loadingScreen.style.display = 'none', 500);
     }
 }
 
@@ -144,13 +95,13 @@ function checkAllLoaded() {
         animatedMoviesGrid.children.length > 0) {
         initialLoadComplete = true;
         hideLoadingScreen();
-        
         initializeSliderControls('popular-movies', popularMoviesGrid);
         initializeSliderControls('top-rated-tv', topRatedTvGrid);
         initializeSliderControls('animated-movies', animatedMoviesGrid);
     }
 }
 
+// Создание плиток фильмов
 async function createMovieTile(movie, isFullscreen = false) {
     const tile = document.createElement('div');
     tile.className = isFullscreen ? 'fullscreen-tile' : 'movie-tile';
@@ -163,11 +114,10 @@ async function createMovieTile(movie, isFullscreen = false) {
         try {
             const response = await fetch(`${BASE_URL}/movie/${movie.id}/images?api_key=${API_KEY}`);
             const data = await response.json();
-            
             const ruLogo = data.logos.find(logo => logo.iso_639_1 === 'ru');
             const enLogo = data.logos.find(logo => logo.iso_639_1 === 'en');
             const logo = ruLogo || enLogo;
-            
+
             if (logo) {
                 const logoImg = document.createElement('img');
                 logoImg.src = `${IMG_URL}${logo.file_path}`;
@@ -190,9 +140,8 @@ async function createMovieTile(movie, isFullscreen = false) {
 
         const watchButton = document.createElement('button');
         watchButton.className = 'watch-button';
-        watchButton.innerHTML = '▶          Смотреть';
+        watchButton.innerHTML = '▶ Смотреть';
         content.appendChild(watchButton);
-        
         tile.appendChild(content);
     } else {
         tile.innerHTML = `
@@ -205,12 +154,11 @@ async function createMovieTile(movie, isFullscreen = false) {
     return tile;
 }
 
+// Загрузка фильмов
 function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries = 3) {
     return fetch(BASE_URL + endpoint)
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+            if (!response.ok) throw new Error('Network response was not ok');
             return response.json();
         })
         .then(async data => {
@@ -226,15 +174,15 @@ function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries
             if (retries > 0) {
                 console.log(`Retrying... (${retries} attempts left)`);
                 return fetchMoviesWithRetry(endpoint, container, isFullscreen, retries - 1);
-            } else {
-                container.innerHTML = '<p>Не удалось загрузить фильмы. Пожалуйста, попробуйте позже.</p>';
             }
+            container.innerHTML = '<p>Не удалось загрузить фильмы. Пожалуйста, попробуйте позже.</p>';
         });
 }
 
+// Отображение информации о фильме
 async function showMovieInfo(movie) {
     const modalContent = movieInfoModal.querySelector('.modal-content');
-    modalContent.innerHTML = '<p>📤 Загрузка </p>';
+    modalContent.innerHTML = '<p>📤 Загрузка</p>';
     movieInfoModal.style.display = 'flex';
 
     const mediaType = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
@@ -246,7 +194,6 @@ async function showMovieInfo(movie) {
             fetch(fetchUrl).then(res => res.json()),
             fetch(logoUrl).then(res => res.json())
         ]);
-
         displayMovieInfo(movieData, movie, logoData);
     } catch (error) {
         console.error('Error fetching movie data:', error);
@@ -256,7 +203,6 @@ async function showMovieInfo(movie) {
 
 async function displayMovieInfo(data, movie, logoData) {
     const modalContent = movieInfoModal.querySelector('.modal-content');
-    
     modalContent.style.backgroundImage = data.backdrop_path 
         ? `url(${BACKDROP_URL}${data.backdrop_path})`
         : 'url(icons/poster.png)';
@@ -265,7 +211,6 @@ async function displayMovieInfo(data, movie, logoData) {
     const overview = data.overview || 'Описание отсутствует.';
     const voteAverage = data.vote_average ? data.vote_average.toFixed(1) : 'Нет данных';
     const ratingClass = voteAverage >= 7 ? 'rating-green' : voteAverage >= 5 ? 'rating-yellow' : 'rating-red';
-
     const ruLogo = logoData.logos?.find(logo => logo.iso_639_1 === 'ru');
     const enLogo = logoData.logos?.find(logo => logo.iso_639_1 === 'en');
     const logo = ruLogo || enLogo;
@@ -292,25 +237,10 @@ async function displayMovieInfo(data, movie, logoData) {
     `;
 
     new Kinobox('#kinobox-player', {
-        search: {
-            tmdb: data.id,
-            type: mediaType === 'tv' ? 'serial' : 'movie'
-        },
-        players: {
-            'alloha': true,
-            'turbo': true,
-            'videocdn': false,
-            'collaps': true,
-            'videoapi': true,
-            'hddb': true
-        },
-        params: {
-            season: data.season_number || 1,
-            episode: data.episode_number || 1
-        },
-        ui: {
-            mobile: true
-        }
+        search: { tmdb: data.id, type: mediaType === 'tv' ? 'serial' : 'movie' },
+        players: { 'alloha': true, 'turbo': true, 'videocdn': false, 'collaps': true, 'videoapi': true, 'hddb': true },
+        params: { season: data.season_number || 1, episode: data.episode_number || 1 },
+        ui: { mobile: true }
     }).init();
 
     document.getElementById('add-to-favorites').onclick = () => toggleFavorite(data);
@@ -331,8 +261,7 @@ function closeMovieInfo() {
     movieInfoModal.style.display = 'none';
 }
 
-let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-
+// Работа с избранным
 function isFavorite(movie) {
     return favorites.some(fav => fav.id === movie.id);
 }
@@ -340,13 +269,12 @@ function isFavorite(movie) {
 function toggleFavorite(movie) {
     const index = favorites.findIndex(fav => fav.id === movie.id);
     if (index === -1) {
-        const favoriteMovie = {
+        favorites.push({
             id: movie.id,
             title: movie.title || movie.name,
             poster_path: movie.poster_path,
             media_type: movie.media_type || (movie.first_air_date ? 'tv' : 'movie')
-        };
-        favorites.push(favoriteMovie);
+        });
         alert('Фильм добавлен в избранное');
     } else {
         favorites.splice(index, 1);
@@ -373,9 +301,9 @@ function closeFavorites() {
     favoritesModal.style.display = 'none';
 }
 
+// Поиск фильмов
 function searchMovies(query) {
     const searchUrl = `${BASE_URL}/search/multi?api_key=${API_KEY}&language=ru-RU&query=${encodeURIComponent(query)}`;
-    
     fetch(searchUrl)
         .then(response => response.json())
         .then(async data => {
@@ -397,23 +325,23 @@ function closeSearchResults() {
     searchResultsModal.style.display = 'none';
 }
 
+// Обработчики событий
 openFavoritesButton.onclick = openFavorites;
 closeFavoritesButton.onclick = closeFavorites;
 closeMovieInfoButton.onclick = closeMovieInfo;
 closeSearchButton.onclick = closeSearchResults;
-searchForm.onsubmit = function(event) {
+searchForm.onsubmit = (event) => {
     event.preventDefault();
     const query = searchInput.value.trim();
-    if (query) {
-        searchMovies(query);
-    }
+    if (query) searchMovies(query);
 };
 
+// Инициализация
 Promise.all([
-    fetchMoviesWithRetry('/movie/now_playing?api_key=' + API_KEY + '&language=ru-RU', newReleasesGrid, true),
-    fetchMoviesWithRetry('/movie/popular?api_key=' + API_KEY + '&language=ru-RU', popularMoviesGrid),
-    fetchMoviesWithRetry('/tv/top_rated?api_key=' + API_KEY + '&language=ru-RU', topRatedTvGrid),
-    fetchMoviesWithRetry('/discover/movie?api_key=' + API_KEY + '&with_genres=16&language=ru-RU', animatedMoviesGrid)
+    fetchMoviesWithRetry(`/movie/now_playing?api_key=${API_KEY}&language=ru-RU`, newReleasesGrid, true),
+    fetchMoviesWithRetry(`/movie/popular?api_key=${API_KEY}&language=ru-RU`, popularMoviesGrid),
+    fetchMoviesWithRetry(`/tv/top_rated?api_key=${API_KEY}&language=ru-RU`, topRatedTvGrid),
+    fetchMoviesWithRetry(`/discover/movie?api_key=${API_KEY}&with_genres=16&language=ru-RU`, animatedMoviesGrid)
 ]).then(() => {
     initialLoadComplete = true;
     hideLoadingScreen();
