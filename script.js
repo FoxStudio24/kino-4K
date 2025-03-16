@@ -10,7 +10,8 @@ let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 let currentSlidePositions = {
     'popular-movies': 0,
     'top-rated-tv': 0,
-    'animated-movies': 0
+    'animated-movies': 0,
+    'russian-releases': 0
 };
 
 // DOM элементы
@@ -19,6 +20,7 @@ const newReleasesGrid = document.getElementById('new-releases-grid');
 const popularMoviesGrid = document.getElementById('popular-movies-grid');
 const topRatedTvGrid = document.getElementById('top-rated-tv-grid');
 const animatedMoviesGrid = document.getElementById('animated-movies-grid');
+const russianReleasesGrid = document.getElementById('russian-releases-grid');
 const searchForm = document.querySelector('header form');
 const searchInput = document.querySelector('header input[type="text"]');
 const movieInfoModal = document.getElementById('movie-info-modal');
@@ -42,10 +44,15 @@ style.textContent = `
     .video-player { width: 100%; height: 500px; max-width: 800px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
     .video-player iframe { width: 100%; height: 100%; border: none; border-radius: 10px; }
     .rating-span { display: inline-block; padding: 5px 10px; border-radius: 15px; color: white; font-weight: bold; font-family: 'Montserrat', sans-serif; }
+    .tile-rating-span { display: inline-block; padding: 2px 6px; border-radius: 10px; color: white; font-size: 12px; font-weight: bold; font-family: 'Montserrat', sans-serif; }
     .rating-green { background-color: #28a745; }
     .rating-yellow { background-color: #d39e00; }
     .rating-red { background-color: #dc3545; }
     .overview-text { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
+    .movie-tile { position: relative; }
+    .age-rating { font-size: 12px; color: #fff; background-color: #555; padding: 2px 6px; border-radius: 10px; margin-right: 5px; }
+    .ratings-container { display: flex; align-items: center; margin-top: 5px; }
+    .modal-age-rating { font-size: 12px; color: #fff; background-color: #555; padding: 2px 6px; border-radius: 10px; margin-top: 5px; margin-bottom: 10px; display: inline-block; }
 `;
 document.head.appendChild(style);
 
@@ -92,12 +99,41 @@ function checkAllLoaded() {
     if (newReleasesGrid.children.length > 0 && 
         popularMoviesGrid.children.length > 0 && 
         topRatedTvGrid.children.length > 0 && 
-        animatedMoviesGrid.children.length > 0) {
+        animatedMoviesGrid.children.length > 0 && 
+        russianReleasesGrid.children.length > 0) {
         initialLoadComplete = true;
         hideLoadingScreen();
         initializeSliderControls('popular-movies', popularMoviesGrid);
         initializeSliderControls('top-rated-tv', topRatedTvGrid);
         initializeSliderControls('animated-movies', animatedMoviesGrid);
+        initializeSliderControls('russian-releases', russianReleasesGrid);
+    }
+}
+
+// Получение возрастного рейтинга с fallback на US
+async function getAgeRating(movie) {
+    const mediaType = movie.first_air_date ? 'tv' : 'movie';
+    const url = `${BASE_URL}/${mediaType}/${movie.id}/${mediaType === 'movie' ? 'release_dates' : 'content_ratings'}?api_key=${API_KEY}`;
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        let rating = 'N/A';
+
+        if (mediaType === 'movie') {
+            const ruRating = data.results?.find(r => r.iso_3166_1 === 'RU');
+            const usRating = data.results?.find(r => r.iso_3166_1 === 'US');
+            rating = ruRating?.release_dates?.[0]?.certification || usRating?.release_dates?.[0]?.certification || 'N/A';
+        } else {
+            const ruRating = data.results?.find(r => r.iso_3166_1 === 'RU');
+            const usRating = data.results?.find(r => r.iso_3166_1 === 'US');
+            rating = ruRating?.rating || usRating?.rating || 'N/A';
+        }
+
+        console.log(`Movie: ${movie.title || movie.name}, Age Rating: ${rating}`);
+        return rating;
+    } catch (error) {
+        console.error('Error fetching age rating:', error);
+        return 'N/A';
     }
 }
 
@@ -144,9 +180,16 @@ async function createMovieTile(movie, isFullscreen = false) {
         content.appendChild(watchButton);
         tile.appendChild(content);
     } else {
+        const ageRating = await getAgeRating(movie);
+        const tmdbRating = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
+        const tmdbRatingClass = tmdbRating >= 7 ? 'rating-green' : tmdbRating >= 5 ? 'rating-yellow' : tmdbRating !== 'N/A' ? 'rating-red' : '';
         tile.innerHTML = `
             <img src="${movie.poster_path ? IMG_URL + movie.poster_path : 'icons/poster.png'}" alt="${movie.title || movie.name}">
             <h3>${movie.title || movie.name}</h3>
+            <div class="ratings-container">
+                ${ageRating !== 'N/A' ? `<span class="age-rating">${ageRating}</span>` : ''}
+                ${tmdbRating !== 'N/A' ? `<span class="tile-rating-span ${tmdbRatingClass}">${tmdbRating}</span>` : ''}
+            </div>
         `;
     }
 
@@ -220,11 +263,13 @@ async function displayMovieInfo(data, movie, logoData) {
         : `<h2 class="movie-title">${title}</h2>`;
 
     const mediaType = data.media_type || (data.first_air_date ? 'tv' : 'movie');
+    const ageRating = await getAgeRating(movie); // Получаем возрастной рейтинг для модального окна
 
     modalContent.innerHTML = `
         <img src="${data.poster_path ? IMG_URL + data.poster_path : 'icons/poster.png'}" alt="${title}" class="movie-poster">
         ${titleHTML}
         <p class="overview-text">${overview}</p>
+        ${ageRating !== 'N/A' ? `<span class="modal-age-rating">${ageRating}</span>` : ''}
         <div class="info-block">
             <div class="rating-container">
                 <span class="rating-span tmdb-rating ${tmdbRatingClass}">${tmdbRating}</span>
@@ -243,7 +288,6 @@ async function displayMovieInfo(data, movie, logoData) {
         </button>
     `;
 
-    // Инициализация Kinobox
     const kinobox = new Kinobox('#kinobox-player', {
         search: { tmdb: data.id, type: mediaType === 'tv' ? 'serial' : 'movie' },
         players: { 
@@ -363,7 +407,9 @@ Promise.all([
     fetchMoviesWithRetry(`/movie/now_playing?api_key=${API_KEY}&language=ru-RU`, newReleasesGrid, true),
     fetchMoviesWithRetry(`/discover/movie?api_key=${API_KEY}&language=ru-RU&sort_by=popularity.desc&vote_average.gte=7&vote_count.gte=100`, popularMoviesGrid),
     fetchMoviesWithRetry(`/discover/tv?api_key=${API_KEY}&language=ru-RU&sort_by=vote_average.desc&vote_average.gte=8&vote_count.gte=100`, topRatedTvGrid),
-    fetchMoviesWithRetry(`/discover/movie?api_key=${API_KEY}&language=ru-RU&with_genres=16&vote_average.gte=7&vote_count.gte=50`, animatedMoviesGrid)
+    fetchMoviesWithRetry(`/discover/movie?api_key=${API_KEY}&language=ru-RU&with_genres=16&vote_average.gte=7&vote_count.gte=50`, animatedMoviesGrid),
+    fetchMoviesWithRetry(`/discover/movie?api_key=${API_KEY}&language=ru-RU&with_origin_country=RU&primary_release_date.gte=2023-01-01&vote_average.gte=6&vote_count.gte=20&sort_by=vote_average.desc`, russianReleasesGrid),
+    fetchMoviesWithRetry(`/discover/tv?api_key=${API_KEY}&language=ru-RU&with_origin_country=RU&first_air_date.gte=2023-01-01&vote_average.gte=6&vote_count.gte=20&sort_by=vote_average.desc`, russianReleasesGrid)
 ]).then(() => {
     initialLoadComplete = true;
     hideLoadingScreen();
