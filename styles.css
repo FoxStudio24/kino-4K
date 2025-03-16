@@ -7,29 +7,29 @@ body {
 }
 
 header {
-    width: 80%;  /* Увеличиваем ширину элемента */
-    max-width: 1200px;  /* Ограничиваем максимальную ширину */
-    padding: 15px;  /* Увеличиваем отступы для большего размера */
+    width: 80%;
+    max-width: 1200px;
+    padding: 15px;
     background: rgba(0, 0, 0, 0.87);
     backdrop-filter: blur(25px);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     z-index: 1000;
-    border-radius: 0 0 15px 15px; /* Закругление только нижних углов */
-    margin: 0 auto;  /* Центрируем по горизонтали */
-    position: fixed; /* Фиксированное позиционирование */
-    top: 0; /* Прижимаем к верху */
+    border-radius: 0 0 15px 15px;
+    margin: 0 auto;
+    position: fixed;
+    top: 0;
     left: 0;
     right: 0;
 }
+
 .header-content {
     display: flex;
     align-items: center;
-    justify-content: space-between; /* Already present, ensures space distribution */
+    justify-content: space-between;
     width: 100%;
     margin: 0 auto;
 }
 
-/* Добавленные стили для логотипа */
 .header-logo {
     display: flex;
     align-items: center;
@@ -37,27 +37,18 @@ header {
 }
 
 .header-logo img {
-    height: 60px;  /* Увеличиваем размер логотипа */
+    height: 60px;
     width: auto;
     border-radius: 8px;
 }
 
-
 header form {
     display: flex;
     align-items: center;
-    margin-left: auto; /* This pushes the form to the right */
-	margin-right: 5px;
+    margin-left: auto;
+    margin-right: 5px;
 }
 
-header input[type="text"] {
-    padding: 10px 5px;
-    font-size: 16px;
-    border: 0.5px solid rgba(255, 255, 255, 0.34);
-    border-radius: 10px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #fff;
-}
 header input[type="text"] {
     padding: 15px 5px;
     font-size: 16px;
@@ -65,10 +56,11 @@ header input[type="text"] {
     border-radius: 999px;
     background-color: rgba(255, 255, 255, 0.1);
     color: #fff;
-    margin-right: 10px; /* Adds some space between input and button */
+    margin-right: 10px;
 }
+
 header button, .close-modal {
-  position: relative;
+    position: relative;
     display: inline-block;
     width: 50px;
     height: 50px;
@@ -83,44 +75,42 @@ header button, .close-modal {
 }
 
 header button:hover, .close-modal:hover {
-  animation: animate 8s linear infinite;
+    animation: animate 8s linear infinite;
 }
 
 header button:before, .close-modal:before {
-  content: "";
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  bottom: -5px;
-  left: -5px;
-  background: linear-gradient(90deg, #03a9f4, #f441a5, #ffeb3b, #03a9f4);
-  background-size: 400%;
-  border-radius: 40px;
-  opacity: 0;
-  transition: 0.5s;
-  z-index: -1;
+    content: "";
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    bottom: -5px;
+    left: -5px;
+    background: linear-gradient(90deg, #03a9f4, #f441a5, #ffeb3b, #03a9f4);
+    background-size: 400%;
+    border-radius: 40px;
+    opacity: 0;
+    transition: 0.5s;
+    z-index: -1;
 }
 
 header button:hover:before, .close-modal:hover:before {
-  filter: blur(20px);
-  opacity: 1;
-  animation: animate 8s linear infinite;
+    filter: blur(20px);
+    opacity: 1;
+    animation: animate 8s linear infinite;
 }
 
 @keyframes animate {
-  0% {
-    background-position: 0%;
-  }
-  100% {
-    background-position: 400%;
-  }
+    0% { background-position: 0%; }
+    100% { background-position: 400%; }
 }
+
 .search-button {
-  margin-left: -50px;
+    margin-left: -50px;
 }
+
 .close-modal {
-  float: right;
-  margin-left: 0;
+    float: right;
+    margin-left: 0;
 }
 
 main {
@@ -129,7 +119,7 @@ main {
 
 .section {
     margin-bottom: 4px;
-	margin-left: 20px;
+    margin-left: 20px;
 }
 
 .fullscreen-section {
@@ -144,13 +134,13 @@ main {
 }
 
 .fullscreen-container {
-    width: calc(100% - 40px); /* Уменьшаем ширину на 40px (по 20px с каждой стороны) */
-    height: calc(100% - 40px); /* Уменьшаем высоту на 40px (по 20px с каждой стороны) */
-    margin: 20px; /* Отступы со всех сторон по 20px */
+    width: calc(100% - 40px);
+    height: calc(100% - 40px);
+    margin: 20px;
     display: flex;
-    transition: transform 0.3s ease-in-out; /* Плавное изменение масштаба */
-    border-radius: 15px; /* Закругление со всех сторон */
-    overflow: hidden; /* Опционально, чтобы содержимое не выходило за границы */
+    transition: transform 0.3s ease-in-out;
+    border-radius: 15px;
+    overflow: hidden;
     position: relative;
 }
 
@@ -169,20 +159,22 @@ main {
 }
 
 .fullscreen-container:hover {
-    transform: scale(1.005); /* Увеличение размера при наведении (на 0.5%) */
+    transform: scale(1.005);
 }
 
 .fullscreen-container:hover::after {
-    opacity: 1; /* Показать эффект на фоне при наведении */
+    opacity: 1;
 }
 
 .fullscreen-slider .slider-button {
-    display: none; /* Скрытие кнопки внутри блока .new-releases */
+    display: none;
 }
+
 .header-logo {
-    user-select: none; /* Отключает выделение */
-    pointer-events: none; /* Запрещает взаимодействие */
+    user-select: none;
+    pointer-events: none;
 }
+
 .loading-screen {
     position: fixed;
     top: 0;
@@ -217,10 +209,6 @@ main {
     pointer-events: none;
 }
 
-/* Add your existing styles here */
-/* Rest of your CSS styles... */
-
-
 .fullscreen-tile {
     flex: 0 0 100%;
     height: 100%;
@@ -254,7 +242,6 @@ main {
     font-weight: 700;
 }
 
-
 .watch-button {
     display: inline-block;
     padding: 15px 60px;
@@ -270,11 +257,11 @@ main {
     transition: outline 0.3s ease, transform 0.2s ease;
     position: relative;
     backdrop-filter: blur(25px);
-	position: absolute; /* Изменено для позиционирования */
-    left: 0px; /* Отступ от левого края */
-    top: 50%; /* Центрирование по вертикали */
-	margin-top: 50px;
-	margin-bottom: 20px; /* Отступ снизу (20px) */
+    position: absolute;
+    left: 0px;
+    top: 50%;
+    margin-top: 50px;
+    margin-bottom: 20px;
 }
 
 .watch-button::after {
@@ -321,68 +308,54 @@ main {
     backdrop-filter: blur(8px);
 }
 
-/* Add the hover effect */
 .slider-button:hover {
-    transform: translateY(-50%) scale(1.1);  /* Slightly enlarge the button */
-    background: rgba(255, 255, 255, 0.35);  /* Change background color on hover */
+    transform: translateY(-50%) scale(1.1);
+    background: rgba(255, 255, 255, 0.35);
 }
 
-
-/* Default styles for the previous button */
 .slider-button.prev {
-  display: -ms-flexbox;
-  display: flex;
-  -ms-flex-align: center;
-  align-items: center;
-  -ms-flex-pack: center;
-  justify-content: center;
-  border: none;
-  border-radius: 8px;
-  background: none;
-  padding: 0;
-  top: 50%;  /* Vertically center the button */
-  left: 5px;  /* Fix it to the left with a 5px margin */
-  transform: translateY(-50%);
-  width: 50px;
-  height: 70px;
-  color: rgba(255, 255, 255, 0.78);
-  transition: transform 0.3s ease, background-color 0.3s ease;  /* Add smooth transitions */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    padding: 0;
+    top: 50%;
+    left: 5px;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 70px;
+    color: rgba(255, 255, 255, 0.78);
+    transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
-/* Hover effect for the previous button */
 .slider-button.prev:hover {
-  transform: translateY(-50%) scale(1.1);  /* Enlarge on hover */
-  background: rgb(0 0 0 / 35%);  /* Change background color on hover */
+    transform: translateY(-50%) scale(1.1);
+    background: rgb(0 0 0 / 35%);
 }
 
-/* Default styles for the next button */
 .slider-button.next {
-  display: -ms-flexbox;
-  display: flex;
-  -ms-flex-align: center;
-  align-items: center;
-  -ms-flex-pack: center;
-  justify-content: center;
-  border: none;
-  border-radius: 8px;
-  background: none;
-  padding: 0;
-  top: 50%;  /* Vertically center the button */
-  right: 5px;  /* Fix it to the right with a 5px margin */
-  transform: translateY(-50%);
-  width: 50px;
-  height: 70px;
-  color: rgba(255, 255, 255, 0.78);
-  transition: transform 0.3s ease, background-color 0.3s ease;  /* Add smooth transitions */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    padding: 0;
+    top: 50%;
+    right: 5px;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 70px;
+    color: rgba(255, 255, 255, 0.78);
+    transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
-/* Hover effect for the next button */
 .slider-button.next:hover {
-  transform: translateY(-50%) scale(1.1);  /* Enlarge on hover */
-  background: rgb(0 0 0 / 35%);  /* Change background color on hover */
+    transform: translateY(-50%) scale(1.1);
+    background: rgb(0 0 0 / 35%);
 }
-
-
 
 .movie-slider {
     position: relative;
@@ -402,14 +375,13 @@ main {
     margin: 8px 20px 0 8px;
     cursor: pointer;
     transition: transform 0.3s ease;
-    z-index: 2;  /* Ensure the tile itself is above the pseudo-element */
+    z-index: 2;
 }
 
 .movie-tile:hover {
     transform: scale(1.02);
 }
 
-/* Псевдо-элемент для размытого изображения */
 .movie-tile::before {
     content: "";
     position: absolute;
@@ -417,19 +389,18 @@ main {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('https://i.gifer.com/3ww9.gif');  /* Используем пустую строку, чтобы взять изображение из <img> */
+    background-image: url('https://i.gifer.com/3ww9.gif');
     background-size: cover;
     background-position: center;
-    filter: blur(25px);  /* Размытие */
-    transform: scale(0.7);  /* Увеличиваем изображение */
-    z-index: 1;  /* Псевдо-элемент находится под изображением */
-    opacity: 0;  /* Скрыто по умолчанию */
-    transition: opacity 0.5s ease;  /* Плавный переход */
+    filter: blur(25px);
+    transform: scale(0.7);
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.5s ease;
 }
 
-/* Когда мы наводим на .movie-tile, псевдо-элемент становится видимым */
 .movie-tile:hover::before {
-    opacity: 1;  /* Показываем размазанную версию изображения */
+    opacity: 1;
 }
 
 .movie-tile img {
@@ -438,14 +409,13 @@ main {
     border-radius: 15px;
     border: 1px solid #ffffff42;
     position: relative;
-    z-index: 1;  /* Изображение будет выше псевдо-элемента */
+    z-index: 1;
 }
 
 .movie-tile h3 {
     margin: 10px 0;
     font-size: 16px;
 }
-
 
 .fullscreen-slider .slider-button.prev,
 .fullscreen-slider .slider-button.next {
@@ -499,7 +469,6 @@ main {
     margin-bottom: 20px;
     border-radius: 10px;
 }
-
 
 #add-to-favorites,
 #close-modal {
@@ -632,27 +601,26 @@ main {
     display: flex;
     align-items: center;
     gap: 15px;
+    flex-wrap: wrap;
 }
 
-.landing-section .tmdb-logo {
+.landing-section .rating-span {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 15px;
+    color: white;
+    font-weight: bold;
+    font-family: 'BioRhyme Expanded', serif;
+    font-size: 1.2rem;
+}
+
+.landing-section .rating-logo {
     background: rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
     padding: 10px;
     border-radius: 8px;
-    max-width: 100px;
+    max-width: 80px;
     height: auto;
-}
-
-.landing-section .rating {
-    font-family: 'BioRhyme Expanded', serif;
-    font-weight: 800;
-    font-size: 1.2rem;
-    background: rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    padding: 1px 10px;
-    border-radius: 8px;
 }
 
 .landing-section .description {
@@ -693,7 +661,36 @@ footer p {
     font-size: 20px;
 }
 
-/*для мобильных устройств  типо на весь экран вроде как */
+.info-block {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.rating-span {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 15px;
+    color: white;
+    font-weight: bold;
+    font-family: 'BioRhyme Expanded', serif;
+    font-size: 1.2rem;
+}
+
+.rating-green { background-color: #28a745; }
+.rating-yellow { background-color: #d39e00; }
+.rating-red { background-color: #dc3545; }
+
+.rating-logo {
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    padding: 10px;
+    border-radius: 8px;
+    max-width: 80px;
+    height: auto;
+}
+
 @media (max-width: 768px) {
     .landing-section .container {
         width: 95%;
@@ -711,46 +708,57 @@ footer p {
     .header-logo img {
         height: 30px;
     }
-.kinobox_wrapper, 
-.kinobox_wrapper * {
-    font-family: 'Tenor Sans', sans-serif !important; /* Применение шрифта ко всем элементам */
-    all: unset; /* Сбрасывает все стили для дочерних элементов */
-    font-family: 'Tenor Sans', sans-serif !important; /* Снова задаёт шрифт */
-}
-.slider-container {
-    display: flex;
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    gap: 20px;
-    padding: 10px 0;
-}
 
-.movie-tile {
-    flex: 0 0 auto;
-    width: 200px;
-    margin-right: 20px;
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    opacity: 1;
-}
+    .info-block {
+        gap: 10px;
+    }
 
-.movie-tile:hover {
-    transform: scale(1.05);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-}
+    .rating-span {
+        font-size: 1rem;
+    }
 
+    .rating-logo {
+        max-width: 60px;
+    }
 
-.movie-slider:hover .slider-button {
-    opacity: 1;
-}
+    .kinobox_wrapper, 
+    .kinobox_wrapper * {
+        font-family: 'Tenor Sans', sans-serif !important;
+        all: unset;
+        font-family: 'Tenor Sans', sans-serif !important;
+    }
 
-.slider-button:hover {
-    transform: translateY(-50%) scale(1.1);
-    background-color: rgba(255, 255, 255, 0.4);
-}
-.movie-tile {
-    transition: opacity 0.3s ease-in-out;
-}
+    .slider-container {
+        display: flex;
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        gap: 20px;
+        padding: 10px 0;
+    }
 
+    .movie-tile {
+        flex: 0 0 auto;
+        width: 200px;
+        margin-right: 20px;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 1;
+    }
 
+    .movie-tile:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
 
+    .movie-slider:hover .slider-button {
+        opacity: 1;
+    }
+
+    .slider-button:hover {
+        transform: translateY(-50%) scale(1.1);
+        background-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .movie-tile {
+        transition: opacity 0.3s ease-in-out;
+    }
 }
