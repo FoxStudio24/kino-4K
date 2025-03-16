@@ -209,6 +209,8 @@ async function displayMovieInfo(data, movie, logoData) {
     
     const title = data.title || data.name;
     const overview = data.overview || 'Описание отсутствует.';
+    const tmdbRating = data.vote_average ? data.vote_average.toFixed(1) : 'N/A';
+    const tmdbRatingClass = tmdbRating >= 7 ? 'rating-green' : tmdbRating >= 5 ? 'rating-yellow' : tmdbRating !== 'N/A' ? 'rating-red' : '';
     const ruLogo = logoData.logos?.find(logo => logo.iso_639_1 === 'ru');
     const enLogo = logoData.logos?.find(logo => logo.iso_639_1 === 'en');
     const logo = ruLogo || enLogo;
@@ -219,75 +221,17 @@ async function displayMovieInfo(data, movie, logoData) {
 
     const mediaType = data.media_type || (data.first_air_date ? 'tv' : 'movie');
 
-    // API ключи
-    const OMDb_API_KEY = '135b8794';
-    const KINOPOISK_API_KEY = 'db70ce2d-cc98-4f5e-a5d5-bfcb03b25f9c';
-
-    // Рейтинг TMDB
-    const tmdbRating = data.vote_average ? data.vote_average.toFixed(1) : 'N/A';
-    const tmdbRatingClass = tmdbRating >= 7 ? 'rating-green' : tmdbRating >= 5 ? 'rating-yellow' : tmdbRating !== 'N/A' ? 'rating-red' : '';
-    console.log(`TMDB Rating for ${title}: ${tmdbRating}`);
-
-    // Получение рейтинга IMDb через OMDb API
-    let imdbRating = 'N/A';
-    let imdbRatingClass = '';
-    if (data.imdb_id) {
-        try {
-            const imdbResponse = await fetch(`http://www.omdbapi.com/?i=${data.imdb_id}&apikey=${OMDb_API_KEY}`);
-            const imdbData = await imdbResponse.json();
-            imdbRating = imdbData.imdbRating || 'N/A';
-            imdbRatingClass = imdbRating >= 7 ? 'rating-green' : imdbRating >= 5 ? 'rating-yellow' : imdbRating !== 'N/A' ? 'rating-red' : '';
-            console.log(`IMDb Rating for ${title}: ${imdbRating}, IMDb ID: ${data.imdb_id}`);
-        } catch (error) {
-            console.error('Ошибка загрузки IMDb рейтинга:', error);
-        }
-    } else {
-        console.log(`IMDb ID отсутствует для ${title}`);
-    }
-
-    // Получение рейтинга Кинопоиска
-    let kinopoiskRating = 'N/A';
-    let kinopoiskRatingClass = '';
-    try {
-        let kpResponse;
-        if (data.imdb_id) {
-            kpResponse = await fetch(`https://kinopoiskapiunofficial.tech/api/v2.2/films?imdbId=${data.imdb_id}`, {
-                headers: { 'X-API-KEY': KINOPOISK_API_KEY }
-            });
-        } else {
-            kpResponse = await fetch(`https://kinopoiskapiunofficial.tech/api/v2.2/films?tmdbId=${data.id}`, {
-                headers: { 'X-API-KEY': KINOPOISK_API_KEY }
-            });
-        }
-        const kpData = await kpResponse.json();
-        if (kpData && kpData.ratingKinopoisk) {
-            kinopoiskRating = kpData.ratingKinopoisk.toFixed(1);
-            kinopoiskRatingClass = kinopoiskRating >= 7 ? 'rating-green' : kinopoiskRating >= 5 ? 'rating-yellow' : 'rating-red';
-            console.log(`Kinopoisk Rating for ${title}: ${kinopoiskRating}`);
-        } else {
-            console.log(`Kinopoisk данные не найдены для ${title}`);
-        }
-    } catch (error) {
-        console.error('Ошибка загрузки Кинопоиск рейтинга:', error);
-    }
-
     modalContent.innerHTML = `
         <img src="${data.poster_path ? IMG_URL + data.poster_path : 'icons/poster.png'}" alt="${title}" class="movie-poster">
         ${titleHTML}
         <p class="overview-text">${overview}</p>
         <div class="info-block">
-            <span class="rating-span tmdb-rating ${tmdbRatingClass}">${tmdbRating}</span>
-            <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg" 
-                 alt="TMDB Logo" 
-                 class="tmdb-logo rating-logo">
-            <span class="rating-span kinopoisk-rating ${kinopoiskRatingClass}">${kinopoiskRating}</span>
-            <img src="https://st.kp.yandex.net/images/kp_logo.png" 
-                 alt="Kinopoisk Logo" 
-                 class="kinopoisk-logo rating-logo">
-            <span class="rating-span imdb-rating ${imdbRatingClass}">${imdbRating}</span>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/6/69/IMDB_Logo_2016.svg" 
-                 alt="IMDb Logo" 
-                 class="imdb-logo rating-logo">
+            <div class="rating-container">
+                <span class="rating-span tmdb-rating ${tmdbRatingClass}">${tmdbRating}</span>
+                <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg" 
+                     alt="TMDB Logo" 
+                     class="tmdb-logo rating-logo">
+            </div>
         </div>
         <div id="kinobox-player" class="video-player"></div>
         <button class="player-button">Плеер 1</button>
@@ -428,63 +372,15 @@ Promise.all([
     hideLoadingScreen();
 });
 
-// Заполнение рейтингов в .landing-section
+// Заполнение рейтинга TMDB в .landing-section
 async function updateLandingSectionRatings() {
     const tmdbId = 197; // ID сериала "Silo"
-    const OMDb_API_KEY = '135b8794';
-    const KINOPOISK_API_KEY = 'db70ce2d-cc98-4f5e-a5d5-bfcb03b25f9c';
-
-    // TMDB рейтинг
     const tmdbResponse = await fetch(`${BASE_URL}/tv/${tmdbId}?api_key=${API_KEY}&language=ru-RU`);
     const tmdbData = await tmdbResponse.json();
     const tmdbRating = tmdbData.vote_average ? tmdbData.vote_average.toFixed(1) : 'N/A';
     const tmdbRatingClass = tmdbRating >= 7 ? 'rating-green' : tmdbRating >= 5 ? 'rating-yellow' : tmdbRating !== 'N/A' ? 'rating-red' : '';
     document.querySelector('.landing-section .tmdb-rating').textContent = tmdbRating;
     document.querySelector('.landing-section .tmdb-rating').classList.add(tmdbRatingClass);
-    console.log(`Landing TMDB Rating for Silo: ${tmdbRating}`);
-
-    // IMDb рейтинг
-    let imdbRating = 'N/A';
-    let imdbRatingClass = '';
-    if (tmdbData.imdb_id) {
-        const imdbResponse = await fetch(`http://www.omdbapi.com/?i=${tmdbData.imdb_id}&apikey=${OMDb_API_KEY}`);
-        const imdbData = await imdbResponse.json();
-        imdbRating = imdbData.imdbRating || 'N/A';
-        imdbRatingClass = imdbRating >= 7 ? 'rating-green' : imdbRating >= 5 ? 'rating-yellow' : imdbRating !== 'N/A' ? 'rating-red' : '';
-        document.querySelector('.landing-section .imdb-rating').textContent = imdbRating;
-        document.querySelector('.landing-section .imdb-rating').classList.add(imdbRatingClass);
-        console.log(`Landing IMDb Rating for Silo: ${imdbRating}, IMDb ID: ${tmdbData.imdb_id}`);
-    } else {
-        console.log('Landing IMDb ID отсутствует для Silo');
-    }
-
-    // Кинопоиск рейтинг
-    let kinopoiskRating = 'N/A';
-    let kinopoiskRatingClass = '';
-    try {
-        let kpResponse;
-        if (tmdbData.imdb_id) {
-            kpResponse = await fetch(`https://kinopoiskapiunofficial.tech/api/v2.2/films?imdbId=${tmdbData.imdb_id}`, {
-                headers: { 'X-API-KEY': KINOPOISK_API_KEY }
-            });
-        } else {
-            kpResponse = await fetch(`https://kinopoiskapiunofficial.tech/api/v2.2/films?tmdbId=${tmdbId}`, {
-                headers: { 'X-API-KEY': KINOPOISK_API_KEY }
-            });
-        }
-        const kpData = await kpResponse.json();
-        if (kpData && kpData.ratingKinopoisk) {
-            kinopoiskRating = kpData.ratingKinopoisk.toFixed(1);
-            kinopoiskRatingClass = kinopoiskRating >= 7 ? 'rating-green' : kinopoiskRating >= 5 ? 'rating-yellow' : 'rating-red';
-            document.querySelector('.landing-section .kinopoisk-rating').textContent = kinopoiskRating;
-            document.querySelector('.landing-section .kinopoisk-rating').classList.add(kinopoiskRatingClass);
-            console.log(`Landing Kinopoisk Rating for Silo: ${kinopoiskRating}`);
-        } else {
-            console.log('Landing Kinopoisk данные не найдены для Silo');
-        }
-    } catch (error) {
-        console.error('Ошибка загрузки Кинопоиск рейтинга для Landing:', error);
-    }
 }
 
 // Вызов функции при загрузке страницы
