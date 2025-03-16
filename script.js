@@ -31,7 +31,7 @@ const searchResultsModal = document.getElementById('search-results');
 const closeSearchButton = document.querySelector('#search-results .close-modal');
 const searchResultsGrid = document.getElementById('search-results-grid');
 
-// Динамические стили
+// Динамические стили с Montserrat
 const style = document.createElement('style');
 style.textContent = `
     .movie-logo { max-width: 300px; max-height: 200px; margin-bottom: 20px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5)); }
@@ -41,7 +41,7 @@ style.textContent = `
     .player-button:hover { background-color: #444; }
     .video-player { width: 100%; height: 500px; max-width: 800px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
     .video-player iframe { width: 100%; height: 100%; border: none; border-radius: 10px; }
-    .rating-span { display: inline-block; padding: 5px 10px; border-radius: 15px; color: white; font-weight: bold; }
+    .rating-span { display: inline-block; padding: 5px 10px; border-radius: 15px; color: white; font-weight: bold; font-family: 'Montserrat', sans-serif; }
     .rating-green { background-color: #28a745; }
     .rating-yellow { background-color: #d39e00; }
     .rating-red { background-color: #dc3545; }
@@ -361,9 +361,9 @@ searchForm.onsubmit = (event) => {
 // Инициализация
 Promise.all([
     fetchMoviesWithRetry(`/movie/now_playing?api_key=${API_KEY}&language=ru-RU`, newReleasesGrid, true),
-    fetchMoviesWithRetry(`/movie/popular?api_key=${API_KEY}&language=ru-RU`, popularMoviesGrid),
-    fetchMoviesWithRetry(`/tv/top_rated?api_key=${API_KEY}&language=ru-RU`, topRatedTvGrid),
-    fetchMoviesWithRetry(`/discover/movie?api_key=${API_KEY}&with_genres=16&language=ru-RU`, animatedMoviesGrid)
+    fetchMoviesWithRetry(`/discover/movie?api_key=${API_KEY}&language=ru-RU&sort_by=popularity.desc&vote_average.gte=7&vote_count.gte=100`, popularMoviesGrid),
+    fetchMoviesWithRetry(`/discover/tv?api_key=${API_KEY}&language=ru-RU&sort_by=vote_average.desc&vote_average.gte=8&vote_count.gte=100`, topRatedTvGrid),
+    fetchMoviesWithRetry(`/discover/movie?api_key=${API_KEY}&language=ru-RU&with_genres=16&vote_average.gte=7&vote_count.gte=50`, animatedMoviesGrid)
 ]).then(() => {
     initialLoadComplete = true;
     hideLoadingScreen();

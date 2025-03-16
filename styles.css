@@ -1,5 +1,5 @@
 body {
-    font-family: 'Tenor Sans', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     margin: 0;
     padding: 0;
     color: #fff;
@@ -238,7 +238,7 @@ main {
 .fullscreen-title {
     font-size: 36px;
     margin-bottom: 20px;
-    font-family: 'Tenor Sans', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-weight: 700;
 }
 
@@ -582,7 +582,7 @@ main {
     display: flex;
     flex-direction: column;
     gap: 30px;
-    font-family: 'Tenor Sans', sans-serif;
+    font-family: 'Montserrat', sans-serif;
 }
 
 .landing-section .header {
@@ -620,7 +620,7 @@ main {
     border-radius: 15px;
     color: white;
     font-weight: bold;
-    font-family: 'BioRhyme Expanded', serif;
+    font-family: 'Montserrat', sans-serif;
     font-size: 1.2rem;
 }
 
@@ -633,7 +633,7 @@ main {
     background: linear-gradient(to right, rgb(1, 4, 9),rgb(0, 11, 15), transparent);  
     padding: 10px;
     border-radius: 15px;
-    font-family: 'Tenor Sans', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-size: 20px;
 }
 
@@ -663,7 +663,7 @@ footer {
 footer p {
     color: #fff;
     margin: 0;
-    font-family: 'Tenor Sans', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-size: 20px;
 }
 
@@ -690,7 +690,7 @@ footer p {
     border-radius: 15px;
     color: white;
     font-weight: bold;
-    font-family: 'BioRhyme Expanded', serif;
+    font-family: 'Montserrat', sans-serif;
     font-size: 1.2rem;
 }
 
@@ -701,15 +701,14 @@ footer p {
 .rating-logo {
     max-width: 80px;
     height: auto;
-	height: auto;
     transform: translateX(-90px);
 }
+
 @media (max-width: 768px) {
     .rating-logo {
         display: none;
     }
 
-@media (max-width: 768px) {
     .landing-section .container {
         width: 95%;
         padding: 10px;
@@ -747,9 +746,9 @@ footer p {
 
     .kinobox_wrapper, 
     .kinobox_wrapper * {
-        font-family: 'Tenor Sans', sans-serif !important;
+        font-family: 'Montserrat', sans-serif !important;
         all: unset;
-        font-family: 'Tenor Sans', sans-serif !important;
+        font-family: 'Montserrat', sans-serif !important;
     }
 
     .slider-container {
