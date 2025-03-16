@@ -35,10 +35,6 @@ header {
     align-items: center;
     margin-right: 20px;
 }
-@media (max-width: 768px) {
-    .header-logo {
-        display: none; /* Полностью скрывает логотип */
-    }
 
 .header-logo img {
     height: 60px;  /* Увеличиваем размер логотипа */
