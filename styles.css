@@ -7,29 +7,29 @@ body {
 }
 
 header {
-    width: 80%;
-    max-width: 1200px;
-    padding: 15px;
+    width: 80%;  /* Увеличиваем ширину элемента */
+    max-width: 1200px;  /* Ограничиваем максимальную ширину */
+    padding: 15px;  /* Увеличиваем отступы для большего размера */
     background: rgba(0, 0, 0, 0.87);
     backdrop-filter: blur(25px);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     z-index: 1000;
-    border-radius: 0 0 15px 15px;
-    margin: 0 auto;
-    position: fixed;
-    top: 0;
+    border-radius: 0 0 15px 15px; /* Закругление только нижних углов */
+    margin: 0 auto;  /* Центрируем по горизонтали */
+    position: fixed; /* Фиксированное позиционирование */
+    top: 0; /* Прижимаем к верху */
     left: 0;
     right: 0;
 }
-
 .header-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    width: 100%;
+    width: 100%;  /* На всю ширину родительского элемента */
     margin: 0 auto;
 }
 
+/* Добавленные стили для логотипа */
 .header-logo {
     display: flex;
     align-items: center;
@@ -37,10 +37,11 @@ header {
 }
 
 .header-logo img {
-    height: 60px;
+    height: 60px;  /* Увеличиваем размер логотипа */
     width: auto;
     border-radius: 8px;
 }
+
 
 header form {
     display: flex;
@@ -57,59 +58,65 @@ header input[type="text"] {
 }
 
 header button, .close-modal {
-    position: relative;
-    display: inline-block;
-    border: none;
-    width: 50px;
-    height: 50px;
-    text-align: center;
-    line-height: 60px;
-    font-size: 24px;
-    color: #fff;
-    background: linear-gradient(90deg, #03a9f4, #f441a5, #ffeb3b, #03a9f4);
-    background-size: 400%;
-    border-radius: 30px;
-    cursor: pointer;
-    z-index: 1;
+  position: relative;
+  display: inline-block;
+  border: 0.5px solid rgba(255, 255, 255, 0.34);
+  width: 50px;
+  height: 50px;
+  text-align: center;
+  line-height: 60px;
+  font-size: 24px;
+  color: #fff;
+  text-transform: uppercase;
+  text-decoration: none;
+  font-family: sans-serif;
+  background: linear-gradient(90deg, #03a9f4, #f441a5, #ffeb3b, #03a9f4);
+  background-size: 400%;
+  border-radius: 30px;
+  border: none;
+  cursor: pointer;
+  z-index: 1;
 }
 
 header button:hover, .close-modal:hover {
-    animation: animate 8s linear infinite;
+  animation: animate 8s linear infinite;
 }
 
 header button:before, .close-modal:before {
-    content: "";
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    bottom: -5px;
-    left: -5px;
-    background: linear-gradient(90deg, #03a9f4, #f441a5, #ffeb3b, #03a9f4);
-    background-size: 400%;
-    border-radius: 40px;
-    opacity: 0;
-    transition: 0.5s;
-    z-index: -1;
+  content: "";
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  bottom: -5px;
+  left: -5px;
+  background: linear-gradient(90deg, #03a9f4, #f441a5, #ffeb3b, #03a9f4);
+  background-size: 400%;
+  border-radius: 40px;
+  opacity: 0;
+  transition: 0.5s;
+  z-index: -1;
 }
 
 header button:hover:before, .close-modal:hover:before {
-    filter: blur(20px);
-    opacity: 1;
-    animation: animate 8s linear infinite;
+  filter: blur(20px);
+  opacity: 1;
+  animation: animate 8s linear infinite;
 }
 
 @keyframes animate {
-    0% { background-position: 0%; }
-    100% { background-position: 400%; }
+  0% {
+    background-position: 0%;
+  }
+  100% {
+    background-position: 400%;
+  }
 }
-
 .search-button {
-    margin-left: -25px;
+  margin-left: -25px;
 }
-
 .close-modal {
-    float: right;
-    margin-left: 0;
+  float: right;
+  margin-left: 0;
 }
 
 main {
@@ -118,7 +125,7 @@ main {
 
 .section {
     margin-bottom: 4px;
-    margin-left: 20px;
+	margin-left: 20px;
 }
 
 .fullscreen-section {
@@ -133,13 +140,13 @@ main {
 }
 
 .fullscreen-container {
-    width: calc(100% - 40px);
-    height: calc(100% - 40px);
-    margin: 20px;
+    width: calc(100% - 40px); /* Уменьшаем ширину на 40px (по 20px с каждой стороны) */
+    height: calc(100% - 40px); /* Уменьшаем высоту на 40px (по 20px с каждой стороны) */
+    margin: 20px; /* Отступы со всех сторон по 20px */
     display: flex;
-    transition: transform 0.3s ease-in-out;
-    border-radius: 15px;
-    overflow: hidden;
+    transition: transform 0.3s ease-in-out; /* Плавное изменение масштаба */
+    border-radius: 15px; /* Закругление со всех сторон */
+    overflow: hidden; /* Опционально, чтобы содержимое не выходило за границы */
     position: relative;
 }
 
@@ -158,22 +165,20 @@ main {
 }
 
 .fullscreen-container:hover {
-    transform: scale(1.005);
+    transform: scale(1.005); /* Увеличение размера при наведении (на 0.5%) */
 }
 
 .fullscreen-container:hover::after {
-    opacity: 1;
+    opacity: 1; /* Показать эффект на фоне при наведении */
 }
 
 .fullscreen-slider .slider-button {
-    display: none;
+    display: none; /* Скрытие кнопки внутри блока .new-releases */
 }
-
 .header-logo {
-    user-select: none;
-    pointer-events: none;
+    user-select: none; /* Отключает выделение */
+    pointer-events: none; /* Запрещает взаимодействие */
 }
-
 .loading-screen {
     position: fixed;
     top: 0;
@@ -208,6 +213,10 @@ main {
     pointer-events: none;
 }
 
+/* Add your existing styles here */
+/* Rest of your CSS styles... */
+
+
 .fullscreen-tile {
     flex: 0 0 100%;
     height: 100%;
@@ -241,6 +250,7 @@ main {
     font-weight: 700;
 }
 
+
 .watch-button {
     display: inline-block;
     padding: 15px 60px;
@@ -254,12 +264,13 @@ main {
     cursor: pointer;
     overflow: hidden;
     transition: outline 0.3s ease, transform 0.2s ease;
-    position: absolute;
-    left: 0px;
-    top: 50%;
-    margin-top: 50px;
-    margin-bottom: 20px;
+    position: relative;
     backdrop-filter: blur(25px);
+	position: absolute; /* Изменено для позиционирования */
+    left: 0px; /* Отступ от левого края */
+    top: 50%; /* Центрирование по вертикали */
+	margin-top: 50px;
+	margin-bottom: 20px; /* Отступ снизу (20px) */
 }
 
 .watch-button::after {
@@ -306,54 +317,68 @@ main {
     backdrop-filter: blur(8px);
 }
 
+/* Add the hover effect */
 .slider-button:hover {
-    transform: translateY(-50%) scale(1.1);
-    background: rgba(255, 255, 255, 0.35);
+    transform: translateY(-50%) scale(1.1);  /* Slightly enlarge the button */
+    background: rgba(255, 255, 255, 0.35);  /* Change background color on hover */
 }
 
+
+/* Default styles for the previous button */
 .slider-button.prev {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    border-radius: 8px;
-    background: none;
-    padding: 0;
-    top: 50%;
-    left: 5px;
-    transform: translateY(-50%);
-    width: 50px;
-    height: 70px;
-    color: rgba(255, 255, 255, 0.78);
-    transition: transform 0.3s ease, background-color 0.3s ease;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-align: center;
+  align-items: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  padding: 0;
+  top: 50%;  /* Vertically center the button */
+  left: 5px;  /* Fix it to the left with a 5px margin */
+  transform: translateY(-50%);
+  width: 50px;
+  height: 70px;
+  color: rgba(255, 255, 255, 0.78);
+  transition: transform 0.3s ease, background-color 0.3s ease;  /* Add smooth transitions */
 }
 
+/* Hover effect for the previous button */
 .slider-button.prev:hover {
-    transform: translateY(-50%) scale(1.1);
-    background: rgb(0 0 0 / 35%);
+  transform: translateY(-50%) scale(1.1);  /* Enlarge on hover */
+  background: rgb(0 0 0 / 35%);  /* Change background color on hover */
 }
 
+/* Default styles for the next button */
 .slider-button.next {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    border-radius: 8px;
-    background: none;
-    padding: 0;
-    top: 50%;
-    right: 5px;
-    transform: translateY(-50%);
-    width: 50px;
-    height: 70px;
-    color: rgba(255, 255, 255, 0.78);
-    transition: transform 0.3s ease, background-color 0.3s ease;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-align: center;
+  align-items: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  padding: 0;
+  top: 50%;  /* Vertically center the button */
+  right: 5px;  /* Fix it to the right with a 5px margin */
+  transform: translateY(-50%);
+  width: 50px;
+  height: 70px;
+  color: rgba(255, 255, 255, 0.78);
+  transition: transform 0.3s ease, background-color 0.3s ease;  /* Add smooth transitions */
 }
 
+/* Hover effect for the next button */
 .slider-button.next:hover {
-    transform: translateY(-50%) scale(1.1);
-    background: rgb(0 0 0 / 35%);
+  transform: translateY(-50%) scale(1.1);  /* Enlarge on hover */
+  background: rgb(0 0 0 / 35%);  /* Change background color on hover */
 }
+
+
 
 .movie-slider {
     position: relative;
@@ -363,25 +388,24 @@ main {
 
 .slider-container {
     display: flex;
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    gap: 20px;
-    padding: 10px 0;
+    transition: transform 0.3s ease-in-out;
 }
 
 .movie-tile {
+    position: relative;
     flex: 0 0 auto;
     width: 200px;
     margin: 8px 20px 0 8px;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    opacity: 1;
+    transition: transform 0.3s ease;
+    z-index: 2;  /* Ensure the tile itself is above the pseudo-element */
 }
 
 .movie-tile:hover {
-    transform: scale(1.05);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    transform: scale(1.02);
 }
 
+/* Псевдо-элемент для размытого изображения */
 .movie-tile::before {
     content: "";
     position: absolute;
@@ -389,18 +413,19 @@ main {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('https://i.gifer.com/3ww9.gif');
+    background-image: url('https://i.gifer.com/3ww9.gif');  /* Используем пустую строку, чтобы взять изображение из <img> */
     background-size: cover;
     background-position: center;
-    filter: blur(25px);
-    transform: scale(0.7);
-    z-index: 1;
-    opacity: 0;
-    transition: opacity 0.5s ease;
+    filter: blur(25px);  /* Размытие */
+    transform: scale(0.7);  /* Увеличиваем изображение */
+    z-index: 1;  /* Псевдо-элемент находится под изображением */
+    opacity: 0;  /* Скрыто по умолчанию */
+    transition: opacity 0.5s ease;  /* Плавный переход */
 }
 
+/* Когда мы наводим на .movie-tile, псевдо-элемент становится видимым */
 .movie-tile:hover::before {
-    opacity: 1;
+    opacity: 1;  /* Показываем размазанную версию изображения */
 }
 
 .movie-tile img {
@@ -409,12 +434,18 @@ main {
     border-radius: 15px;
     border: 1px solid #ffffff42;
     position: relative;
-    z-index: 1;
+    z-index: 1;  /* Изображение будет выше псевдо-элемента */
 }
 
 .movie-tile h3 {
     margin: 10px 0;
     font-size: 16px;
+}
+
+
+.fullscreen-slider .slider-button.prev,
+.fullscreen-slider .slider-button.next {
+    display: none;
 }
 
 .modal {
@@ -464,6 +495,7 @@ main {
     margin-bottom: 20px;
     border-radius: 10px;
 }
+
 
 #add-to-favorites,
 #close-modal {
@@ -535,10 +567,18 @@ main {
     margin-bottom: 20px;
 }
 
-.search-icon,
+.search-icon {
+    width: 30px;
+    height: 30px;
+}
+
 .favorites-icon {
     width: 30px;
     height: 30px;
+}
+
+.menu_list ul {
+    display: none;
 }
 
 .landing-section {
@@ -593,6 +633,7 @@ main {
 .landing-section .tmdb-logo {
     background: rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     padding: 10px;
     border-radius: 8px;
     max-width: 100px;
@@ -605,12 +646,13 @@ main {
     font-size: 1.2rem;
     background: rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     padding: 1px 10px;
     border-radius: 8px;
 }
 
 .landing-section .description {
-    background: linear-gradient(to right, rgb(1, 4, 9), rgb(0, 11, 15), transparent);
+    background: linear-gradient(to right, rgb(1, 4, 9),rgb(0, 11, 15), transparent);  
     padding: 10px;
     border-radius: 15px;
     font-family: 'Tenor Sans', sans-serif;
@@ -622,6 +664,15 @@ main {
     min-width: 300px;
     max-width: 800px;
     margin: 0 auto;
+}
+
+.landing-section .plyr {
+    --plyr-color-main: #1ac266;
+    border-radius: 10px;
+    box-shadow: 0px 10px 30px rgba(1, 1, 1, 1);
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
 }
 
 footer {
@@ -638,151 +689,64 @@ footer p {
     font-size: 20px;
 }
 
-/* Медиа-запросы для мобильных устройств */
+/*для мобильных устройств  типо на весь экран вроде как */
 @media (max-width: 768px) {
-    header {
-        width: 100%;
+    .landing-section .container {
+        width: 95%;
         padding: 10px;
-        border-radius: 0;
     }
-
-    .header-content {
-        flex-direction: column;
-        gap: 10px;
+    
+    .landing-section .content {
+        max-width: 100%;
+    }
+    
+    .landing-section .player-wrapper {
+        max-width: 100%;
     }
 
     .header-logo img {
-        height: 40px;
+        height: 30px;
     }
+.kinobox_wrapper, 
+.kinobox_wrapper * {
+    font-family: 'Tenor Sans', sans-serif !important; /* Применение шрифта ко всем элементам */
+    all: unset; /* Сбрасывает все стили для дочерних элементов */
+    font-family: 'Tenor Sans', sans-serif !important; /* Снова задаёт шрифт */
+}
+.slider-container {
+    display: flex;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: 20px;
+    padding: 10px 0;
+}
 
-    header input[type="text"] {
-        width: 100%;
-        padding: 8px;
-        font-size: 14px;
-    }
+.movie-tile {
+    flex: 0 0 auto;
+    width: 200px;
+    margin-right: 20px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 1;
+}
 
-    header button {
-        width: 40px;
-        height: 40px;
-        line-height: 40px;
-    }
+.movie-tile:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
 
-    .search-button {
-        margin-left: 0;
-    }
 
-    main {
-        margin-top: 60px;
-    }
+.movie-slider:hover .slider-button {
+    opacity: 1;
+}
 
-    .section {
-        margin-left: 10px;
-        margin-right: 10px;
-    }
+.slider-button:hover {
+    transform: translateY(-50%) scale(1.1);
+    background-color: rgba(255, 255, 255, 0.4);
+}
+.movie-tile {
+    transition: opacity 0.3s ease-in-out;
+}
 
-    .fullscreen-section {
-        height: 400px;
-    }
 
-    .fullscreen-container {
-        width: 100%;
-        margin: 0;
-        border-radius: 0;
-    }
 
-    .fullscreen-title {
-        font-size: 24px;
-        margin-bottom: 15px;
-    }
-
-    .watch-button {
-        padding: 10px 40px;
-        font-size: 16px;
-        margin-top: 20px;
-    }
-
-    .movie-tile {
-        width: 150px;
-        margin: 5px;
-    }
-
-    .slider-container {
-        gap: 10px;
-        padding: 5px 0;
-    }
-
-    .slider-button {
-        padding: 15px 10px;
-        font-size: 16px;
-    }
-
-    .slider-button.prev,
-    .slider-button.next {
-        width: 40px;
-        height: 60px;
-    }
-
-    .modal-content {
-        width: 90%;
-        max-width: none;
-        margin: 10px;
-        padding: 15px;
-    }
-
-    .movie-poster {
-        max-width: 150px;
-        float: none;
-        margin: 0 auto 15px;
-        display: block;
-    }
-
-    .movie-title-logo {
-        display: block;
-        margin: 0 auto 15px;
-        max-width: 250px;
-    }
-
-    .landing-section {
-        min-height: auto;
-        padding: 10px 0;
-    }
-
-    .landing-section .container {
-        width: 100%;
-        padding: 10px;
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .landing-section .content {
-        max-width: 100%;
-        padding: 10px;
-        gap: 15px;
-    }
-
-    .landing-section .logo {
-        max-width: 100%;
-    }
-
-    .landing-section .description {
-        font-size: 16px;
-    }
-
-    .landing-section .player-wrapper {
-        max-width: 100%;
-        min-width: 0;
-    }
-
-    .landing-section .player-wrapper iframe {
-        width: 100%;
-        height: 200px;
-    }
-
-    footer {
-        font-size: 16px;
-    }
-
-    footer p {
-        font-size: 16px;
-    }
 }
