@@ -1,8 +1,11 @@
 // Константы
-const API_KEY = '06936145fe8e20be28b02e26b55d3ce6';
-const BASE_URL = 'https://api.themoviedb.org/3';
+const TMDB_API_KEY = '06936145fe8e20be28b02e26b55d3ce6'; // Ваш ключ TMDB
+const KINOPOISK_API_KEY = 'db70ce2d-cc98-4f5e-a5d5-bfcb03b25f9c'; // Ваш ключ Kinopoisk API
+const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+const KINOPOISK_BASE_URL = 'https://kinopoiskapiunofficial.tech/api/v2.2';
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 const BACKDROP_URL = 'https://image.tmdb.org/t/p/original';
+const VIBIX_API_TOKEN = '8506|eOybyt3t9bUnwdwexHVh6wLNFOyFiq8AQuMEDvfde091d426'; // Ваш токен Vibix
 
 // Переменные состояния
 let initialLoadComplete = false;
@@ -38,9 +41,11 @@ const style = document.createElement('style');
 style.textContent = `
     .movie-logo { max-width: 300px; max-height: 200px; margin-bottom: 20px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5)); }
     .movie-title-logo { max-width: 300px; max-height: 120px; margin-bottom: 15px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5)); }
-    .button-container { display: flex; justify-content: flex-end; }
-    .player-button { float: right; padding: 7px 25px; background-color: #333; color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; margin-top: 7px; }
-    .player-button:hover { background-color: #444; }
+    .button-container { display: flex; justify-content: flex-end; margin-top: 10px; }
+    .player-button { padding: 7px 25px; background-color: rgba(100, 100, 100, 0.5); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; margin-left: 10px; backdrop-filter: blur(5px); }
+    .player-button:hover { background-color: rgba(120, 120, 120, 0.7); }
+    .player-button.active { background-color: #666; backdrop-filter: none; }
+    .player-button.hidden { display: none; }
     .video-player { width: 100%; height: 500px; max-width: 800px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
     .video-player iframe { width: 100%; height: 100%; border: none; border-radius: 10px; }
     .rating-span { display: inline-block; padding: 5px 10px; border-radius: 15px; color: white; font-weight: bold; font-family: 'Montserrat', sans-serif; }
@@ -55,6 +60,35 @@ style.textContent = `
     .modal-age-rating { font-size: 12px; color: #fff; background-color: #555; padding: 2px 6px; border-radius: 10px; margin-top: 5px; margin-bottom: 10px; display: inline-block; }
 `;
 document.head.appendChild(style);
+
+// Функция для получения Kinopoisk ID по названию
+async function getKinopoiskIdByTitle(title, year) {
+    try {
+        const response = await fetch(`${KINOPOISK_BASE_URL}/films?type=ALL&keyword=${encodeURIComponent(title)}`, {
+            headers: {
+                'X-API-KEY': KINOPOISK_API_KEY,
+                'Content-Type': 'application/json'
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`Ошибка HTTP: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('Kinopoisk поиск:', data);
+
+        const result = data.items.find(item => {
+            const matchesTitle = item.nameRu.toLowerCase().includes(title.toLowerCase()) || 
+                                item.nameEn?.toLowerCase().includes(title.toLowerCase());
+            const matchesYear = year ? item.year === year : true;
+            return matchesTitle && matchesYear;
+        });
+
+        return result ? result.kinopoiskId : null;
+    } catch (error) {
+        console.error('Ошибка при поиске Kinopoisk ID:', error);
+        return null;
+    }
+}
 
 // Функции управления слайдером
 function initializeSliderControls(sectionId, grid) {
@@ -113,7 +147,7 @@ function checkAllLoaded() {
 // Получение возрастного рейтинга с fallback на US
 async function getAgeRating(movie) {
     const mediaType = movie.first_air_date ? 'tv' : 'movie';
-    const url = `${BASE_URL}/${mediaType}/${movie.id}/${mediaType === 'movie' ? 'release_dates' : 'content_ratings'}?api_key=${API_KEY}`;
+    const url = `${TMDB_BASE_URL}/${mediaType}/${movie.id}/${mediaType === 'movie' ? 'release_dates' : 'content_ratings'}?api_key=${TMDB_API_KEY}`;
     try {
         const response = await fetch(url);
         const data = await response.json();
@@ -129,10 +163,10 @@ async function getAgeRating(movie) {
             rating = ruRating?.rating || usRating?.rating || 'N/A';
         }
 
-        console.log(`Movie: ${movie.title || movie.name}, Age Rating: ${rating}`);
+        console.log(`Фильм: ${movie.title || movie.name}, Возрастной рейтинг: ${rating}`);
         return rating;
     } catch (error) {
-        console.error('Error fetching age rating:', error);
+        console.error('Ошибка при получении возрастного рейтинга:', error);
         return 'N/A';
     }
 }
@@ -148,7 +182,7 @@ async function createMovieTile(movie, isFullscreen = false) {
         content.className = 'fullscreen-content';
 
         try {
-            const response = await fetch(`${BASE_URL}/movie/${movie.id}/images?api_key=${API_KEY}`);
+            const response = await fetch(`${TMDB_BASE_URL}/movie/${movie.id}/images?api_key=${TMDB_API_KEY}`);
             const data = await response.json();
             const ruLogo = data.logos.find(logo => logo.iso_639_1 === 'ru');
             const enLogo = data.logos.find(logo => logo.iso_639_1 === 'en');
@@ -167,7 +201,7 @@ async function createMovieTile(movie, isFullscreen = false) {
                 content.appendChild(title);
             }
         } catch (error) {
-            console.error('Error fetching movie logos:', error);
+            console.error('Ошибка при получении логотипов фильма:', error);
             const title = document.createElement('h2');
             title.className = 'fullscreen-title';
             title.textContent = movie.title || movie.name;
@@ -199,9 +233,9 @@ async function createMovieTile(movie, isFullscreen = false) {
 
 // Загрузка фильмов
 function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries = 3) {
-    return fetch(BASE_URL + endpoint)
+    return fetch(TMDB_BASE_URL + endpoint)
         .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
+            if (!response.ok) throw new Error('Сеть ответила ошибкой');
             return response.json();
         })
         .then(async data => {
@@ -213,9 +247,9 @@ function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries
             checkAllLoaded();
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Ошибка:', error);
             if (retries > 0) {
-                console.log(`Retrying... (${retries} attempts left)`);
+                console.log(`Повторная попытка... (осталось ${retries} попыток)`);
                 return fetchMoviesWithRetry(endpoint, container, isFullscreen, retries - 1);
             }
             container.innerHTML = '<p>Не удалось загрузить фильмы. Пожалуйста, попробуйте позже.</p>';
@@ -229,8 +263,8 @@ async function showMovieInfo(movie) {
     movieInfoModal.style.display = 'flex';
 
     const mediaType = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
-    const fetchUrl = `${BASE_URL}/${mediaType}/${movie.id}?api_key=${API_KEY}&language=ru-RU`;
-    const logoUrl = `${BASE_URL}/${mediaType}/${movie.id}/images?api_key=${API_KEY}`;
+    const fetchUrl = `${TMDB_BASE_URL}/${mediaType}/${movie.id}?api_key=${TMDB_API_KEY}&language=ru-RU`;
+    const logoUrl = `${TMDB_BASE_URL}/${mediaType}/${movie.id}/images?api_key=${TMDB_API_KEY}`;
 
     try {
         const [movieData, logoData] = await Promise.all([
@@ -239,7 +273,7 @@ async function showMovieInfo(movie) {
         ]);
         displayMovieInfo(movieData, movie, logoData);
     } catch (error) {
-        console.error('Error fetching movie data:', error);
+        console.error('Ошибка при получении данных о фильме:', error);
         displayMovieInfoError();
     }
 }
@@ -263,7 +297,37 @@ async function displayMovieInfo(data, movie, logoData) {
         : `<h2 class="movie-title">${title}</h2>`;
 
     const mediaType = data.media_type || (data.first_air_date ? 'tv' : 'movie');
-    const ageRating = await getAgeRating(movie); // Получаем возрастной рейтинг для модального окна
+    const ageRating = await getAgeRating(movie);
+    const releaseYear = data.release_date ? parseInt(data.release_date.split('-')[0]) : data.first_air_date ? parseInt(data.first_air_date.split('-')[0]) : null;
+
+    // Получение Kinopoisk ID
+    let kpId = null;
+    let vibixAvailable = false;
+    try {
+        const externalIdsUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/external_ids?api_key=${TMDB_API_KEY}`;
+        const externalIdsResponse = await fetch(externalIdsUrl);
+        const externalIdsData = await externalIdsResponse.json();
+        kpId = externalIdsData.kinopoisk_id || null;
+        console.log(`TMDB ID: ${data.id}, Kinopoisk ID из TMDB: ${kpId}`, externalIdsData);
+
+        if (!kpId) {
+            kpId = await getKinopoiskIdByTitle(title, releaseYear);
+            console.log(`Kinopoisk ID из поиска по названию: ${kpId}`);
+        }
+
+        if (kpId) {
+            const vibixResponse = await fetch(`https://vibix.org/api/v1/publisher/videos/kp/${kpId}`, {
+                headers: {
+                    'Authorization': `Bearer ${VIBIX_API_TOKEN}`
+                }
+            });
+            const vibixData = await vibixResponse.json();
+            vibixAvailable = vibixResponse.ok && vibixData.iframe_url;
+            console.log('Vibix данные:', vibixData);
+        }
+    } catch (error) {
+        console.error('Ошибка при получении Kinopoisk ID или данных Vibix:', error);
+    }
 
     modalContent.innerHTML = `
         <img src="${data.poster_path ? IMG_URL + data.poster_path : 'icons/poster.png'}" alt="${title}" class="movie-poster">
@@ -278,8 +342,14 @@ async function displayMovieInfo(data, movie, logoData) {
                      class="tmdb-logo rating-logo">
             </div>
         </div>
-        <div id="kinobox-player" class="video-player"></div>
-        <button class="player-button">Плеер 1</button>
+        <div id="video-player-container">
+            <div id="kinobox-player" class="video-player"></div>
+            <div id="vibix-player" class="video-player" style="display: none;"></div>
+        </div>
+        <div class="button-container">
+            <button class="player-button active" id="kinobox-button">Плеер 1</button>
+            <button class="player-button ${!vibixAvailable ? 'hidden' : ''}" id="vibix-button">Плеер 2</button>
+        </div>
         <button id="add-to-favorites">
             <img src="${isFavorite(data) ? 'icons/delete.png' : 'icons/add.png'}" alt="${isFavorite(data) ? 'Удалить из избранного' : 'Добавить в избранное'}" class="favorites-icon"/>
         </button>
@@ -288,6 +358,7 @@ async function displayMovieInfo(data, movie, logoData) {
         </button>
     `;
 
+    // Инициализация Kinobox плеера
     const kinobox = new Kinobox('#kinobox-player', {
         search: { tmdb: data.id, type: mediaType === 'tv' ? 'serial' : 'movie' },
         players: { 
@@ -307,6 +378,63 @@ async function displayMovieInfo(data, movie, logoData) {
     } catch (error) {
         console.error('Ошибка инициализации Kinobox:', error);
         document.getElementById('kinobox-player').innerHTML = '<p>Не удалось загрузить плеер. Попробуйте позже.</p>';
+    }
+
+    // Интеграция Vibix плеера
+    const kinoboxPlayer = document.getElementById('kinobox-player');
+    const vibixPlayer = document.getElementById('vibix-player');
+    const kinoboxButton = document.getElementById('kinobox-button');
+    const vibixButton = document.getElementById('vibix-button');
+
+    async function loadVibixPlayer() {
+        if (!kpId) {
+            vibixPlayer.innerHTML = '<p>Kinopoisk ID не найден</p>';
+            return;
+        }
+
+        try {
+            const response = await fetch(`https://vibix.org/api/v1/publisher/videos/kp/${kpId}`, {
+                headers: {
+                    'Authorization': `Bearer ${VIBIX_API_TOKEN}`
+                }
+            });
+            const vibixData = await response.json();
+            if (response.ok && vibixData.iframe_url) {
+                vibixPlayer.innerHTML = `
+                    <iframe src="${vibixData.iframe_url}" 
+                            width="100%" 
+                            height="100%" 
+                            frameborder="0" 
+                            allowfullscreen 
+                            allow="autoplay *; fullscreen *"></iframe>
+                `;
+            } else {
+                vibixPlayer.innerHTML = '<p>Видео не найдено на Vibix</p>';
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки плеера Vibix:', error);
+            vibixPlayer.innerHTML = '<p>Ошибка загрузки плеера Vibix</p>';
+        }
+    }
+
+    // Логика переключения плееров
+    kinoboxButton.onclick = () => {
+        kinoboxPlayer.style.display = 'block';
+        vibixPlayer.style.display = 'none';
+        kinoboxButton.classList.add('active');
+        vibixButton.classList.remove('active');
+    };
+
+    if (vibixButton) {
+        vibixButton.onclick = () => {
+            kinoboxPlayer.style.display = 'none';
+            vibixPlayer.style.display = 'block';
+            vibixButton.classList.add('active');
+            kinoboxButton.classList.remove('active');
+            if (!vibixPlayer.children.length) {
+                loadVibixPlayer();
+            }
+        };
     }
 
     document.getElementById('add-to-favorites').onclick = () => toggleFavorite(data);
@@ -369,7 +497,7 @@ function closeFavorites() {
 
 // Поиск фильмов
 function searchMovies(query) {
-    const searchUrl = `${BASE_URL}/search/multi?api_key=${API_KEY}&language=ru-RU&query=${encodeURIComponent(query)}`;
+    const searchUrl = `${TMDB_BASE_URL}/search/multi?api_key=${TMDB_API_KEY}&language=ru-RU&query=${encodeURIComponent(query)}`;
     fetch(searchUrl)
         .then(response => response.json())
         .then(async data => {
@@ -381,7 +509,7 @@ function searchMovies(query) {
             searchResultsModal.style.display = 'flex';
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Ошибка:', error);
             searchResultsGrid.innerHTML = '<p>Не удалось выполнить поиск. Пожалуйста, попробуйте позже.</p>';
             searchResultsModal.style.display = 'flex';
         });
@@ -404,24 +532,24 @@ searchForm.onsubmit = (event) => {
 
 // Инициализация
 Promise.all([
-    fetchMoviesWithRetry(`/movie/now_playing?api_key=${API_KEY}&language=ru-RU`, newReleasesGrid, true),
-    fetchMoviesWithRetry(`/discover/movie?api_key=${API_KEY}&language=ru-RU&sort_by=popularity.desc&vote_average.gte=7&vote_count.gte=100`, popularMoviesGrid),
-    fetchMoviesWithRetry(`/discover/tv?api_key=${API_KEY}&language=ru-RU&sort_by=vote_average.desc&vote_average.gte=8&vote_count.gte=100`, topRatedTvGrid),
-    fetchMoviesWithRetry(`/discover/movie?api_key=${API_KEY}&language=ru-RU&with_genres=16&vote_average.gte=7&vote_count.gte=50`, animatedMoviesGrid),
-    fetchMoviesWithRetry(`/discover/movie?api_key=${API_KEY}&language=ru-RU&with_origin_country=RU&primary_release_date.gte=2023-01-01&vote_average.gte=6&vote_count.gte=20&sort_by=vote_average.desc`, russianReleasesGrid),
-    fetchMoviesWithRetry(`/discover/tv?api_key=${API_KEY}&language=ru-RU&with_origin_country=RU&first_air_date.gte=2023-01-01&vote_average.gte=6&vote_count.gte=20&sort_by=vote_average.desc`, russianReleasesGrid)
+    fetchMoviesWithRetry(`/movie/now_playing?api_key=${TMDB_API_KEY}&language=ru-RU`, newReleasesGrid, true),
+    fetchMoviesWithRetry(`/discover/movie?api_key=${TMDB_API_KEY}&language=ru-RU&sort_by=popularity.desc&vote_average.gte=7&vote_count.gte=100`, popularMoviesGrid),
+    fetchMoviesWithRetry(`/discover/tv?api_key=${TMDB_API_KEY}&language=ru-RU&sort_by=vote_average.desc&vote_average.gte=8&vote_count.gte=100`, topRatedTvGrid),
+    fetchMoviesWithRetry(`/discover/movie?api_key=${TMDB_API_KEY}&language=ru-RU&with_genres=16&vote_average.gte=7&vote_count.gte=50`, animatedMoviesGrid),
+    fetchMoviesWithRetry(`/discover/movie?api_key=${TMDB_API_KEY}&language=ru-RU&with_origin_country=RU&primary_release_date.gte=2023-01-01&vote_average.gte=6&vote_count.gte=20&sort_by=vote_average.desc`, russianReleasesGrid),
+    fetchMoviesWithRetry(`/discover/tv?api_key=${TMDB_API_KEY}&language=ru-RU&with_origin_country=RU&first_air_date.gte=2023-01-01&vote_average.gte=6&vote_count.gte=20&sort_by=vote_average.desc`, russianReleasesGrid)
 ]).then(() => {
     initialLoadComplete = true;
     hideLoadingScreen();
 }).catch(error => {
-    console.error('Error in initial load:', error);
+    console.error('Ошибка при начальной загрузке:', error);
     hideLoadingScreen();
 });
 
 // Заполнение рейтинга TMDB в .landing-section
 async function updateLandingSectionRatings() {
     const tmdbId = 197; // ID сериала "Silo"
-    const tmdbResponse = await fetch(`${BASE_URL}/tv/${tmdbId}?api_key=${API_KEY}&language=ru-RU`);
+    const tmdbResponse = await fetch(`${TMDB_BASE_URL}/tv/${tmdbId}?api_key=${TMDB_API_KEY}&language=ru-RU`);
     const tmdbData = await tmdbResponse.json();
     const tmdbRating = tmdbData.vote_average ? tmdbData.vote_average.toFixed(1) : 'N/A';
     const tmdbRatingClass = tmdbRating >= 7 ? 'rating-green' : tmdbRating >= 5 ? 'rating-yellow' : tmdbRating !== 'N/A' ? 'rating-red' : '';
