@@ -630,7 +630,7 @@ main {
 }
 
 .landing-section .description {
-    background: linear-gradient(to right, rgb(1, 4, 9),rgb(0, 11, 15), transparent);  
+    background: linear-gradient(to right, rgb(1, 4, 9), rgb(0, 11, 15), transparent);  
     padding: 10px;
     border-radius: 15px;
     font-family: 'Montserrat', sans-serif;
@@ -653,6 +653,14 @@ main {
     aspect-ratio: 16/9;
 }
 
+.player-wrapper iframe {
+    width: 90%;
+    height: 300px;
+    border-radius: 15px;
+    display: block;
+    margin: 0 auto;
+}
+
 footer {
     background: linear-gradient(to right, rgb(1, 4, 9), rgb(0, 11, 15), transparent);
     padding: 10px;
@@ -660,11 +668,33 @@ footer {
     font-size: 20px;
 }
 
-footer p {
-    color: #fff;
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-content p {
     margin: 0;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 20px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.footer-content a {
+    color: #00b7ff;
+    text-decoration: none;
+}
+
+.footer-content a:hover {
+    text-decoration: underline;
+}
+
+.tmdb-logo-footer {
+    width: 70px;
+    height: 20px;
 }
 
 .info-block {
@@ -757,7 +787,7 @@ footer p {
         gap: 20px;
         padding: 10px 0;
     }
-
+    
     .movie-tile {
         flex: 0 0 auto;
         width: 200px;
