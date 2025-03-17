@@ -259,7 +259,7 @@ main {
     backdrop-filter: blur(25px);
     position: absolute;
     left: 0px;
-    top: 50%;
+    top: 30%;
     margin-top: 50px;
     margin-bottom: 20px;
 }
