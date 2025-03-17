@@ -42,9 +42,9 @@ style.textContent = `
     .movie-logo { max-width: 300px; max-height: 200px; margin-bottom: 20px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5)); }
     .movie-title-logo { max-width: 300px; max-height: 120px; margin-bottom: 15px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5)); }
     .button-container { display: flex; justify-content: flex-end; margin-top: 10px; }
-    .player-button { padding: 7px 25px; background-color: rgba(100, 100, 100, 0.5); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; margin-left: 10px; backdrop-filter: blur(5px); }
+    .player-button { padding: 7px 25px; background-color: rgba(255 255 255 / 17%); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; margin-left: 10px; backdrop-filter: blur(5px); }
     .player-button:hover { background-color: rgba(120, 120, 120, 0.7); }
-    .player-button.active { background-color: #666; backdrop-filter: none; }
+    .player-button.active { background-color: #272727; backdrop-filter: none; }
     .player-button.hidden { display: none; }
     .video-player { width: 100%; height: 500px; max-width: 800px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
     .video-player iframe { width: 100%; height: 100%; border: none; border-radius: 10px; }
