@@ -16,7 +16,6 @@ header {
     z-index: 1000;
     border-radius: 0 0 15px 15px;
     margin: 0 auto;
-    position: fixed;
     top: 0;
     left: 0;
     right: 0;
@@ -181,7 +180,8 @@ main {
     left: 0;
     width: 100%;
     height: 100vh;
-    background: #000000;
+    background: #000000bd;
+    backdrop-filter: blur(25px);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -229,15 +229,30 @@ main {
 
 .fullscreen-content {
     position: absolute;
-    bottom: 60px;
-    left: 25px;
-    right: 50px;
+    left: 20px;
+    bottom: 20px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 10px;
+    width: 300px;
+    padding-top: 60px; /* Отступ сверху для рейтингов */
+}
+
+.fullscreen-ratings-top {
+    position: absolute;
+    top: 20px;
+    left: 0px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     z-index: 2;
 }
 
 .fullscreen-title {
     font-size: 36px;
-    margin-bottom: 20px;
+    margin: 0;
     font-family: 'Montserrat', sans-serif;
     font-weight: 700;
 }
@@ -257,11 +272,6 @@ main {
     transition: outline 0.3s ease, transform 0.2s ease;
     position: relative;
     backdrop-filter: blur(25px);
-    position: absolute;
-    left: 0px;
-    top: 30%;
-    margin-top: 50px;
-    margin-bottom: 20px;
 }
 
 .watch-button::after {

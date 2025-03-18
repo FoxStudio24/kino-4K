@@ -1,13 +1,11 @@
 // Константы
-const TMDB_API_KEY = '06936145fe8e20be28b02e26b55d3ce6';
-const KINOPOISK_API_KEY = 'db70ce2d-cc98-4f5e-a5d5-bfcb03b25f9c';
+const TMDB_API_KEY = '06936145fe8e20be28b02e26b55d3ce6'; // Ваш ключ TMDB
+const KINOPOISK_API_KEY = 'db70ce2d-cc98-4f5e-a5d5-bfcb03b25f9c'; // Ваш ключ Kinopoisk API
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const KINOPOISK_BASE_URL = 'https://kinopoiskapiunofficial.tech/api/v2.2';
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 const BACKDROP_URL = 'https://image.tmdb.org/t/p/original';
-const VIBIX_API_TOKEN = '8506|eOybyt3t9bUnwdwexHVh6wLNFOyFiq8AQuMEDvfde091d426';
-const LUMEX_API_TOKEN = 'c9368010a6ff29b02795712d3dd8fdab';
-const LUMEX_CLIENT_ID = 'GbaXAhTWVSqL';
+const VIBIX_API_TOKEN = '8506|eOybyt3t9bUnwdwexHVh6wLNFOyFiq8AQuMEDvfde091d426'; // Ваш токен Vibix
 
 // Переменные состояния
 let initialLoadComplete = false;
@@ -72,14 +70,19 @@ async function getKinopoiskIdByTitle(title, year) {
                 'Content-Type': 'application/json'
             }
         });
-        if (!response.ok) throw new Error(`Ошибка HTTP: ${response.status}`);
+        if (!response.ok) {
+            throw new Error(`Ошибка HTTP: ${response.status}`);
+        }
         const data = await response.json();
+        console.log('Kinopoisk поиск:', data);
+
         const result = data.items.find(item => {
             const matchesTitle = item.nameRu.toLowerCase().includes(title.toLowerCase()) || 
                                 item.nameEn?.toLowerCase().includes(title.toLowerCase());
             const matchesYear = year ? item.year === year : true;
             return matchesTitle && matchesYear;
         });
+
         return result ? result.kinopoiskId : null;
     } catch (error) {
         console.error('Ошибка при поиске Kinopoisk ID:', error);
@@ -141,7 +144,7 @@ function checkAllLoaded() {
     }
 }
 
-// Получение возрастного рейтинга
+// Получение возрастного рейтинга с fallback на US
 async function getAgeRating(movie) {
     const mediaType = movie.first_air_date ? 'tv' : 'movie';
     const url = `${TMDB_BASE_URL}/${mediaType}/${movie.id}/${mediaType === 'movie' ? 'release_dates' : 'content_ratings'}?api_key=${TMDB_API_KEY}`;
@@ -149,6 +152,7 @@ async function getAgeRating(movie) {
         const response = await fetch(url);
         const data = await response.json();
         let rating = 'N/A';
+
         if (mediaType === 'movie') {
             const ruRating = data.results?.find(r => r.iso_3166_1 === 'RU');
             const usRating = data.results?.find(r => r.iso_3166_1 === 'US');
@@ -158,6 +162,8 @@ async function getAgeRating(movie) {
             const usRating = data.results?.find(r => r.iso_3166_1 === 'US');
             rating = ruRating?.rating || usRating?.rating || 'N/A';
         }
+
+        console.log(`Фильм: ${movie.title || movie.name}, Возрастной рейтинг: ${rating}`);
         return rating;
     } catch (error) {
         console.error('Ошибка при получении возрастного рейтинга:', error);
@@ -175,6 +181,21 @@ async function createMovieTile(movie, isFullscreen = false) {
         const content = document.createElement('div');
         content.className = 'fullscreen-content';
 
+        // Получение возрастного рейтинга и рейтинга TMDB
+        const ageRating = await getAgeRating(movie);
+        const tmdbRating = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
+        const tmdbRatingClass = tmdbRating >= 7 ? 'rating-green' : tmdbRating >= 5 ? 'rating-yellow' : tmdbRating !== 'N/A' ? 'rating-red' : '';
+
+        // Создание контейнера для рейтингов над логотипом
+        const ratingsContainerTop = document.createElement('div');
+        ratingsContainerTop.className = 'ratings-container fullscreen-ratings-top';
+        ratingsContainerTop.innerHTML = `
+            ${ageRating !== 'N/A' ? `<span class="age-rating">${ageRating}</span>` : ''}
+            ${tmdbRating !== 'N/A' ? `<span class="tile-rating-span ${tmdbRatingClass}">${tmdbRating}</span>` : ''}
+        `;
+        content.appendChild(ratingsContainerTop);
+
+        // Логотип или название
         try {
             const response = await fetch(`${TMDB_BASE_URL}/movie/${movie.id}/images?api_key=${TMDB_API_KEY}`);
             const data = await response.json();
@@ -206,6 +227,7 @@ async function createMovieTile(movie, isFullscreen = false) {
         watchButton.className = 'watch-button';
         watchButton.innerHTML = '▶ Смотреть';
         content.appendChild(watchButton);
+
         tile.appendChild(content);
     } else {
         const ageRating = await getAgeRating(movie);
@@ -294,34 +316,33 @@ async function displayMovieInfo(data, movie, logoData) {
     const ageRating = await getAgeRating(movie);
     const releaseYear = data.release_date ? parseInt(data.release_date.split('-')[0]) : data.first_air_date ? parseInt(data.first_air_date.split('-')[0]) : null;
 
+    // Получение Kinopoisk ID
     let kpId = null;
     let vibixAvailable = false;
-    let lumexAvailable = false;
     try {
         const externalIdsUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/external_ids?api_key=${TMDB_API_KEY}`;
         const externalIdsResponse = await fetch(externalIdsUrl);
         const externalIdsData = await externalIdsResponse.json();
         kpId = externalIdsData.kinopoisk_id || null;
+        console.log(`TMDB ID: ${data.id}, Kinopoisk ID из TMDB: ${kpId}`, externalIdsData);
 
         if (!kpId) {
             kpId = await getKinopoiskIdByTitle(title, releaseYear);
+            console.log(`Kinopoisk ID из поиска по названию: ${kpId}`);
         }
 
         if (kpId) {
             const vibixResponse = await fetch(`https://vibix.org/api/v1/publisher/videos/kp/${kpId}`, {
-                headers: { 'Authorization': `Bearer ${VIBIX_API_TOKEN}` }
+                headers: {
+                    'Authorization': `Bearer ${VIBIX_API_TOKEN}`
+                }
             });
             const vibixData = await vibixResponse.json();
             vibixAvailable = vibixResponse.ok && vibixData.iframe_url;
-
-            const lumexResponse = await fetch(`https://portal.lumex.host/api/short?api_token=${LUMEX_API_TOKEN}&kinopoisk_id=${kpId}`, {
-                headers: { 'X-Client-Id': LUMEX_CLIENT_ID }
-            });
-            const lumexData = await lumexResponse.json();
-            lumexAvailable = lumexResponse.ok && lumexData.result && lumexData.data.length > 0 && lumexData.data[0].iframe_src;
+            console.log('Vibix данные:', vibixData);
         }
     } catch (error) {
-        console.error('Ошибка при получении данных плееров:', error);
+        console.error('Ошибка при получении Kinopoisk ID или данных Vibix:', error);
     }
 
     modalContent.innerHTML = `
@@ -340,12 +361,10 @@ async function displayMovieInfo(data, movie, logoData) {
         <div id="video-player-container">
             <div id="kinobox-player" class="video-player"></div>
             <div id="vibix-player" class="video-player" style="display: none;"></div>
-            <div id="lumex-player" class="video-player" style="display: none;"></div>
         </div>
         <div class="button-container">
             <button class="player-button active" id="kinobox-button">Плеер 1</button>
             <button class="player-button ${!vibixAvailable ? 'hidden' : ''}" id="vibix-button">Плеер 2</button>
-            <button class="player-button ${!lumexAvailable ? 'hidden' : ''}" id="lumex-button">Плеер 3</button>
         </div>
         <button id="add-to-favorites">
             <img src="${isFavorite(data) ? 'icons/delete.png' : 'icons/add.png'}" alt="${isFavorite(data) ? 'Удалить из избранного' : 'Добавить в избранное'}" class="favorites-icon"/>
@@ -355,6 +374,7 @@ async function displayMovieInfo(data, movie, logoData) {
         </button>
     `;
 
+    // Инициализация Kinobox плеера
     const kinobox = new Kinobox('#kinobox-player', {
         search: { tmdb: data.id, type: mediaType === 'tv' ? 'serial' : 'movie' },
         players: { 
@@ -376,21 +396,23 @@ async function displayMovieInfo(data, movie, logoData) {
         document.getElementById('kinobox-player').innerHTML = '<p>Не удалось загрузить плеер. Попробуйте позже.</p>';
     }
 
+    // Интеграция Vibix плеера
     const kinoboxPlayer = document.getElementById('kinobox-player');
     const vibixPlayer = document.getElementById('vibix-player');
-    const lumexPlayer = document.getElementById('lumex-player');
     const kinoboxButton = document.getElementById('kinobox-button');
     const vibixButton = document.getElementById('vibix-button');
-    const lumexButton = document.getElementById('lumex-button');
 
     async function loadVibixPlayer() {
         if (!kpId) {
             vibixPlayer.innerHTML = '<p>Kinopoisk ID не найден</p>';
             return;
         }
+
         try {
             const response = await fetch(`https://vibix.org/api/v1/publisher/videos/kp/${kpId}`, {
-                headers: { 'Authorization': `Bearer ${VIBIX_API_TOKEN}` }
+                headers: {
+                    'Authorization': `Bearer ${VIBIX_API_TOKEN}`
+                }
             });
             const vibixData = await response.json();
             if (response.ok && vibixData.iframe_url) {
@@ -411,64 +433,23 @@ async function displayMovieInfo(data, movie, logoData) {
         }
     }
 
-    async function loadLumexPlayer() {
-        if (!kpId) {
-            lumexPlayer.innerHTML = '<p>Kinopoisk ID не найден</p>';
-            return;
-        }
-        try {
-            const response = await fetch(`https://portal.lumex.host/api/short?api_token=${LUMEX_API_TOKEN}&kinopoisk_id=${kpId}`, {
-                headers: { 'X-Client-Id': LUMEX_CLIENT_ID }
-            });
-            const lumexData = await response.json();
-            if (response.ok && lumexData.result && lumexData.data.length > 0 && lumexData.data[0].iframe_src) {
-                lumexPlayer.innerHTML = `
-                    <iframe src="${lumexData.data[0].iframe_src}" 
-                            width="100%" 
-                            height="100%" 
-                            frameborder="0" 
-                            allowfullscreen 
-                            allow="autoplay *; fullscreen *"></iframe>
-                `;
-            } else {
-                lumexPlayer.innerHTML = '<p>Видео не найдено на Lumex</p>';
-            }
-        } catch (error) {
-            console.error('Ошибка загрузки плеера Lumex:', error);
-            lumexPlayer.innerHTML = '<p>Ошибка загрузки плеера Lumex</p>';
-        }
-    }
-
+    // Логика переключения плееров
     kinoboxButton.onclick = () => {
         kinoboxPlayer.style.display = 'block';
         vibixPlayer.style.display = 'none';
-        lumexPlayer.style.display = 'none';
         kinoboxButton.classList.add('active');
         vibixButton.classList.remove('active');
-        lumexButton.classList.remove('active');
     };
 
     if (vibixButton) {
         vibixButton.onclick = () => {
             kinoboxPlayer.style.display = 'none';
             vibixPlayer.style.display = 'block';
-            lumexPlayer.style.display = 'none';
             vibixButton.classList.add('active');
             kinoboxButton.classList.remove('active');
-            lumexButton.classList.remove('active');
-            if (!vibixPlayer.children.length) loadVibixPlayer();
-        };
-    }
-
-    if (lumexButton) {
-        lumexButton.onclick = () => {
-            kinoboxPlayer.style.display = 'none';
-            vibixPlayer.style.display = 'none';
-            lumexPlayer.style.display = 'block';
-            lumexButton.classList.add('active');
-            kinoboxButton.classList.remove('active');
-            vibixButton.classList.remove('active');
-            if (!lumexPlayer.children.length) loadLumexPlayer();
+            if (!vibixPlayer.children.length) {
+                loadVibixPlayer();
+            }
         };
     }
 
@@ -583,7 +564,7 @@ Promise.all([
 
 // Заполнение рейтинга TMDB в .landing-section
 async function updateLandingSectionRatings() {
-    const tmdbId = 197;
+    const tmdbId = 197; // ID сериала "Silo"
     const tmdbResponse = await fetch(`${TMDB_BASE_URL}/tv/${tmdbId}?api_key=${TMDB_API_KEY}&language=ru-RU`);
     const tmdbData = await tmdbResponse.json();
     const tmdbRating = tmdbData.vote_average ? tmdbData.vote_average.toFixed(1) : 'N/A';
@@ -592,4 +573,5 @@ async function updateLandingSectionRatings() {
     document.querySelector('.landing-section .tmdb-rating').classList.add(tmdbRatingClass);
 }
 
+// Вызов функции при загрузке страницы
 document.addEventListener('DOMContentLoaded', updateLandingSectionRatings);
