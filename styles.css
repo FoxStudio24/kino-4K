@@ -473,7 +473,7 @@ main {
 }
 
 .movie-poster {
-    max-width: 200px;
+    max-width: 180px;
     float: left;
     margin-right: 20px;
     margin-bottom: 20px;
@@ -742,6 +742,96 @@ footer {
     max-width: 80px;
     height: auto;
     transform: translateX(-90px);
+}
+
+/* Стили для кнопки и списка актеров */
+.actors-button-container {
+    text-align: right;
+    margin-top: 10px;
+}
+
+.actors-button {
+    padding: 5px 15px;
+    background-color: rgba(255, 255, 255, 0.17);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    backdrop-filter: blur(5px);
+	margin-top: -25px;
+}
+
+.actors-button:hover {
+    background-color: rgba(120, 120, 120, 0.7);
+    transform: scale(1.05);
+}
+
+.actors-list {
+    display: none;
+    margin-top: 20px;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 10px;
+    max-height: 0;
+    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease-in-out;
+    opacity: 0;
+}
+
+.actors-list.active {
+    display: block;
+    max-height: 0px;
+    opacity: 1;
+	backdrop-filter: blur(10px);
+	background-color: rgba(255, 255, 255, 0.17);
+	padding: 8px;
+	border-radius: 15px;
+}
+
+.actors-list::-webkit-scrollbar {
+    height: 1px;
+}
+
+.actors-list::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 99px;
+}
+
+.actors-list::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+.actor-item {
+    display: inline-block;
+    text-align: center;
+    width: 120px;
+    margin-right: 15px;
+    vertical-align: top;
+}
+
+.actor-item img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 99px;
+    border: 1px solid #ffffff69;
+}
+
+.actor-item p {
+    color: white;
+    margin: 5px 0 0;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    white-space: normal;
+    word-break: break-word;
+}
+.age-rating-container {
+    margin-top: 10px;
+}
+.tmdb-rating-container {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
 }
 
 @media (max-width: 768px) {
