@@ -53,11 +53,32 @@ style.textContent = `
     .rating-green { background-color: #28a745; }
     .rating-yellow { background-color: #d39e00; }
     .rating-red { background-color: #dc3545; }
-    .overview-text { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
+    .overview-text { 
+        display: -webkit-box; 
+        -webkit-line-clamp: 5; 
+        -webkit-box-orient: vertical; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+        max-height: 150px; 
+        font-family: 'Montserrat', sans-serif; 
+        font-size: 14px; 
+        line-height: 1.5; 
+    }
     .movie-tile { position: relative; }
     .age-rating { font-size: 12px; color: #fff; background-color: #555; padding: 2px 6px; border-radius: 10px; margin-right: 5px; }
-    .ratings-container { display: flex; align-items: center; margin-top: 5px; }
-    .modal-age-rating { font-size: 12px; color: #fff; background-color: #555; padding: 2px 6px; border-radius: 10px; margin-top: 5px; margin-bottom: 10px; display: inline-block; }
+    .ratings-container { display: flex; align-items: center; margin-top: 5px; gap: 10px; }
+    .modal-age-rating { font-size: 12px; color: #fff; background-color: #555; padding: 2px 9px; border-radius: 10px; }
+    .actors-button-container { text-align: right; margin-top: 10px; }
+    .actors-button { padding: 7px 25px; background-color: rgba(255 255 255 / 17%); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; backdrop-filter: blur(5px); }
+    .actors-button:hover { background-color: rgba(120, 120, 120, 0.7); }
+    .actors-list { display: none; margin-top: 20px; overflow-x: auto; white-space: nowrap; padding-bottom: 10px; transition: all 0.3s ease-in-out; max-height: 0; }
+    .actors-list.active { display: block; max-height: 248px; }
+    .actors-list::-webkit-scrollbar { height: 8px; }
+    .actors-list::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.3); border-radius: 4px; }
+    .actors-list::-webkit-scrollbar-track { background-color: transparent; }
+    .actor-item { display: inline-block; text-align: center; width: 120px; margin-right: 15px; vertical-align: top; }
+    .actor-item img { width: 80px; height: 80px; object-fit: cover; border-radius: 99px; border: 1px solid #ffffff52; }
+    .actor-item p { color: white; margin: 5px 0 0; font-family: 'Montserrat', sans-serif; font-size: 14px; white-space: normal; word-break: break-word; }
 `;
 document.head.appendChild(style);
 
@@ -146,20 +167,17 @@ function checkAllLoaded() {
 
 // Маппинг рейтингов TMDB в числовые категории
 const ratingMap = {
-    // Фильмы (US)
     'G': '0+',
     'PG': '6+',
     'PG-13': '12+',
     'R': '16+',
     'NC-17': '18+',
-    // Сериалы (US TV ratings)
     'TV-Y': '0+',
     'TV-Y7': '6+',
     'TV-G': '0+',
     'TV-PG': '12+',
     'TV-14': '16+',
     'TV-MA': '18+',
-    // Российские рейтинги (если доступны)
     '0+': '0+',
     '6+': '6+',
     '12+': '12+',
@@ -186,7 +204,6 @@ async function getAgeRating(movie) {
             rawRating = ruRating?.rating || usRating?.rating || 'N/A';
         }
 
-        // Преобразование рейтинга в числовую категорию
         const mappedRating = ratingMap[rawRating] || 'N/A';
         console.log(`Фильм: ${movie.title || movie.name}, Исходный рейтинг: ${rawRating}, Преобразованный рейтинг: ${mappedRating}`);
         return mappedRating;
@@ -202,19 +219,16 @@ async function createMovieTile(movie, isFullscreen = false) {
     tile.className = isFullscreen ? 'fullscreen-tile' : 'movie-tile';
 
     if (isFullscreen) {
-        // Центрируем фоновое изображение
         tile.style.backgroundImage = `url(${BACKDROP_URL}${movie.backdrop_path})`;
         tile.style.backgroundPosition = 'center';
         tile.style.backgroundSize = 'cover';
         const content = document.createElement('div');
         content.className = 'fullscreen-content';
 
-        // Получение возрастного рейтинга и рейтинга TMDB
         const ageRating = await getAgeRating(movie);
         const tmdbRating = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
         const tmdbRatingClass = tmdbRating >= 7 ? 'rating-green' : tmdbRating >= 5 ? 'rating-yellow' : tmdbRating !== 'N/A' ? 'rating-red' : '';
 
-        // Создание контейнера для рейтингов над логотипом
         const ratingsContainerTop = document.createElement('div');
         ratingsContainerTop.className = 'ratings-container fullscreen-ratings-top';
         ratingsContainerTop.innerHTML = `
@@ -223,7 +237,6 @@ async function createMovieTile(movie, isFullscreen = false) {
         `;
         content.appendChild(ratingsContainerTop);
 
-        // Логотип или название
         try {
             const response = await fetch(`${TMDB_BASE_URL}/movie/${movie.id}/images?api_key=${TMDB_API_KEY}`);
             const data = await response.json();
@@ -275,7 +288,7 @@ async function createMovieTile(movie, isFullscreen = false) {
     return tile;
 }
 
-// Загрузка фильмов (обновлено для new-releases)
+// Загрузка фильмов
 function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries = 3) {
     return fetch(TMDB_BASE_URL + endpoint)
         .then(response => {
@@ -284,13 +297,11 @@ function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries
         })
         .then(async data => {
             container.innerHTML = '';
-            // Для new-releases берем только первый фильм
             if (container.id === 'new-releases-grid' && data.results.length > 0) {
-                const movie = data.results[0]; // Берем только первый фильм
+                const movie = data.results[0];
                 const movieTile = await createMovieTile(movie, isFullscreen);
                 container.appendChild(movieTile);
             } else {
-                // Для остальных секций загружаем все фильмы
                 for (const movie of data.results) {
                     const movieTile = await createMovieTile(movie, isFullscreen);
                     container.appendChild(movieTile);
@@ -352,7 +363,6 @@ async function displayMovieInfo(data, movie, logoData) {
     const ageRating = await getAgeRating(movie);
     const releaseYear = data.release_date ? parseInt(data.release_date.split('-')[0]) : data.first_air_date ? parseInt(data.first_air_date.split('-')[0]) : null;
 
-    // Получение Kinopoisk ID
     let kpId = null;
     let vibixAvailable = false;
     try {
@@ -384,16 +394,15 @@ async function displayMovieInfo(data, movie, logoData) {
     modalContent.innerHTML = `
         <img src="${data.poster_path ? IMG_URL + data.poster_path : 'icons/poster.png'}" alt="${title}" class="movie-poster">
         ${titleHTML}
-        <p class="overview-text">${overview}</p>
-        ${ageRating !== 'N/A' ? `<span class="modal-age-rating">${ageRating}</span>` : ''}
-        <div class="info-block">
-            <div class="rating-container">
-                <span class="rating-span tmdb-rating ${tmdbRatingClass}">${tmdbRating}</span>
-                <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg" 
-                     alt="TMDB Logo" 
-                     class="tmdb-logo rating-logo">
-            </div>
+        <div class="ratings-container">
+            ${tmdbRating !== 'N/A' ? `<span class="rating-span tmdb-rating ${tmdbRatingClass}">${tmdbRating}</span>` : ''}
+            ${ageRating !== 'N/A' ? `<span class="modal-age-rating">${ageRating}</span>` : ''}
         </div>
+        <p class="overview-text">${overview}</p>
+        <div class="actors-button-container">
+            <button id="toggle-actors-button" class="actors-button">Показать актеров</button>
+        </div>
+        <div id="actors-list" class="actors-list"></div>
         <div id="video-player-container">
             <div id="kinobox-player" class="video-player"></div>
             <div id="vibix-player" class="video-player" style="display: none;"></div>
@@ -410,7 +419,46 @@ async function displayMovieInfo(data, movie, logoData) {
         </button>
     `;
 
-    // Инициализация Kinobox плеера
+    const toggleActorsButton = document.getElementById('toggle-actors-button');
+    const actorsList = document.getElementById('actors-list');
+    let actorsLoaded = false;
+
+    toggleActorsButton.onclick = async () => {
+        if (!actorsLoaded) {
+            try {
+                const creditsUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/credits?api_key=${TMDB_API_KEY}&language=ru-RU`;
+                const response = await fetch(creditsUrl);
+                const creditsData = await response.json();
+                const actors = creditsData.cast.slice(0, 10); // Берем первых 10 актеров
+
+                actorsList.innerHTML = '';
+                actors.forEach(actor => {
+                    const actorItem = document.createElement('div');
+                    actorItem.className = 'actor-item';
+                    actorItem.innerHTML = `
+                        <img src="${actor.profile_path ? `${IMG_URL}${actor.profile_path}` : 'icons/poster.png'}" alt="${actor.name}">
+                        <p>${actor.name}</p>
+                    `;
+                    actorsList.appendChild(actorItem);
+                });
+                actorsLoaded = true;
+            } catch (error) {
+                console.error('Ошибка при загрузке актеров:', error);
+                actorsList.innerHTML = '<p>Не удалось загрузить актеров.</p>';
+            }
+        }
+
+        if (actorsList.classList.contains('active')) {
+            actorsList.classList.remove('active');
+            toggleActorsButton.textContent = 'Показать актеров';
+            setTimeout(() => actorsList.style.display = 'none', 300); // Задержка для анимации
+        } else {
+            actorsList.style.display = 'block';
+            setTimeout(() => actorsList.classList.add('active'), 10); // Небольшая задержка для триггера анимации
+            toggleActorsButton.textContent = 'Скрыть актеров';
+        }
+    };
+
     const kinobox = new Kinobox('#kinobox-player', {
         search: { tmdb: data.id, type: mediaType === 'tv' ? 'serial' : 'movie' },
         players: { 
@@ -432,7 +480,6 @@ async function displayMovieInfo(data, movie, logoData) {
         document.getElementById('kinobox-player').innerHTML = '<p>Не удалось загрузить плеер. Попробуйте позже.</p>';
     }
 
-    // Интеграция Vibix плеера
     const kinoboxPlayer = document.getElementById('kinobox-player');
     const vibixPlayer = document.getElementById('vibix-player');
     const kinoboxButton = document.getElementById('kinobox-button');
@@ -469,7 +516,6 @@ async function displayMovieInfo(data, movie, logoData) {
         }
     }
 
-    // Логика переключения плееров
     kinoboxButton.onclick = () => {
         kinoboxPlayer.style.display = 'block';
         vibixPlayer.style.display = 'none';
@@ -584,7 +630,7 @@ searchForm.onsubmit = (event) => {
 
 // Инициализация
 Promise.all([
-    fetchMoviesWithRetry(`/trending/movie/week?api_key=${TMDB_API_KEY}&language=ru-RU`, newReleasesGrid, true), // Изменено на тренды за неделю
+    fetchMoviesWithRetry(`/trending/movie/week?api_key=${TMDB_API_KEY}&language=ru-RU`, newReleasesGrid, true),
     fetchMoviesWithRetry(`/discover/movie?api_key=${TMDB_API_KEY}&language=ru-RU&sort_by=popularity.desc&vote_average.gte=7&vote_count.gte=100`, popularMoviesGrid),
     fetchMoviesWithRetry(`/discover/tv?api_key=${TMDB_API_KEY}&language=ru-RU&sort_by=vote_average.desc&vote_average.gte=8&vote_count.gte=100`, topRatedTvGrid),
     fetchMoviesWithRetry(`/discover/movie?api_key=${TMDB_API_KEY}&language=ru-RU&with_genres=16&vote_average.gte=7&vote_count.gte=50`, animatedMoviesGrid),
@@ -609,5 +655,4 @@ async function updateLandingSectionRatings() {
     document.querySelector('.landing-section .tmdb-rating').classList.add(tmdbRatingClass);
 }
 
-// Вызов функции при загрузке страницы
 document.addEventListener('DOMContentLoaded', updateLandingSectionRatings);
