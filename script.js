@@ -144,27 +144,52 @@ function checkAllLoaded() {
     }
 }
 
-// Получение возрастного рейтинга с fallback на US
+// Маппинг рейтингов TMDB в числовые категории
+const ratingMap = {
+    // Фильмы (US)
+    'G': '0+',
+    'PG': '6+',
+    'PG-13': '12+',
+    'R': '16+',
+    'NC-17': '18+',
+    // Сериалы (US TV ratings)
+    'TV-Y': '0+',
+    'TV-Y7': '6+',
+    'TV-G': '0+',
+    'TV-PG': '12+',
+    'TV-14': '16+',
+    'TV-MA': '18+',
+    // Российские рейтинги (если доступны)
+    '0+': '0+',
+    '6+': '6+',
+    '12+': '12+',
+    '16+': '16+',
+    '18+': '18+'
+};
+
+// Получение возрастного рейтинга с маппингом на числовые категории
 async function getAgeRating(movie) {
     const mediaType = movie.first_air_date ? 'tv' : 'movie';
     const url = `${TMDB_BASE_URL}/${mediaType}/${movie.id}/${mediaType === 'movie' ? 'release_dates' : 'content_ratings'}?api_key=${TMDB_API_KEY}`;
     try {
         const response = await fetch(url);
         const data = await response.json();
-        let rating = 'N/A';
+        let rawRating = 'N/A';
 
         if (mediaType === 'movie') {
             const ruRating = data.results?.find(r => r.iso_3166_1 === 'RU');
             const usRating = data.results?.find(r => r.iso_3166_1 === 'US');
-            rating = ruRating?.release_dates?.[0]?.certification || usRating?.release_dates?.[0]?.certification || 'N/A';
+            rawRating = ruRating?.release_dates?.[0]?.certification || usRating?.release_dates?.[0]?.certification || 'N/A';
         } else {
             const ruRating = data.results?.find(r => r.iso_3166_1 === 'RU');
             const usRating = data.results?.find(r => r.iso_3166_1 === 'US');
-            rating = ruRating?.rating || usRating?.rating || 'N/A';
+            rawRating = ruRating?.rating || usRating?.rating || 'N/A';
         }
 
-        console.log(`Фильм: ${movie.title || movie.name}, Возрастной рейтинг: ${rating}`);
-        return rating;
+        // Преобразование рейтинга в числовую категорию
+        const mappedRating = ratingMap[rawRating] || 'N/A';
+        console.log(`Фильм: ${movie.title || movie.name}, Исходный рейтинг: ${rawRating}, Преобразованный рейтинг: ${mappedRating}`);
+        return mappedRating;
     } catch (error) {
         console.error('Ошибка при получении возрастного рейтинга:', error);
         return 'N/A';
@@ -177,7 +202,10 @@ async function createMovieTile(movie, isFullscreen = false) {
     tile.className = isFullscreen ? 'fullscreen-tile' : 'movie-tile';
 
     if (isFullscreen) {
+        // Центрируем фоновое изображение
         tile.style.backgroundImage = `url(${BACKDROP_URL}${movie.backdrop_path})`;
+        tile.style.backgroundPosition = 'center';
+        tile.style.backgroundSize = 'cover';
         const content = document.createElement('div');
         content.className = 'fullscreen-content';
 
@@ -247,7 +275,7 @@ async function createMovieTile(movie, isFullscreen = false) {
     return tile;
 }
 
-// Загрузка фильмов
+// Загрузка фильмов (обновлено для new-releases)
 function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries = 3) {
     return fetch(TMDB_BASE_URL + endpoint)
         .then(response => {
@@ -256,9 +284,17 @@ function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries
         })
         .then(async data => {
             container.innerHTML = '';
-            for (const movie of data.results) {
+            // Для new-releases берем только первый фильм
+            if (container.id === 'new-releases-grid' && data.results.length > 0) {
+                const movie = data.results[0]; // Берем только первый фильм
                 const movieTile = await createMovieTile(movie, isFullscreen);
                 container.appendChild(movieTile);
+            } else {
+                // Для остальных секций загружаем все фильмы
+                for (const movie of data.results) {
+                    const movieTile = await createMovieTile(movie, isFullscreen);
+                    container.appendChild(movieTile);
+                }
             }
             checkAllLoaded();
         })
@@ -548,7 +584,7 @@ searchForm.onsubmit = (event) => {
 
 // Инициализация
 Promise.all([
-    fetchMoviesWithRetry(`/movie/now_playing?api_key=${TMDB_API_KEY}&language=ru-RU`, newReleasesGrid, true),
+    fetchMoviesWithRetry(`/trending/movie/week?api_key=${TMDB_API_KEY}&language=ru-RU`, newReleasesGrid, true), // Изменено на тренды за неделю
     fetchMoviesWithRetry(`/discover/movie?api_key=${TMDB_API_KEY}&language=ru-RU&sort_by=popularity.desc&vote_average.gte=7&vote_count.gte=100`, popularMoviesGrid),
     fetchMoviesWithRetry(`/discover/tv?api_key=${TMDB_API_KEY}&language=ru-RU&sort_by=vote_average.desc&vote_average.gte=8&vote_count.gte=100`, topRatedTvGrid),
     fetchMoviesWithRetry(`/discover/movie?api_key=${TMDB_API_KEY}&language=ru-RU&with_genres=16&vote_average.gte=7&vote_count.gte=50`, animatedMoviesGrid),
