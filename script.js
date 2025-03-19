@@ -399,7 +399,7 @@ async function displayMovieInfo(data, movie, logoData) {
                 console.error('Ошибка проверки Vibix:', error);
             }
 
-            // Lumex доступен, если есть kpId (нет API для проверки)
+            // Lumex доступен, если есть kpId
             lumexAvailable = true;
         }
     } catch (error) {
@@ -446,7 +446,7 @@ async function displayMovieInfo(data, movie, logoData) {
                 const creditsUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/credits?api_key=${TMDB_API_KEY}&language=ru-RU`;
                 const response = await fetch(creditsUrl);
                 const creditsData = await response.json();
-                const actors = creditsData.cast.slice(0, 10); // Берем первых 10 актеров
+                const actors = creditsData.cast.slice(0, 10);
 
                 actorsList.innerHTML = '';
                 actors.forEach(actor => {
@@ -476,15 +476,16 @@ async function displayMovieInfo(data, movie, logoData) {
         }
     };
 
+    // Инициализация Kinobox с использованием Kinopoisk ID
     const kinobox = new Kinobox('#kinobox-player', {
-        search: { tmdb: data.id, type: mediaType === 'tv' ? 'serial' : 'movie' },
+        search: { kinopoisk: kpId, type: mediaType === 'tv' ? 'serial' : 'movie' },
         players: { 
             'alloha': true, 
             'turbo': true, 
-            'videocdn': true, 
-            'collaps': true, 
-            'videoapi': true, 
-            'hddb': true 
+            'videocdn': false, 
+            'collaps': false, 
+            'videoapi': false, 
+            'hddb': false 
         },
         params: { season: 1, episode: 1 },
         ui: { mobile: true }
@@ -492,7 +493,7 @@ async function displayMovieInfo(data, movie, logoData) {
 
     try {
         await kinobox.init();
-        console.log('Kinobox инициализирован');
+        console.log('Kinobox инициализирован с kpId:', kpId);
     } catch (error) {
         console.error('Ошибка инициализации Kinobox:', error);
         document.getElementById('kinobox-player').innerHTML = '<p>Не удалось загрузить плеер Kinobox</p>';
