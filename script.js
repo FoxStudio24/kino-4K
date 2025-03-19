@@ -82,70 +82,29 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Улучшенная функция для получения Kinopoisk ID по названию
-async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaType = 'movie') {
+// Функция для получения Kinopoisk ID по названию
+async function getKinopoiskIdByTitle(title, year) {
     try {
-        const searchType = mediaType === 'tv' ? 'TV_SERIES' : 'FILM';
-        let url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(title)}&page=1`;
-        
-        const response = await fetch(url, {
+        const response = await fetch(`${KINOPOISK_BASE_URL}/films?type=ALL&keyword=${encodeURIComponent(title)}`, {
             headers: {
                 'X-API-KEY': KINOPOISK_API_KEY,
                 'Content-Type': 'application/json'
             }
         });
-
         if (!response.ok) {
             throw new Error(`Ошибка HTTP: ${response.status}`);
         }
-
         const data = await response.json();
         console.log('Kinopoisk поиск:', data);
 
-        function getSimilarity(str1, str2) {
-            if (!str1 || !str2) return 0;
-            str1 = str1.toLowerCase();
-            str2 = str2.toLowerCase();
-            const len1 = str1.length, len2 = str2.length;
-            const matrix = Array(len2 + 1).fill(null).map(() => Array(len1 + 1).fill(null));
+        const result = data.items.find(item => {
+            const matchesTitle = item.nameRu.toLowerCase().includes(title.toLowerCase()) || 
+                                item.nameEn?.toLowerCase().includes(title.toLowerCase());
+            const matchesYear = year ? item.year === year : true;
+            return matchesTitle && matchesYear;
+        });
 
-            for (let i = 0; i <= len1; i++) matrix[0][i] = i;
-            for (let j = 0; j <= len2; j++) matrix[j][0] = j;
-
-            for (let j = 1; j <= len2; j++) {
-                for (let i = 1; i <= len1; i++) {
-                    const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
-                    matrix[j][i] = Math.min(
-                        matrix[j - 1][i] + 1,
-                        matrix[j][i - 1] + 1,
-                        matrix[j - 1][i - 1] + indicator
-                    );
-                }
-            }
-            return 1 - matrix[len2][len1] / Math.max(len1, len2);
-        }
-
-        const candidates = data.items
-            .map(item => {
-                const titleRuMatch = item.nameRu ? getSimilarity(item.nameRu, title) : 0;
-                const titleEnMatch = item.nameEn ? getSimilarity(item.nameEn, title) : 0;
-                const originalTitleMatch = originalTitle && item.nameOriginal ? getSimilarity(item.nameOriginal, originalTitle) : 0;
-                const yearMatch = year && item.year ? Math.abs(parseInt(item.year) - parseInt(year)) <= 1 : true;
-
-                const score = Math.max(titleRuMatch, titleEnMatch, originalTitleMatch) * (yearMatch ? 1 : 0.5);
-                return { item, score };
-            })
-            .filter(candidate => candidate.score > 0.6)
-            .sort((a, b) => b.score - a.score);
-
-        if (candidates.length === 0) {
-            console.log(`Kinopoisk ID не найден для "${title}" (${year})`);
-            return null;
-        }
-
-        const bestMatch = candidates[0].item;
-        console.log(`Найден лучший Kinopoisk ID: ${bestMatch.kinopoiskId}, Название: ${bestMatch.nameRu || bestMatch.nameEn}, Год: ${bestMatch.year}, Score: ${candidates[0].score}`);
-        return bestMatch.kinopoiskId;
+        return result ? result.kinopoiskId : null;
     } catch (error) {
         console.error('Ошибка при поиске Kinopoisk ID:', error);
         return null;
@@ -408,6 +367,7 @@ async function displayMovieInfo(data, movie, logoData) {
     let vibixAvailable = false;
     let lumexAvailable = false;
 
+    // Получение Kinopoisk ID
     try {
         const externalIdsUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/external_ids?api_key=${TMDB_API_KEY}`;
         const externalIdsResponse = await fetch(externalIdsUrl);
@@ -419,16 +379,12 @@ async function displayMovieInfo(data, movie, logoData) {
         console.log(`TMDB ID: ${data.id}, Kinopoisk ID из TMDB: ${kpId}`);
 
         if (!kpId) {
-            kpId = await getKinopoiskIdByTitle(
-                data.title || data.name,
-                releaseYear,
-                data.original_title || data.original_name,
-                mediaType
-            );
+            kpId = await getKinopoiskIdByTitle(title, releaseYear);
             console.log(`Kinopoisk ID из поиска по названию: ${kpId}`);
         }
 
         if (kpId) {
+            // Проверка Vibix
             try {
                 const vibixResponse = await fetch(`https://vibix.org/api/v1/publisher/videos/kp/${kpId}`, {
                     headers: {
@@ -443,6 +399,7 @@ async function displayMovieInfo(data, movie, logoData) {
                 console.error('Ошибка проверки Vibix:', error);
             }
 
+            // Lumex доступен, если есть kpId (нет API для проверки)
             lumexAvailable = true;
         }
     } catch (error) {
@@ -489,7 +446,7 @@ async function displayMovieInfo(data, movie, logoData) {
                 const creditsUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/credits?api_key=${TMDB_API_KEY}&language=ru-RU`;
                 const response = await fetch(creditsUrl);
                 const creditsData = await response.json();
-                const actors = creditsData.cast.slice(0, 10);
+                const actors = creditsData.cast.slice(0, 10); // Берем первых 10 актеров
 
                 actorsList.innerHTML = '';
                 actors.forEach(actor => {
