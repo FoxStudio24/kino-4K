@@ -424,9 +424,9 @@ async function displayMovieInfo(data, movie, logoData) {
             <div id="lumex-player" class="video-player" style="display: none;"></div>
         </div>
         <div class="button-container">
-            <button class="player-button active" id="kinobox-button">Плеер 1</button>
-            <button class="player-button ${!vibixAvailable ? 'hidden' : ''}" id="vibix-button">Плеер 2</button>
-            <button class="player-button ${!lumexAvailable ? 'hidden' : ''}" id="lumex-button">Плеер 3</button>
+            <button class="player-button active" id="kinobox-button">Alloha</button>
+            <button class="player-button ${!vibixAvailable ? 'hidden' : ''}" id="vibix-button">Vibix</button>
+            <button class="player-button ${!lumexAvailable ? 'hidden' : ''}" id="lumex-button">Lumex</button>
         </div>
         <button id="add-to-favorites">
             <img src="${isFavorite(data) ? 'icons/delete.png' : 'icons/add.png'}" alt="${isFavorite(data) ? 'Удалить из избранного' : 'Добавить в избранное'}" class="favorites-icon"/>
