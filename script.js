@@ -86,11 +86,22 @@ document.head.appendChild(style);
 async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaType = 'movie') {
     try {
         const searchType = mediaType === 'tv' ? 'TV_SERIES' : 'FILM';
-        let page = 1;
-        let found = false;
-        let bestMatch = null;
+        let url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(title)}&page=1`;
+        
+        const response = await fetch(url, {
+            headers: {
+                'X-API-KEY': KINOPOISK_API_KEY,
+                'Content-Type': 'application/json'
+            }
+        });
 
-        // Функция для вычисления степени схожести строк (расстояние Левенштейна)
+        if (!response.ok) {
+            throw new Error(`Ошибка HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Kinopoisk поиск:', data);
+
         function getSimilarity(str1, str2) {
             if (!str1 || !str2) return 0;
             str1 = str1.toLowerCase();
@@ -114,89 +125,26 @@ async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaTyp
             return 1 - matrix[len2][len1] / Math.max(len1, len2);
         }
 
-        // Поиск по нескольким страницам (максимум 3 страницы)
-        while (page <= 3 && !found) {
-            const url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(title)}&page=${page}`;
-            const response = await fetch(url, {
-                headers: {
-                    'X-API-KEY': KINOPOISK_API_KEY,
-                    'Content-Type': 'application/json'
-                }
-            });
+        const candidates = data.items
+            .map(item => {
+                const titleRuMatch = item.nameRu ? getSimilarity(item.nameRu, title) : 0;
+                const titleEnMatch = item.nameEn ? getSimilarity(item.nameEn, title) : 0;
+                const originalTitleMatch = originalTitle && item.nameOriginal ? getSimilarity(item.nameOriginal, originalTitle) : 0;
+                const yearMatch = year && item.year ? Math.abs(parseInt(item.year) - parseInt(year)) <= 1 : true;
 
-            if (!response.ok) {
-                throw new Error(`Ошибка HTTP: ${response.status}`);
-            }
+                const score = Math.max(titleRuMatch, titleEnMatch, originalTitleMatch) * (yearMatch ? 1 : 0.5);
+                return { item, score };
+            })
+            .filter(candidate => candidate.score > 0.6)
+            .sort((a, b) => b.score - a.score);
 
-            const data = await response.json();
-            console.log(`Kinopoisk поиск (страница ${page}):`, data);
-
-            if (!data.items || data.items.length === 0) break;
-
-            const candidates = data.items
-                .map(item => {
-                    const titleRuMatch = item.nameRu ? getSimilarity(item.nameRu, title) : 0;
-                    const titleEnMatch = item.nameEn ? getSimilarity(item.nameEn, title) : 0;
-                    const originalTitleMatch = originalTitle && item.nameOriginal ? getSimilarity(item.nameOriginal, originalTitle) : 0;
-                    const yearMatch = year && item.year ? Math.abs(parseInt(item.year) - parseInt(year)) <= 1 : true;
-
-                    // Вес совпадений: приоритет оригинальному названию
-                    const score = Math.max(titleRuMatch * 0.8, titleEnMatch * 0.8, originalTitleMatch * 1.0) * (yearMatch ? 1 : 0.5);
-                    return { item, score };
-                })
-                .filter(candidate => candidate.score > 0.4) // Снижен порог для коротких названий
-                .sort((a, b) => b.score - a.score);
-
-            if (candidates.length > 0) {
-                bestMatch = candidates[0].item;
-                console.log(`Найден кандидат (страница ${page}): Kinopoisk ID: ${bestMatch.kinopoiskId}, Название: ${bestMatch.nameRu || bestMatch.nameEn}, Год: ${bestMatch.year}, Score: ${candidates[0].score}`);
-                found = true;
-                break;
-            }
-
-            page++;
-        }
-
-        if (!found && originalTitle && originalTitle !== title) {
-            console.log(`Повторный поиск по оригинальному названию: "${originalTitle}"`);
-            const url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(originalTitle)}&page=1`;
-            const response = await fetch(url, {
-                headers: {
-                    'X-API-KEY': KINOPOISK_API_KEY,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Kinopoisk поиск по оригинальному названию:', data);
-
-                const candidates = data.items
-                    .map(item => {
-                        const originalTitleMatch = item.nameOriginal ? getSimilarity(item.nameOriginal, originalTitle) : 0;
-                        const titleRuMatch = item.nameRu ? getSimilarity(item.nameRu, originalTitle) : 0;
-                        const titleEnMatch = item.nameEn ? getSimilarity(item.nameEn, originalTitle) : 0;
-                        const yearMatch = year && item.year ? Math.abs(parseInt(item.year) - parseInt(year)) <= 1 : true;
-
-                        const score = Math.max(originalTitleMatch * 1.0, titleRuMatch * 0.8, titleEnMatch * 0.8) * (yearMatch ? 1 : 0.5);
-                        return { item, score };
-                    })
-                    .filter(candidate => candidate.score > 0.4)
-                    .sort((a, b) => b.score - a.score);
-
-                if (candidates.length > 0) {
-                    bestMatch = candidates[0].item;
-                    console.log(`Найден по оригинальному названию: Kinopoisk ID: ${bestMatch.kinopoiskId}, Название: ${bestMatch.nameRu || bestMatch.nameEn}, Год: ${bestMatch.year}, Score: ${candidates[0].score}`);
-                    found = true;
-                }
-            }
-        }
-
-        if (!found) {
-            console.log(`Kinopoisk ID не найден для "${title}" (${year}) даже с оригинальным названием "${originalTitle}"`);
+        if (candidates.length === 0) {
+            console.log(`Kinopoisk ID не найден для "${title}" (${year})`);
             return null;
         }
 
+        const bestMatch = candidates[0].item;
+        console.log(`Найден лучший Kinopoisk ID: ${bestMatch.kinopoiskId}, Название: ${bestMatch.nameRu || bestMatch.nameEn}, Год: ${bestMatch.year}, Score: ${candidates[0].score}`);
         return bestMatch.kinopoiskId;
     } catch (error) {
         console.error('Ошибка при поиске Kinopoisk ID:', error);
@@ -496,8 +444,6 @@ async function displayMovieInfo(data, movie, logoData) {
             }
 
             lumexAvailable = true;
-        } else {
-            console.log(`Фильм "${title}" (${releaseYear}) отсутствует в базе Kinopoisk на данный момент.`);
         }
     } catch (error) {
         console.error('Ошибка при получении Kinopoisk ID:', error);
@@ -511,7 +457,6 @@ async function displayMovieInfo(data, movie, logoData) {
             ${ageRating !== 'N/A' ? `<span class="modal-age-rating">${ageRating}</span>` : ''}
         </div>
         <p class="overview-text">${overview}</p>
-        ${!kpId ? '<p style="color: #ff5555;">Этот фильм пока недоступен на Kinopoisk.</p>' : ''}
         <div class="actors-button-container">
             <button id="toggle-actors-button" class="actors-button">Показать актеров</button>
         </div>
