@@ -633,7 +633,7 @@ async function displayMovieInfo(data, movie, logoData) {
         players: { 
             'turbo': true, 
             'alloha': true, 
-            'videocdn': true, 
+            'lumex': true, 
             'collaps': true, 
             'videoapi': false, 
             'hddb': false 
