@@ -365,12 +365,18 @@ async function displayMovieInfo(data, movie, logoData) {
 
     let kpId = null;
     let vibixAvailable = false;
+    let lumexAvailable = false;
+
+    // Получение Kinopoisk ID
     try {
         const externalIdsUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/external_ids?api_key=${TMDB_API_KEY}`;
         const externalIdsResponse = await fetch(externalIdsUrl);
+        if (!externalIdsResponse.ok) {
+            console.error(`Ошибка external_ids: ${externalIdsResponse.status}`);
+        }
         const externalIdsData = await externalIdsResponse.json();
         kpId = externalIdsData.kinopoisk_id || null;
-        console.log(`TMDB ID: ${data.id}, Kinopoisk ID из TMDB: ${kpId}`, externalIdsData);
+        console.log(`TMDB ID: ${data.id}, Kinopoisk ID из TMDB: ${kpId}`);
 
         if (!kpId) {
             kpId = await getKinopoiskIdByTitle(title, releaseYear);
@@ -378,17 +384,26 @@ async function displayMovieInfo(data, movie, logoData) {
         }
 
         if (kpId) {
-            const vibixResponse = await fetch(`https://vibix.org/api/v1/publisher/videos/kp/${kpId}`, {
-                headers: {
-                    'Authorization': `Bearer ${VIBIX_API_TOKEN}`
-                }
-            });
-            const vibixData = await vibixResponse.json();
-            vibixAvailable = vibixResponse.ok && vibixData.iframe_url;
-            console.log('Vibix данные:', vibixData);
+            // Проверка Vibix
+            try {
+                const vibixResponse = await fetch(`https://vibix.org/api/v1/publisher/videos/kp/${kpId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${VIBIX_API_TOKEN}`
+                    }
+                });
+                console.log(`Vibix статус: ${vibixResponse.status}`);
+                const vibixData = await vibixResponse.json();
+                vibixAvailable = vibixResponse.ok && vibixData.iframe_url;
+                console.log('Vibix данные:', vibixData);
+            } catch (error) {
+                console.error('Ошибка проверки Vibix:', error);
+            }
+
+            // Lumex доступен, если есть kpId (нет API для проверки)
+            lumexAvailable = true;
         }
     } catch (error) {
-        console.error('Ошибка при получении Kinopoisk ID или данных Vibix:', error);
+        console.error('Ошибка при получении Kinopoisk ID:', error);
     }
 
     modalContent.innerHTML = `
@@ -406,10 +421,12 @@ async function displayMovieInfo(data, movie, logoData) {
         <div id="video-player-container">
             <div id="kinobox-player" class="video-player"></div>
             <div id="vibix-player" class="video-player" style="display: none;"></div>
+            <div id="lumex-player" class="video-player" style="display: none;"></div>
         </div>
         <div class="button-container">
             <button class="player-button active" id="kinobox-button">Плеер 1</button>
             <button class="player-button ${!vibixAvailable ? 'hidden' : ''}" id="vibix-button">Плеер 2</button>
+            <button class="player-button ${!lumexAvailable ? 'hidden' : ''}" id="lumex-button">Плеер 3</button>
         </div>
         <button id="add-to-favorites">
             <img src="${isFavorite(data) ? 'icons/delete.png' : 'icons/add.png'}" alt="${isFavorite(data) ? 'Удалить из избранного' : 'Добавить в избранное'}" class="favorites-icon"/>
@@ -451,10 +468,10 @@ async function displayMovieInfo(data, movie, logoData) {
         if (actorsList.classList.contains('active')) {
             actorsList.classList.remove('active');
             toggleActorsButton.textContent = 'Показать актеров';
-            setTimeout(() => actorsList.style.display = 'none', 300); // Задержка для анимации
+            setTimeout(() => actorsList.style.display = 'none', 300);
         } else {
             actorsList.style.display = 'block';
-            setTimeout(() => actorsList.classList.add('active'), 10); // Небольшая задержка для триггера анимации
+            setTimeout(() => actorsList.classList.add('active'), 10);
             toggleActorsButton.textContent = 'Скрыть актеров';
         }
     };
@@ -475,19 +492,23 @@ async function displayMovieInfo(data, movie, logoData) {
 
     try {
         await kinobox.init();
+        console.log('Kinobox инициализирован');
     } catch (error) {
         console.error('Ошибка инициализации Kinobox:', error);
-        document.getElementById('kinobox-player').innerHTML = '<p>Не удалось загрузить плеер. Попробуйте позже.</p>';
+        document.getElementById('kinobox-player').innerHTML = '<p>Не удалось загрузить плеер Kinobox</p>';
     }
 
     const kinoboxPlayer = document.getElementById('kinobox-player');
     const vibixPlayer = document.getElementById('vibix-player');
+    const lumexPlayer = document.getElementById('lumex-player');
     const kinoboxButton = document.getElementById('kinobox-button');
     const vibixButton = document.getElementById('vibix-button');
+    const lumexButton = document.getElementById('lumex-button');
 
     async function loadVibixPlayer() {
         if (!kpId) {
             vibixPlayer.innerHTML = '<p>Kinopoisk ID не найден</p>';
+            console.log('Vibix: Нет kpId');
             return;
         }
 
@@ -497,8 +518,14 @@ async function displayMovieInfo(data, movie, logoData) {
                     'Authorization': `Bearer ${VIBIX_API_TOKEN}`
                 }
             });
+            console.log(`Vibix запрос для kpId ${kpId}, статус: ${response.status}`);
+            if (!response.ok) {
+                vibixPlayer.innerHTML = `<p>Ошибка Vibix: ${response.status}</p>`;
+                throw new Error(`Vibix API ошибка: ${response.status}`);
+            }
             const vibixData = await response.json();
-            if (response.ok && vibixData.iframe_url) {
+            console.log('Vibix данные:', vibixData);
+            if (vibixData.iframe_url) {
                 vibixPlayer.innerHTML = `
                     <iframe src="${vibixData.iframe_url}" 
                             width="100%" 
@@ -507,30 +534,78 @@ async function displayMovieInfo(data, movie, logoData) {
                             allowfullscreen 
                             allow="autoplay *; fullscreen *"></iframe>
                 `;
+                console.log('Vibix iframe загружен:', vibixData.iframe_url);
             } else {
                 vibixPlayer.innerHTML = '<p>Видео не найдено на Vibix</p>';
+                console.log('Vibix: iframe_url отсутствует');
             }
         } catch (error) {
-            console.error('Ошибка загрузки плеера Vibix:', error);
+            console.error('Ошибка загрузки Vibix:', error);
             vibixPlayer.innerHTML = '<p>Ошибка загрузки плеера Vibix</p>';
+        }
+    }
+
+    async function loadLumexPlayer() {
+        if (!kpId) {
+            lumexPlayer.innerHTML = '<p>Kinopoisk ID не найден</p>';
+            console.log('Lumex: Нет kpId');
+            return;
+        }
+
+        try {
+            const iframeSrc = `//p.lumex.cloud/GbaXAhTWVSqL?kp_id=${kpId}&autoplay=1`;
+            console.log(`Lumex iframe URL: ${iframeSrc}`);
+            lumexPlayer.innerHTML = `
+                <iframe src="${iframeSrc}" 
+                        width="100%" 
+                        height="100%" 
+                        frameborder="0" 
+                        allowfullscreen 
+                        allow="autoplay *; fullscreen *"></iframe>
+            `;
+            console.log('Lumex плеер загружен');
+        } catch (error) {
+            console.error('Ошибка загрузки Lumex:', error);
+            lumexPlayer.innerHTML = '<p>Ошибка загрузки плеера Lumex</p>';
         }
     }
 
     kinoboxButton.onclick = () => {
         kinoboxPlayer.style.display = 'block';
         vibixPlayer.style.display = 'none';
+        lumexPlayer.style.display = 'none';
         kinoboxButton.classList.add('active');
         vibixButton.classList.remove('active');
+        lumexButton.classList.remove('active');
+        console.log('Переключено на Kinobox');
     };
 
     if (vibixButton) {
         vibixButton.onclick = () => {
             kinoboxPlayer.style.display = 'none';
             vibixPlayer.style.display = 'block';
+            lumexPlayer.style.display = 'none';
             vibixButton.classList.add('active');
             kinoboxButton.classList.remove('active');
+            lumexButton.classList.remove('active');
             if (!vibixPlayer.children.length) {
+                console.log('Загрузка Vibix...');
                 loadVibixPlayer();
+            }
+        };
+    }
+
+    if (lumexButton) {
+        lumexButton.onclick = () => {
+            kinoboxPlayer.style.display = 'none';
+            vibixPlayer.style.display = 'none';
+            lumexPlayer.style.display = 'block';
+            lumexButton.classList.add('active');
+            kinoboxButton.classList.remove('active');
+            vibixButton.classList.remove('active');
+            if (!lumexPlayer.children.length) {
+                console.log('Загрузка Lumex...');
+                loadLumexPlayer();
             }
         };
     }
