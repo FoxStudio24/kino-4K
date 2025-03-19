@@ -585,10 +585,10 @@ async function displayMovieInfo(data, movie, logoData) {
         players: { 
             'alloha': true, 
             'turbo': true, 
-            'videocdn': true, 
+            'videocdn': false, 
             'collaps': true, 
-            'videoapi': true, 
-            'hddb': true 
+            'videoapi': false, 
+            'hddb': false 
         },
         params: { season: 1, episode: 1 },
         ui: { mobile: true }
