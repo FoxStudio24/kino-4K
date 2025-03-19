@@ -522,7 +522,7 @@ async function displayMovieInfo(data, movie, logoData) {
             <div id="lumex-player" class="video-player" style="display: none;"></div>
         </div>
         <div class="button-container">
-            <button class="player-button active" id="kinobox-button">Alloha</button>
+            <button class="player-button active" id="kinobox-button">Kinobox</button>
             <button class="player-button ${!vibixAvailable ? 'hidden' : ''}" id="vibix-button">Vibix</button>
             <button class="player-button ${!lumexAvailable ? 'hidden' : ''}" id="lumex-button">Lumex</button>
         </div>
@@ -585,7 +585,7 @@ async function displayMovieInfo(data, movie, logoData) {
         players: { 
             'alloha': true, 
             'turbo': true, 
-            'videocdn': false, 
+            'videocdn': афдыу, 
             'collaps': true, 
             'videoapi': false, 
             'hddb': false 
