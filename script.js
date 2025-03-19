@@ -574,8 +574,14 @@ async function displayMovieInfo(data, movie, logoData) {
         }
     };
 
+    // Инициализация Kinobox с приоритетом Kinopoisk ID
+    const kinoboxSearch = kpId 
+        ? { kinopoisk: kpId, type: mediaType === 'tv' ? 'serial' : 'movie' }
+        : { tmdb: data.id, type: mediaType === 'tv' ? 'serial' : 'movie' };
+    console.log(`Kinobox использует: ${kpId ? `Kinopoisk ID: ${kpId}` : `TMDB ID: ${data.id}`}`);
+
     const kinobox = new Kinobox('#kinobox-player', {
-        search: { tmdb: data.id, type: mediaType === 'tv' ? 'serial' : 'movie' },
+        search: kinoboxSearch,
         players: { 
             'alloha': true, 
             'turbo': true, 
