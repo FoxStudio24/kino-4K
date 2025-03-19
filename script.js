@@ -631,8 +631,8 @@ async function displayMovieInfo(data, movie, logoData) {
     const kinobox = new Kinobox('#kinobox-player', {
         search: kinoboxSearch,
         players: { 
-            'alloha': true, 
             'turbo': true, 
+            'alloha': true, 
             'videocdn': true, 
             'collaps': true, 
             'videoapi': false, 
