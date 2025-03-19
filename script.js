@@ -69,16 +69,17 @@ style.textContent = `
     .ratings-container { display: flex; align-items: center; margin-top: 5px; gap: 10px; }
     .modal-age-rating { font-size: 12px; color: #fff; background-color: #555; padding: 2px 9px; border-radius: 10px; }
     .actors-button-container { text-align: right; margin-top: 10px; }
-    .actors-button { padding: 7px 25px; background-color: rgba(255 255 255 / 17%); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; backdrop-filter: blur(5px); }
-    .actors-button:hover { background-color: rgba(120, 120, 120, 0.7); }
-    .actors-list { display: none; margin-top: 20px; overflow-x: auto; white-space: nowrap; padding-bottom: 10px; transition: all 0.3s ease-in-out; max-height: 0; }
-    .actors-list.active { display: block; max-height: 248px; }
-    .actors-list::-webkit-scrollbar { height: 8px; }
-    .actors-list::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.3); border-radius: 4px; }
-    .actors-list::-webkit-scrollbar-track { background-color: transparent; }
+    .actors-button, .trailer-button { padding: 7px 25px; background-color: rgba(255 255 255 / 17%); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; backdrop-filter: blur(5px); margin-left: 10px; }
+    .actors-button:hover, .trailer-button:hover { background-color: rgba(120, 120, 120, 0.7); }
+    .actors-list, .trailer-container { display: none; margin-top: 20px; overflow-x: auto; padding-bottom: 10px; transition: all 0.3s ease-in-out; max-height: 0; }
+    .actors-list.active, .trailer-container.active { display: block; max-height: 248px; }
+    .actors-list::-webkit-scrollbar, .trailer-container::-webkit-scrollbar { height: 8px; }
+    .actors-list::-webkit-scrollbar-thumb, .trailer-container::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.3); border-radius: 4px; }
+    .actors-list::-webkit-scrollbar-track, .trailer-container::-webkit-scrollbar-track { background-color: transparent; }
     .actor-item { display: inline-block; text-align: center; width: 120px; margin-right: 15px; vertical-align: top; }
     .actor-item img { width: 80px; height: 80px; object-fit: cover; border-radius: 99px; border: 1px solid #ffffff52; }
     .actor-item p { color: white; margin: 5px 0 0; font-family: 'Montserrat', sans-serif; font-size: 14px; white-space: normal; word-break: break-word; }
+    .trailer-container iframe { width: 100%; height: 248px; border: none; border-radius: 10px; }
 `;
 document.head.appendChild(style);
 
@@ -514,8 +515,10 @@ async function displayMovieInfo(data, movie, logoData) {
         ${!kpId ? '<p style="color: #ff5555;">Этот фильм пока недоступен на Kinopoisk.</p>' : ''}
         <div class="actors-button-container">
             <button id="toggle-actors-button" class="actors-button">Показать актеров</button>
+            <button id="toggle-trailer-button" class="trailer-button">Показать трейлер</button>
         </div>
         <div id="actors-list" class="actors-list"></div>
+        <div id="trailer-container" class="trailer-container"></div>
         <div id="video-player-container">
             <div id="kinobox-player" class="video-player"></div>
             <div id="vibix-player" class="video-player" style="display: none;"></div>
@@ -574,6 +577,51 @@ async function displayMovieInfo(data, movie, logoData) {
         }
     };
 
+    const toggleTrailerButton = document.getElementById('toggle-trailer-button');
+    const trailerContainer = document.getElementById('trailer-container');
+    let trailerLoaded = false;
+
+    toggleTrailerButton.onclick = async () => {
+        if (!trailerLoaded) {
+            try {
+                const videosUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/videos?api_key=${TMDB_API_KEY}&language=ru-RU`;
+                const response = await fetch(videosUrl);
+                const videosData = await response.json();
+                const trailers = videosData.results.filter(video => video.type === 'Trailer' && video.site === 'YouTube');
+
+                let trailer = trailers.find(trailer => trailer.iso_639_1 === 'ru'); // Предпочтение русскому языку
+                if (!trailer && trailers.length > 0) trailer = trailers[0]; // Если русского нет, берем первый доступный
+
+                if (trailer) {
+                    trailerContainer.innerHTML = `
+                        <iframe src="https://www.youtube.com/embed/${trailer.key}" 
+                                frameborder="0" 
+                                allowfullscreen 
+                                allow="autoplay; encrypted-media"></iframe>
+                    `;
+                    console.log(`Трейлер загружен: ${trailer.name} (${trailer.iso_639_1})`);
+                } else {
+                    trailerContainer.innerHTML = '<p>Трейлер не найден.</p>';
+                    console.log('Трейлеры отсутствуют для этого фильма/сериала');
+                }
+                trailerLoaded = true;
+            } catch (error) {
+                console.error('Ошибка при загрузке трейлера:', error);
+                trailerContainer.innerHTML = '<p>Не удалось загрузить трейлер.</p>';
+            }
+        }
+
+        if (trailerContainer.classList.contains('active')) {
+            trailerContainer.classList.remove('active');
+            toggleTrailerButton.textContent = 'Показать трейлер';
+            setTimeout(() => trailerContainer.style.display = 'none', 300);
+        } else {
+            trailerContainer.style.display = 'block';
+            setTimeout(() => trailerContainer.classList.add('active'), 10);
+            toggleTrailerButton.textContent = 'Скрыть трейлер';
+        }
+    };
+
     // Инициализация Kinobox с приоритетом Kinopoisk ID
     const kinoboxSearch = kpId 
         ? { kinopoisk: kpId, type: mediaType === 'tv' ? 'serial' : 'movie' }
@@ -583,9 +631,9 @@ async function displayMovieInfo(data, movie, logoData) {
     const kinobox = new Kinobox('#kinobox-player', {
         search: kinoboxSearch,
         players: { 
-            'turbo': true, 
             'alloha': true, 
-            'lumex': false, 
+            'turbo': true, 
+            'videocdn': true, 
             'collaps': true, 
             'videoapi': false, 
             'hddb': false 
