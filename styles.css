@@ -65,42 +65,15 @@ header button, .close-modal {
     height: 50px;
     font-size: 24px;
     color: #fff;
-    background: linear-gradient(90deg, #03a9f4, #f441a5, #ffeb3b, #03a9f4);
+    background-image: linear-gradient(0.54turn, rgb(255 255 255) 11%, rgb(134 112 201) 100%);
     background-size: 400%;
     border-radius: 30px;
     border: none;
     cursor: pointer;
     z-index: 1;
-}
-
-header button:hover, .close-modal:hover {
-    animation: animate 8s linear infinite;
-}
-
-header button:before, .close-modal:before {
-    content: "";
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    bottom: -5px;
-    left: -5px;
-    background: linear-gradient(90deg, #03a9f4, #f441a5, #ffeb3b, #03a9f4);
-    background-size: 400%;
-    border-radius: 40px;
-    opacity: 0;
-    transition: 0.5s;
-    z-index: -1;
-}
-
-header button:hover:before, .close-modal:hover:before {
-    filter: blur(20px);
-    opacity: 1;
-    animation: animate 8s linear infinite;
-}
-
-@keyframes animate {
-    0% { background-position: 0%; }
-    100% { background-position: 400%; }
+	display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .search-button {
@@ -543,11 +516,25 @@ main {
     width: 100%;
     margin: 0;
 }
+h2 {
+    display: block;
+    font-size: 1.5em;
+    margin-block-start: 0.83em;
+    margin-block-end: 0.83em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    font-weight: bold;
+    unicode-bidi: isolate;
+   background-image: linear-gradient(0.54turn, rgb(255 255 255) 11%, rgb(134 112 201) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
 
 #favorites h2,
 #search-results h2 {
-    text-align: center;
     margin-bottom: 20px;
+	text-align: left;
 }
 
 .search-icon {
@@ -741,7 +728,7 @@ footer {
 .rating-logo {
     max-width: 80px;
     height: auto;
-    transform: translateX(-90px);
+    transform: translateX(-5px);
 }
 
 /* Стили для кнопки и списка актеров */
