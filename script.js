@@ -809,7 +809,6 @@ async function displayMovieInfo(data, movie, logoData) {
         : { tmdb: data.id, type: mediaType === 'tv' ? 'serial' : 'movie' };
     console.log(`Kinobox использует: ${kpId ? `Kinopoisk ID: ${kpId}` : `TMDB ID: ${data.id}`}`);
 
-    // Проверка, что Kinobox определен
     if (typeof Kinobox !== 'undefined') {
         const kinobox = new Kinobox('#kinobox-player', {
             search: kinoboxSearch,
@@ -1013,9 +1012,68 @@ function displayMovieInfoError() {
     document.getElementById('close-modal').onclick = closeMovieInfo;
 }
 
+// Закрытие модального окна с остановкой воспроизведения
 function closeMovieInfo() {
+    const kinoboxPlayer = document.getElementById('kinobox-player');
+    const vibixPlayer = document.getElementById('vibix-player');
+    const lumexPlayer = document.getElementById('lumex-player');
+    const vidfastPlayer = document.getElementById('vidfast-player');
+    const trailerContainer = document.getElementById('trailer-container');
+
+    // Проверка активного плеера и остановка воспроизведения
+    if (kinoboxPlayer && kinoboxPlayer.style.display === 'block') {
+        try {
+            if (typeof Kinobox !== 'undefined' && kinoboxPlayer.children.length > 0) {
+                const iframe = kinoboxPlayer.querySelector('iframe');
+                if (iframe) {
+                    iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                    console.log('Kinobox: Видео приостановлено');
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка при остановке Kinobox:', error);
+        }
+    } else if (vibixPlayer && vibixPlayer.style.display === 'block') {
+        const iframe = vibixPlayer.querySelector('iframe');
+        if (iframe) {
+            iframe.src = iframe.src; // Перезагрузка iframe для остановки
+            console.log('Vibix: Видео остановлено');
+        }
+    } else if (lumexPlayer && lumexPlayer.style.display === 'block') {
+        const iframe = lumexPlayer.querySelector('iframe');
+        if (iframe) {
+            iframe.src = iframe.src; // Перезагрузка iframe для остановки
+            console.log('Lumex: Видео остановлено');
+        }
+    } else if (vidfastPlayer && vidfastPlayer.style.display === 'block') {
+        const iframe = vidfastPlayer.querySelector('iframe');
+        if (iframe) {
+            iframe.src = iframe.src; // Перезагрузка iframe для остановки
+            console.log('VidFast: Видео остановлено');
+        }
+    }
+
+    // Остановка трейлера, если он активен
+    if (trailerContainer && trailerContainer.classList.contains('active')) {
+        const trailerIframe = trailerContainer.querySelector('iframe');
+        if (trailerIframe) {
+            trailerIframe.src = trailerIframe.src; // Перезагрузка iframe для остановки
+            trailerContainer.classList.remove('active');
+            trailerContainer.style.display = 'none';
+            document.getElementById('toggle-trailer-button').textContent = 'Показать трейлер';
+            console.log('Трейлер остановлен');
+        }
+    }
+
+    // Скрытие модального окна и восстановление прокрутки
     movieInfoModal.style.display = 'none';
     enableBodyScroll();
+
+    // Очистка содержимого плееров
+    if (kinoboxPlayer) kinoboxPlayer.innerHTML = '';
+    if (vibixPlayer) vibixPlayer.innerHTML = '';
+    if (lumexPlayer) lumexPlayer.innerHTML = '';
+    if (vidfastPlayer) vidfastPlayer.innerHTML = '';
 }
 
 // Работа с избранным
