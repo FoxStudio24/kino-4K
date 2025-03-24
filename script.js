@@ -1,11 +1,11 @@
 // Константы
-const TMDB_API_KEY = '06936145fe8e20be28b02e26b55d3ce6'; // Ваш ключ TMDB
-const KINOPOISK_API_KEY = 'db70ce2d-cc98-4f5e-a5d5-bfcb03b25f9c'; // Ваш ключ Kinopoisk API
+const TMDB_API_KEY = '06936145fe8e20be28b02e26b55d3ce6';
+const KINOPOISK_API_KEY = 'db70ce2d-cc98-4f5e-a5d5-bfcb03b25f9c';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const KINOPOISK_BASE_URL = 'https://kinopoiskapiunofficial.tech/api/v2.2';
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 const BACKDROP_URL = 'https://image.tmdb.org/t/p/original';
-const VIBIX_API_TOKEN = '8506|eOybyt3t9bUnwdwexHVh6wLNFOyFiq8AQuMEDvfde091d426'; // Ваш токен Vibix
+const VIBIX_API_TOKEN = '8506|eOybyt3t9bUnwdwexHVh6wLNFOyFiq8AQuMEDvfde091d426';
 
 // Переменные состояния
 let initialLoadComplete = false;
@@ -37,7 +37,7 @@ const searchResultsModal = document.getElementById('search-results');
 const closeSearchButton = document.querySelector('#search-results .close-modal');
 const searchResultsGrid = document.getElementById('search-results-grid');
 
-// Маппинг кодов стран на русские названия
+// Маппинг кодов стран
 const countryMap = {
     'US': 'США',
     'RU': 'Россия',
@@ -55,13 +55,13 @@ const countryMap = {
     'MX': 'Мексика'
 };
 
-// Динамические стили с Montserrat
+// Стили
 const style = document.createElement('style');
 style.textContent = `
     .movie-logo { max-width: 300px; max-height: 200px; margin-bottom: 20px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5)); }
     .movie-title-logo { max-width: 300px; max-height: 120px; margin-bottom: 15px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5)); }
     .button-container { display: flex; justify-content: flex-end; margin-top: 10px; }
-    .player-button { padding: 7px 25px; background-color: rgba(255, 255, 255, 0.17); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; margin-left: 10px; backdrop-filter: blur(5px); }
+    .player NAACP-button { padding: 7px 25px; background-color: rgba(255, 255, 255, 0.17); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; margin-left: 10px; backdrop-filter: blur(5px); }
     .player-button:hover { background-color: rgba(120, 120, 120, 0.7); }
     .player-button.active { background-color: #8b75cb; backdrop-filter: none; }
     .player-button.hidden { display: none; }
@@ -123,7 +123,7 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Улучшенная функция для получения Kinopoisk ID по названию
+// Улучшенная функция поиска Kinopoisk ID
 async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaType = 'movie') {
     try {
         const searchType = mediaType === 'tv' ? 'TV_SERIES' : 'FILM';
@@ -163,12 +163,8 @@ async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaTyp
                 }
             });
 
-            if (!response.ok) {
-                throw new Error(`Ошибка HTTP: ${response.status}`);
-            }
-
+            if (!response.ok) throw new Error(`Ошибка HTTP: ${response.status}`);
             const data = await response.json();
-            console.log(`Kinopoisk поиск (страница ${page}):`, data);
 
             if (!data.items || data.items.length === 0) break;
 
@@ -187,16 +183,13 @@ async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaTyp
 
             if (candidates.length > 0) {
                 bestMatch = candidates[0].item;
-                console.log(`Найден кандидат (страница ${page}): Kinopoisk ID: ${bestMatch.kinopoiskId}, Название: ${bestMatch.nameRu || bestMatch.nameEn}, Год: ${bestMatch.year}, Score: ${candidates[0].score}`);
                 found = true;
                 break;
             }
-
             page++;
         }
 
         if (!found && originalTitle && originalTitle !== title) {
-            console.log(`Повторный поиск по оригинальному названию: "${originalTitle}"`);
             const url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(originalTitle)}&page=1`;
             const response = await fetch(url, {
                 headers: {
@@ -207,8 +200,6 @@ async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaTyp
 
             if (response.ok) {
                 const data = await response.json();
-                console.log('Kinopoisk поиск по оригинальному названию:', data);
-
                 const candidates = data.items
                     .map(item => {
                         const originalTitleMatch = item.nameOriginal ? getSimilarity(item.nameOriginal, originalTitle) : 0;
@@ -224,25 +215,19 @@ async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaTyp
 
                 if (candidates.length > 0) {
                     bestMatch = candidates[0].item;
-                    console.log(`Найден по оригинальному названию: Kinopoisk ID: ${bestMatch.kinopoiskId}, Название: ${bestMatch.nameRu || bestMatch.nameEn}, Год: ${bestMatch.year}, Score: ${candidates[0].score}`);
                     found = true;
                 }
             }
         }
 
-        if (!found) {
-            console.log(`Kinopoisk ID не найден для "${title}" (${year}) даже с оригинальным названием "${originalTitle}"`);
-            return null;
-        }
-
-        return bestMatch.kinopoiskId;
+        return bestMatch ? bestMatch.kinopoiskId : null;
     } catch (error) {
         console.error('Ошибка при поиске Kinopoisk ID:', error);
         return null;
     }
 }
 
-// Функции управления слайдером
+// Управление слайдером
 function initializeSliderControls(sectionId, grid) {
     const section = document.getElementById(sectionId);
     const prevButton = section.querySelector('.slider-button.prev');
@@ -273,7 +258,7 @@ function initializeSliderControls(sectionId, grid) {
     window.addEventListener('resize', updateSliderVisibility);
 }
 
-// Управление экраном загрузки
+// Экран загрузки
 function hideLoadingScreen() {
     if (initialLoadComplete) {
         loadingScreen.classList.add('hidden');
@@ -296,7 +281,7 @@ function checkAllLoaded() {
     }
 }
 
-// Маппинг рейтингов TMDB в числовые категории
+// Маппинг рейтингов
 const ratingMap = {
     'G': '0+',
     'PG': '6+',
@@ -316,7 +301,6 @@ const ratingMap = {
     '18+': '18+'
 };
 
-// Получение возрастного рейтинга с маппингом на числовые категории
 async function getAgeRating(movie) {
     const mediaType = movie.first_air_date ? 'tv' : 'movie';
     const url = `${TMDB_BASE_URL}/${mediaType}/${movie.id}/${mediaType === 'movie' ? 'release_dates' : 'content_ratings'}?api_key=${TMDB_API_KEY}`;
@@ -335,16 +319,13 @@ async function getAgeRating(movie) {
             rawRating = ruRating?.rating || usRating?.rating || 'N/A';
         }
 
-        const mappedRating = ratingMap[rawRating] || 'N/A';
-        console.log(`Фильм: ${movie.title || movie.name}, Исходный рейтинг: ${rawRating}, Преобразованный рейтинг: ${mappedRating}`);
-        return mappedRating;
+        return ratingMap[rawRating] || 'N/A';
     } catch (error) {
         console.error('Ошибка при получении возрастного рейтинга:', error);
         return 'N/A';
     }
 }
 
-// Проверка, произведен ли фильм в Индии
 async function isFromIndia(movie) {
     const mediaType = movie.first_air_date ? 'tv' : 'movie';
     const url = `${TMDB_BASE_URL}/${mediaType}/${movie.id}?api_key=${TMDB_API_KEY}&language=ru-RU`;
@@ -353,18 +334,15 @@ async function isFromIndia(movie) {
         const data = await response.json();
         const productionCountries = data.production_countries || [];
         const originCountry = data.origin_country || [];
-        const isIndiaInvolved = productionCountries.some(country => country.iso_3166_1 === 'IN') || 
-                               (Array.isArray(originCountry) && originCountry.includes('IN')) || 
-                               originCountry === 'IN';
-        console.log(`Фильм: ${data.title || data.name}, Произведен в Индии: ${isIndiaInvolved}`);
-        return isIndiaInvolved;
+        return productionCountries.some(country => country.iso_3166_1 === 'IN') || 
+               (Array.isArray(originCountry) && originCountry.includes('IN')) || 
+               originCountry === 'IN';
     } catch (error) {
         console.error('Ошибка при проверке страны производства:', error);
         return false;
     }
 }
 
-// Создание плиток фильмов
 async function createMovieTile(movie, isFullscreen = false) {
     const tile = document.createElement('div');
     tile.className = isFullscreen ? 'fullscreen-tile' : 'movie-tile';
@@ -408,7 +386,6 @@ async function createMovieTile(movie, isFullscreen = false) {
                 content.appendChild(title);
             }
         } catch (error) {
-            console.error('Ошибка при получении логотипов фильма:', error);
             const title = document.createElement('h2');
             title.className = 'fullscreen-title';
             title.textContent = movie.title || movie.name;
@@ -439,7 +416,6 @@ async function createMovieTile(movie, isFullscreen = false) {
     return tile;
 }
 
-// Новая функция для создания плиток результатов поиска
 async function createSearchResultTile(result) {
     const tile = document.createElement('div');
     tile.className = 'movie-tile';
@@ -469,7 +445,6 @@ async function createSearchResultTile(result) {
     return tile;
 }
 
-// Загрузка фильмов с фильтрацией Индии
 async function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries = 3) {
     return fetch(TMDB_BASE_URL + endpoint)
         .then(response => {
@@ -482,22 +457,17 @@ async function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, r
 
             for (const movie of data.results) {
                 const isIndian = await isFromIndia(movie);
-                if (!isIndian) {
-                    filteredMovies.push(movie);
-                } else {
-                    console.log(`Фильм "${movie.title || movie.name}" исключен из рекомендаций (страна: Индия)`);
-                }
+                if (!isIndian) filteredMovies.push(movie);
             }
 
             if (filteredMovies.length === 0) {
-                container.innerHTML = '<p>Нет доступных фильмов, удовлетворяющих критериям.</p>';
+                container.innerHTML = '<p>Нет доступных фильмов.</p>';
                 checkAllLoaded();
                 return;
             }
 
             if (container.id === 'new-releases-grid' && filteredMovies.length > 0) {
-                const movie = filteredMovies[0];
-                const movieTile = await createMovieTile(movie, isFullscreen);
+                const movieTile = await createMovieTile(filteredMovies[0], isFullscreen);
                 container.appendChild(movieTile);
             } else {
                 for (const movie of filteredMovies) {
@@ -508,16 +478,13 @@ async function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, r
             checkAllLoaded();
         })
         .catch(error => {
-            console.error('Ошибка:', error);
             if (retries > 0) {
-                console.log(`Повторная попытка... (осталось ${retries} попыток)`);
                 return fetchMoviesWithRetry(endpoint, container, isFullscreen, retries - 1);
             }
-            container.innerHTML = '<p>Не удалось загрузить фильмы. Пожалуйста, попробуйте позже.</p>';
+            container.innerHTML = '<p>Не удалось загрузить фильмы.</p>';
         });
 }
 
-// Функция для получения рейтинга Кинопоиска
 async function getKinopoiskRating(kpId) {
     try {
         const url = `${KINOPOISK_BASE_URL}/films/${kpId}`;
@@ -527,20 +494,15 @@ async function getKinopoiskRating(kpId) {
                 'Content-Type': 'application/json'
             }
         });
-        if (!response.ok) {
-            throw new Error(`Ошибка HTTP: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Ошибка HTTP: ${response.status}`);
         const data = await response.json();
-        const kpRating = data.ratingKinopoisk ? data.ratingKinopoisk.toFixed(1) : 'N/A';
-        console.log(`Рейтинг Кинопоиска для ID ${kpId}: ${kpRating}`);
-        return kpRating;
+        return data.ratingKinopoisk ? data.ratingKinopoisk.toFixed(1) : 'N/A';
     } catch (error) {
         console.error('Ошибка при получении рейтинга Кинопоиска:', error);
         return 'N/A';
     }
 }
 
-// Функции для управления прокруткой
 function disableBodyScroll() {
     document.body.style.overflow = 'hidden';
     document.body.style.height = '100vh';
@@ -551,7 +513,7 @@ function enableBodyScroll() {
     document.body.style.height = '';
 }
 
-// Отображение информации о фильме
+// Обновленная функция showMovieInfo с закрытием других модальных окон
 async function showMovieInfo(movie) {
     const modalContent = movieInfoModal.querySelector('.modal-content');
     modalContent.innerHTML = `
@@ -559,6 +521,15 @@ async function showMovieInfo(movie) {
             <img src="icons/Загрузка.gif" alt="Загрузка">
         </div>
     `;
+
+    // Закрываем модальные окна поиска и избранного, если они открыты
+    if (searchResultsModal.style.display === 'flex') {
+        closeSearchResults();
+    }
+    if (favoritesModal.style.display === 'flex') {
+        closeFavorites();
+    }
+
     movieInfoModal.style.display = 'flex';
     disableBodyScroll();
 
@@ -607,63 +578,35 @@ async function displayMovieInfo(data, movie, logoData) {
     let kpId = null;
     let vibixAvailable = false;
     let lumexAvailable = false;
-    let vidfastAvailable = true; // Предполагаем, что VidFast всегда доступен
+    let vidfastAvailable = true;
     let kpRating = 'N/A';
     let hasActors = false;
     let hasTrailers = false;
 
     try {
         const externalIdsUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/external_ids?api_key=${TMDB_API_KEY}`;
-        const externalIdsResponse = await fetch(externalIdsUrl);
-        if (!externalIdsResponse.ok) {
-            console.error(`Ошибка external_ids: ${externalIdsResponse.status}`);
-        }
-        const externalIdsData = await externalIdsResponse.json();
-        kpId = externalIdsData.kinopoisk_id || null;
-        console.log(`TMDB ID: ${data.id}, Kinopoisk ID из TMDB: ${kpId}`);
-
-        if (!kpId) {
-            kpId = await getKinopoiskIdByTitle(
-                data.title || data.name,
-                releaseYear,
-                data.original_title || data.original_name,
-                mediaType
-            );
-            console.log(`Kinopoisk ID из поиска по названию: ${kpId}`);
-        }
+        const externalIdsData = await fetch(externalIdsUrl).then(res => res.json());
+        kpId = externalIdsData.kinopoisk_id || await getKinopoiskIdByTitle(
+            data.title || data.name,
+            releaseYear,
+            data.original_title || data.original_name,
+            mediaType
+        );
 
         if (kpId) {
             kpRating = await getKinopoiskRating(kpId);
-            try {
-                const vibixResponse = await fetch(`https://vibix.org/api/v1/publisher/videos/kp/${kpId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${VIBIX_API_TOKEN}`
-                    }
-                });
-                console.log(`Vibix статус: ${vibixResponse.status}`);
-                const vibixData = await vibixResponse.json();
-                vibixAvailable = vibixResponse.ok && vibixData.iframe_url;
-                console.log('Vibix данные:', vibixData);
-            } catch (error) {
-                console.error('Ошибка проверки Vibix:', error);
-            }
+            const vibixResponse = await fetch(`https://vibix.org/api/v1/publisher/videos/kp/${kpId}`, {
+                headers: { 'Authorization': `Bearer ${VIBIX_API_TOKEN}` }
+            });
+            vibixAvailable = vibixResponse.ok && (await vibixResponse.json()).iframe_url;
             lumexAvailable = true;
-        } else {
-            console.log(`Фильм "${title}" (${releaseYear}) отсутствует в базе Kinopoisk на данный момент.`);
         }
 
-        const creditsUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/credits?api_key=${TMDB_API_KEY}&language=ru-RU`;
-        const creditsResponse = await fetch(creditsUrl);
-        const creditsData = await creditsResponse.json();
+        const creditsData = await fetch(`${TMDB_BASE_URL}/${mediaType}/${data.id}/credits?api_key=${TMDB_API_KEY}&language=ru-RU`).then(res => res.json());
         hasActors = creditsData.cast && creditsData.cast.length > 0;
-        console.log(`Актеры доступны: ${hasActors}, Количество: ${creditsData.cast?.length || 0}`);
 
-        const videosUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/videos?api_key=${TMDB_API_KEY}&language=ru-RU`;
-        const videosResponse = await fetch(videosUrl);
-        const videosData = await videosResponse.json();
-        const trailers = videosData.results.filter(video => video.type === 'Trailer' && video.site === 'YouTube');
-        hasTrailers = trailers.length > 0;
-        console.log(`Трейлеры доступны: ${hasTrailers}, Количество: ${trailers.length}`);
+        const videosData = await fetch(`${TMDB_BASE_URL}/${mediaType}/${data.id}/videos?api_key=${TMDB_API_KEY}&language=ru-RU`).then(res => res.json());
+        hasTrailers = videosData.results.filter(video => video.type === 'Trailer' && video.site === 'YouTube').length > 0;
     } catch (error) {
         console.error('Ошибка при получении дополнительных данных:', error);
     }
@@ -722,38 +665,23 @@ async function displayMovieInfo(data, movie, logoData) {
 
         toggleActorsButton.onclick = async () => {
             if (!actorsLoaded) {
-                try {
-                    const creditsUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/credits?api_key=${TMDB_API_KEY}&language=ru-RU`;
-                    const response = await fetch(creditsUrl);
-                    const creditsData = await response.json();
-                    const actors = creditsData.cast.slice(0, 10);
-
-                    actorsList.innerHTML = '';
-                    actors.forEach(actor => {
-                        const actorItem = document.createElement('div');
-                        actorItem.className = 'actor-item';
-                        actorItem.innerHTML = `
-                            <img src="${actor.profile_path ? `${IMG_URL}${actor.profile_path}` : 'icons/poster.png'}" alt="${actor.name}">
-                            <p>${actor.name}</p>
-                        `;
-                        actorsList.appendChild(actorItem);
-                    });
-                    actorsLoaded = true;
-                } catch (error) {
-                    console.error('Ошибка при загрузке актеров:', error);
-                    actorsList.innerHTML = '<p>Не удалось загрузить актеров.</p>';
-                }
+                const creditsData = await fetch(`${TMDB_BASE_URL}/${mediaType}/${data.id}/credits?api_key=${TMDB_API_KEY}&language=ru-RU`).then(res => res.json());
+                actorsList.innerHTML = '';
+                creditsData.cast.slice(0, 10).forEach(actor => {
+                    const actorItem = document.createElement('div');
+                    actorItem.className = 'actor-item';
+                    actorItem.innerHTML = `
+                        <img src="${actor.profile_path ? `${IMG_URL}${actor.profile_path}` : 'icons/poster.png'}" alt="${actor.name}">
+                        <p>${actor.name}</p>
+                    `;
+                    actorsList.appendChild(actorItem);
+                });
+                actorsLoaded = true;
             }
 
-            if (actorsList.classList.contains('active')) {
-                actorsList.classList.remove('active');
-                toggleActorsButton.textContent = 'Показать актеров';
-                setTimeout(() => actorsList.style.display = 'none', 300);
-            } else {
-                actorsList.style.display = 'block';
-                setTimeout(() => actorsList.classList.add('active'), 10);
-                toggleActorsButton.textContent = 'Скрыть актеров';
-            }
+            actorsList.classList.toggle('active');
+            toggleActorsButton.textContent = actorsList.classList.contains('active') ? 'Скрыть актеров' : 'Показать актеров';
+            actorsList.style.display = actorsList.classList.contains('active') ? 'block' : 'none';
         };
     }
 
@@ -764,76 +692,38 @@ async function displayMovieInfo(data, movie, logoData) {
 
         toggleTrailerButton.onclick = async () => {
             if (!trailerLoaded) {
-                try {
-                    const videosUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/videos?api_key=${TMDB_API_KEY}&language=ru-RU`;
-                    const response = await fetch(videosUrl);
-                    const videosData = await response.json();
-                    const trailers = videosData.results.filter(video => video.type === 'Trailer' && video.site === 'YouTube');
-
-                    let trailer = trailers.find(trailer => trailer.iso_639_1 === 'ru');
-                    if (!trailer && trailers.length > 0) trailer = trailers[0];
-
-                    if (trailer) {
-                        trailerContainer.innerHTML = `
-                            <iframe src="https://www.youtube.com/embed/${trailer.key}" 
-                                    frameborder="0" 
-                                    allowfullscreen 
-                                    allow="autoplay; encrypted-media"></iframe>
-                        `;
-                        console.log(`Трейлер загружен: ${trailer.name} (${trailer.iso_639_1})`);
-                    } else {
-                        trailerContainer.innerHTML = '<p>Трейлер не найден.</p>';
-                        console.log('Трейлеры отсутствуют для этого фильма/сериала');
-                    }
-                    trailerLoaded = true;
-                } catch (error) {
-                    console.error('Ошибка при загрузке трейлера:', error);
-                    trailerContainer.innerHTML = '<p>Не удалось загрузить трейлер.</p>';
+                const videosData = await fetch(`${TMDB_BASE_URL}/${mediaType}/${data.id}/videos?api_key=${TMDB_API_KEY}&language=ru-RU`).then(res => res.json());
+                const trailers = videosData.results.filter(video => video.type === 'Trailer' && video.site === 'YouTube');
+                const trailer = trailers.find(t => t.iso_639_1 === 'ru') || trailers[0];
+                if (trailer) {
+                    trailerContainer.innerHTML = `
+                        <iframe src="https://www.youtube.com/embed/${trailer.key}" 
+                                frameborder="0" 
+                                allowfullscreen 
+                                allow="autoplay; encrypted-media"></iframe>
+                    `;
                 }
+                trailerLoaded = true;
             }
 
-            if (trailerContainer.classList.contains('active')) {
-                trailerContainer.classList.remove('active');
-                toggleTrailerButton.textContent = 'Показать трейлер';
-                setTimeout(() => trailerContainer.style.display = 'none', 300);
-            } else {
-                trailerContainer.style.display = 'block';
-                setTimeout(() => trailerContainer.classList.add('active'), 10);
-                toggleTrailerButton.textContent = 'Скрыть трейлер';
-            }
+            trailerContainer.classList.toggle('active');
+            toggleTrailerButton.textContent = trailerContainer.classList.contains('active') ? 'Скрыть трейлер' : 'Показать трейлер';
+            trailerContainer.style.display = trailerContainer.classList.contains('active') ? 'block' : 'none';
         };
     }
 
     const kinoboxSearch = kpId 
         ? { kinopoisk: kpId, type: mediaType === 'tv' ? 'serial' : 'movie' }
         : { tmdb: data.id, type: mediaType === 'tv' ? 'serial' : 'movie' };
-    console.log(`Kinobox использует: ${kpId ? `Kinopoisk ID: ${kpId}` : `TMDB ID: ${data.id}`}`);
 
     if (typeof Kinobox !== 'undefined') {
         const kinobox = new Kinobox('#kinobox-player', {
             search: kinoboxSearch,
-            players: { 
-                'turbo': true,
-                'alloha': true,
-                'lumex': true,
-                'collaps': true,
-                'videoapi': false,
-                'hddb': false 
-            },
+            players: { 'turbo': true, 'alloha': true, 'lumex': true, 'collaps': true },
             params: { season: 1, episode: 1 },
             ui: { mobile: true }
         });
-
-        try {
-            await kinobox.init();
-            console.log('Kinobox инициализирован');
-        } catch (error) {
-            console.error('Ошибка инициализации Kinobox:', error);
-            document.getElementById('kinobox-player').innerHTML = '<p>Не удалось загрузить плеер Kinobox</p>';
-        }
-    } else {
-        console.error('Kinobox не подключен. Убедитесь, что скрипт Kinobox загружен.');
-        document.getElementById('kinobox-player').innerHTML = '<p>Плеер Kinobox недоступен</p>';
+        await kinobox.init();
     }
 
     const kinoboxPlayer = document.getElementById('kinobox-player');
@@ -846,99 +736,44 @@ async function displayMovieInfo(data, movie, logoData) {
     const vidfastButton = document.getElementById('vidfast-button');
 
     async function loadVibixPlayer() {
-        if (!kpId) {
-            vibixPlayer.innerHTML = '<p>Kinopoisk ID не найден</p>';
-            console.log('Vibix: Нет kpId');
-            return;
-        }
-
-        try {
-            const response = await fetch(`https://vibix.org/api/v1/publisher/videos/kp/${kpId}`, {
-                headers: {
-                    'Authorization': `Bearer ${VIBIX_API_TOKEN}`
-                }
-            });
-            console.log(`Vibix запрос для kpId ${kpId}, статус: ${response.status}`);
-            if (!response.ok) {
-                vibixPlayer.innerHTML = `<p>Ошибка Vibix: ${response.status}</p>`;
-                throw new Error(`Vibix API ошибка: ${response.status}`);
-            }
-            const vibixData = await response.json();
-            console.log('Vibix данные:', vibixData);
-            if (vibixData.iframe_url) {
-                vibixPlayer.innerHTML = `
-                    <iframe src="${vibixData.iframe_url}" 
-                            width="100%" 
-                            height="100%" 
-                            frameborder="0" 
-                            allowfullscreen 
-                            allow="autoplay *; fullscreen *"></iframe>
-                `;
-                console.log('Vibix iframe загружен:', vibixData.iframe_url);
-            } else {
-                vibixPlayer.innerHTML = '<p>Видео не найдено на Vibix</p>';
-                console.log('Vibix: iframe_url отсутствует');
-            }
-        } catch (error) {
-            console.error('Ошибка загрузки Vibix:', error);
-            vibixPlayer.innerHTML = '<p>Ошибка загрузки плеера Vibix</p>';
+        if (!kpId) return vibixPlayer.innerHTML = '<p>Kinopoisk ID не найден</p>';
+        const response = await fetch(`https://vibix.org/api/v1/publisher/videos/kp/${kpId}`, {
+            headers: { 'Authorization': `Bearer ${VIBIX_API_TOKEN}` }
+        });
+        const vibixData = await response.json();
+        if (vibixData.iframe_url) {
+            vibixPlayer.innerHTML = `<iframe src="${vibixData.iframe_url}" width="100%" height="100%" frameborder="0" allowfullscreen allow="autoplay *; fullscreen *"></iframe>`;
+        } else {
+            vibixPlayer.innerHTML = '<p>Видео не найдено на Vibix</p>';
         }
     }
 
     async function loadLumexPlayer() {
-        if (!kpId) {
-            lumexPlayer.innerHTML = '<p>Kinopoisk ID не найден</p>';
-            console.log('Lumex: Нет kpId');
-            return;
-        }
-
-        try {
-            const iframeSrc = `//p.lumex.cloud/GbaXAhTWVSqL?kp_id=${kpId}&autoplay=1`;
-            console.log(`Lumex iframe URL: ${iframeSrc}`);
-            lumexPlayer.innerHTML = `
-                <iframe src="${iframeSrc}" 
-                        width="100%" 
-                        height="100%" 
-                        frameborder="0" 
-                        allowfullscreen 
-                        allow="autoplay *; fullscreen *"></iframe>
-            `;
-            console.log('Lumex плеер загружен');
-        } catch (error) {
-            console.error('Ошибка загрузки Lumex:', error);
-            lumexPlayer.innerHTML = '<p>Ошибка загрузки плеера Lumex</p>';
-        }
+        if (!kpId) return lumexPlayer.innerHTML = '<p>Kinopoisk ID не найден</p>';
+        lumexPlayer.innerHTML = `
+            <iframe src="//p.lumex.cloud/GbaXAhTWVSqL?kp_id=${kpId}&autoplay=1" 
+                    width="100%" 
+                    height="100%" 
+                    frameborder="0" 
+                    allowfullscreen 
+                    allow="autoplay *; fullscreen *"></iframe>
+        `;
     }
 
     async function loadVidfastPlayer() {
-        try {
-            const externalIdsUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/external_ids?api_key=${TMDB_API_KEY}`;
-            const externalIdsResponse = await fetch(externalIdsUrl);
-            const externalIdsData = await externalIdsResponse.json();
-            const imdbId = externalIdsData.imdb_id || null;
-            const tmdbId = data.id;
-
-            let iframeSrc;
-            if (mediaType === 'movie') {
-                iframeSrc = `https://vidfast.pro/movie/${imdbId || tmdbId}?autoPlay=true&color=16A085`;
-            } else {
-                iframeSrc = `https://vidfast.pro/tv/${imdbId || tmdbId}/1/1?autoPlay=true&nextButton=true&autoNext=true&color=16A085`;
-            }
-
-            console.log(`VidFast iframe URL: ${iframeSrc}`);
-            vidfastPlayer.innerHTML = `
-                <iframe src="${iframeSrc}" 
-                        width="100%" 
-                        height="100%" 
-                        frameborder="0" 
-                        allowfullscreen 
-                        allow="autoplay *; fullscreen *"></iframe>
-            `;
-            console.log('VidFast плеер загружен');
-        } catch (error) {
-            console.error('Ошибка загрузки VidFast:', error);
-            vidfastPlayer.innerHTML = '<p>Ошибка загрузки плеера VidFast</p>';
-        }
+        const externalIdsData = await fetch(`${TMDB_BASE_URL}/${mediaType}/${data.id}/external_ids?api_key=${TMDB_API_KEY}`).then(res => res.json());
+        const imdbId = externalIdsData.imdb_id || data.id;
+        const iframeSrc = mediaType === 'movie' 
+            ? `https://vidfast.pro/movie/${imdbId}?autoPlay=true&color=16A085`
+            : `https://vidfast.pro/tv/${imdbId}/1/1?autoPlay=true&nextButton=true&autoNext=true&color=16A085`;
+        vidfastPlayer.innerHTML = `
+            <iframe src="${iframeSrc}" 
+                    width="100%" 
+                    height="100%" 
+                    frameborder="0" 
+                    allowfullscreen 
+                    allow="autoplay *; fullscreen *"></iframe>
+        `;
     }
 
     kinoboxButton.onclick = () => {
@@ -950,7 +785,6 @@ async function displayMovieInfo(data, movie, logoData) {
         vibixButton.classList.remove('active');
         lumexButton.classList.remove('active');
         vidfastButton.classList.remove('active');
-        console.log('Переключено на Kinobox');
     };
 
     vibixButton.onclick = () => {
@@ -962,10 +796,7 @@ async function displayMovieInfo(data, movie, logoData) {
         kinoboxButton.classList.remove('active');
         lumexButton.classList.remove('active');
         vidfastButton.classList.remove('active');
-        if (!vibixPlayer.children.length) {
-            console.log('Загрузка Vibix...');
-            loadVibixPlayer();
-        }
+        if (!vibixPlayer.children.length) loadVibixPlayer();
     };
 
     lumexButton.onclick = () => {
@@ -977,10 +808,7 @@ async function displayMovieInfo(data, movie, logoData) {
         kinoboxButton.classList.remove('active');
         vibixButton.classList.remove('active');
         vidfastButton.classList.remove('active');
-        if (!lumexPlayer.children.length) {
-            console.log('Загрузка Lumex...');
-            loadLumexPlayer();
-        }
+        if (!lumexPlayer.children.length) loadLumexPlayer();
     };
 
     vidfastButton.onclick = () => {
@@ -992,10 +820,7 @@ async function displayMovieInfo(data, movie, logoData) {
         kinoboxButton.classList.remove('active');
         vibixButton.classList.remove('active');
         lumexButton.classList.remove('active');
-        if (!vidfastPlayer.children.length) {
-            console.log('Загрузка VidFast...');
-            loadVidfastPlayer();
-        }
+        if (!vidfastPlayer.children.length) loadVidfastPlayer();
     };
 
     document.getElementById('add-to-favorites').onclick = () => toggleFavorite(data);
@@ -1006,77 +831,35 @@ function displayMovieInfoError() {
     const modalContent = movieInfoModal.querySelector('.modal-content');
     modalContent.innerHTML = `
         <p>Произошла ошибка при загрузке информации о фильме.</p>
-        <p>Пожалуйста, попробуйте позже или выберите другой фильм.</p>
         <button id="close-modal">Закрыть</button>
     `;
     document.getElementById('close-modal').onclick = closeMovieInfo;
 }
 
-// Закрытие модального окна с остановкой воспроизведения
 function closeMovieInfo() {
-    const kinoboxPlayer = document.getElementById('kinobox-player');
-    const vibixPlayer = document.getElementById('vibix-player');
-    const lumexPlayer = document.getElementById('lumex-player');
-    const vidfastPlayer = document.getElementById('vidfast-player');
+    const players = ['kinobox-player', 'vibix-player', 'lumex-player', 'vidfast-player'].map(id => document.getElementById(id));
     const trailerContainer = document.getElementById('trailer-container');
 
-    // Проверка активного плеера и остановка воспроизведения
-    if (kinoboxPlayer && kinoboxPlayer.style.display === 'block') {
-        try {
-            if (typeof Kinobox !== 'undefined' && kinoboxPlayer.children.length > 0) {
-                const iframe = kinoboxPlayer.querySelector('iframe');
-                if (iframe) {
-                    iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-                    console.log('Kinobox: Видео приостановлено');
-                }
-            }
-        } catch (error) {
-            console.error('Ошибка при остановке Kinobox:', error);
+    players.forEach(player => {
+        if (player && player.style.display === 'block') {
+            const iframe = player.querySelector('iframe');
+            if (iframe) iframe.src = iframe.src;
+            player.innerHTML = '';
         }
-    } else if (vibixPlayer && vibixPlayer.style.display === 'block') {
-        const iframe = vibixPlayer.querySelector('iframe');
-        if (iframe) {
-            iframe.src = iframe.src; // Перезагрузка iframe для остановки
-            console.log('Vibix: Видео остановлено');
-        }
-    } else if (lumexPlayer && lumexPlayer.style.display === 'block') {
-        const iframe = lumexPlayer.querySelector('iframe');
-        if (iframe) {
-            iframe.src = iframe.src; // Перезагрузка iframe для остановки
-            console.log('Lumex: Видео остановлено');
-        }
-    } else if (vidfastPlayer && vidfastPlayer.style.display === 'block') {
-        const iframe = vidfastPlayer.querySelector('iframe');
-        if (iframe) {
-            iframe.src = iframe.src; // Перезагрузка iframe для остановки
-            console.log('VidFast: Видео остановлено');
-        }
-    }
+    });
 
-    // Остановка трейлера, если он активен
     if (trailerContainer && trailerContainer.classList.contains('active')) {
         const trailerIframe = trailerContainer.querySelector('iframe');
-        if (trailerIframe) {
-            trailerIframe.src = trailerIframe.src; // Перезагрузка iframe для остановки
-            trailerContainer.classList.remove('active');
-            trailerContainer.style.display = 'none';
-            document.getElementById('toggle-trailer-button').textContent = 'Показать трейлер';
-            console.log('Трейлер остановлен');
-        }
+        if (trailerIframe) trailerIframe.src = trailerIframe.src;
+        trailerContainer.classList.remove('active');
+        trailerContainer.style.display = 'none';
+        document.getElementById('toggle-trailer-button').textContent = 'Показать трейлер';
     }
 
-    // Скрытие модального окна и восстановление прокрутки
     movieInfoModal.style.display = 'none';
     enableBodyScroll();
-
-    // Очистка содержимого плееров
-    if (kinoboxPlayer) kinoboxPlayer.innerHTML = '';
-    if (vibixPlayer) vibixPlayer.innerHTML = '';
-    if (lumexPlayer) lumexPlayer.innerHTML = '';
-    if (vidfastPlayer) vidfastPlayer.innerHTML = '';
 }
 
-// Работа с избранным
 function isFavorite(movie) {
     return favorites.some(fav => fav.id === movie.id);
 }
@@ -1106,8 +889,6 @@ function updateFavoritesGrid() {
         if (!isIndian) {
             const movieTile = await createMovieTile(movie);
             favoritesGrid.appendChild(movieTile);
-        } else {
-            console.log(`Фильм "${movie.title}" исключен из избранного (страна: Индия)`);
         }
     });
 }
@@ -1123,7 +904,6 @@ function closeFavorites() {
     enableBodyScroll();
 }
 
-// Поиск фильмов с фильтрацией Индии
 async function searchMovies(query) {
     searchResultsGrid.innerHTML = `
         <div class="loading-indicator">
@@ -1134,27 +914,37 @@ async function searchMovies(query) {
     disableBodyScroll();
     searchResultsGrid.dataset.lastQuery = query;
 
-    const searchUrl = `${TMDB_BASE_URL}/search/multi?api_key=${TMDB_API_KEY}&language=ru-RU&query=${encodeURIComponent(query)}&include_adult=false`;
-    try {
-        const response = await fetch(searchUrl);
-        if (!response.ok) throw new Error(`TMDB ошибка: ${response.status}`);
-        const data = await response.json();
+    let allResults = [];
+    let page = 1;
+    const maxPages = 3;
 
-        let filteredResults = data.results.filter(result => 
-            result.media_type === 'movie' || result.media_type === 'tv'
-        );
+    try {
+        while (page <= maxPages) {
+            const searchUrl = `${TMDB_BASE_URL}/search/multi?api_key=${TMDB_API_KEY}&language=ru-RU&query=${encodeURIComponent(query)}&page=${page}&include_adult=false`;
+            const response = await fetch(searchUrl);
+            if (!response.ok) throw new Error(`TMDB ошибка: ${response.status}`);
+            const data = await response.json();
+
+            const filteredResults = data.results.filter(result => 
+                (result.media_type === 'movie' || result.media_type === 'tv') &&
+                result.poster_path
+            );
+
+            allResults = allResults.concat(filteredResults);
+
+            if (page >= data.total_pages || filteredResults.length === 0) break;
+            page++;
+        }
 
         const nonIndianResults = [];
-        for (const result of filteredResults) {
+        for (const result of allResults) {
             const isIndian = await isFromIndia(result);
             if (!isIndian) {
                 nonIndianResults.push(result);
-            } else {
-                console.log(`Фильм "${result.title || result.name}" исключен из поиска (страна: Индия)`);
             }
         }
 
-        filteredResults = nonIndianResults;
+        let filteredResults = nonIndianResults;
 
         switch (currentFilter) {
             case 'tv':
@@ -1175,9 +965,7 @@ async function searchMovies(query) {
                 break;
         }
 
-        filteredResults = filteredResults
-            .filter(result => result.vote_count >= 50 && result.vote_average >= 5)
-            .sort((a, b) => b.popularity - a.popularity);
+        filteredResults = filteredResults.sort((a, b) => b.popularity - a.popularity);
 
         if (filteredResults.length === 0) {
             searchResultsGrid.innerHTML = '<p>Ничего не найдено. Попробуйте изменить запрос или фильтр.</p>';
@@ -1185,13 +973,12 @@ async function searchMovies(query) {
         }
 
         searchResultsGrid.innerHTML = '';
-        for (const result of filteredResults) {
-            const movieTile = await createSearchResultTile(result);
-            searchResultsGrid.appendChild(movieTile);
-        }
+        const promises = filteredResults.map(result => createSearchResultTile(result));
+        const tiles = await Promise.all(promises);
+        tiles.forEach(tile => searchResultsGrid.appendChild(tile));
     } catch (error) {
         console.error('Ошибка поиска:', error);
-        searchResultsGrid.innerHTML = '<p>Не удалось выполнить поиск. Пожалуйста, попробуйте позже.</p>';
+        searchResultsGrid.innerHTML = '<p>Не удалось выполнить поиск. Попробуйте позже.</p>';
     }
 }
 
@@ -1221,37 +1008,26 @@ searchForm.onsubmit = (event) => {
 };
 
 movieInfoModal.addEventListener('click', (event) => {
-    if (event.target === movieInfoModal) {
-        closeMovieInfo();
-    }
+    if (event.target === movieInfoModal) closeMovieInfo();
 });
 
 favoritesModal.addEventListener('click', (event) => {
-    if (event.target === favoritesModal) {
-        closeFavorites();
-    }
+    if (event.target === favoritesModal) closeFavorites();
 });
 
 searchResultsModal.addEventListener('click', (event) => {
-    if (event.target === searchResultsModal) {
-        closeSearchResults();
-    }
+    if (event.target === searchResultsModal) closeSearchResults();
 });
 
-// Функция для применения фильтров поиска
 function applyFilter(filter) {
     currentFilter = filter;
     document.querySelectorAll('.filter-button').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`filter-${filter}`).classList.add('active');
     const lastQuery = searchResultsGrid.dataset.lastQuery;
-    if (lastQuery) {
-        searchMovies(lastQuery);
-    } else {
-        console.log('Нет последнего запроса для применения фильтра');
-    }
+    if (lastQuery) searchMovies(lastQuery);
 }
 
-// Инициализация фильтров поиска
+// Инициализация фильтров
 document.addEventListener('DOMContentLoaded', () => {
     const searchModalContent = searchResultsModal.querySelector('.modal-content');
     const filtersDiv = document.createElement('div');
@@ -1286,11 +1062,9 @@ Promise.all([
     hideLoadingScreen();
 });
 
-// Заполнение рейтинга TMDB в .landing-section
 async function updateLandingSectionRatings() {
-    const tmdbId = 197; // ID сериала "Silo"
-    const tmdbResponse = await fetch(`${TMDB_BASE_URL}/tv/${tmdbId}?api_key=${TMDB_API_KEY}&language=ru-RU`);
-    const tmdbData = await tmdbResponse.json();
+    const tmdbId = 197;
+    const tmdbData = await fetch(`${TMDB_BASE_URL}/tv/${tmdbId}?api_key=${TMDB_API_KEY}&language=ru-RU`).then(res => res.json());
     const tmdbRating = tmdbData.vote_average ? tmdbData.vote_average.toFixed(1) : 'N/A';
     const tmdbRatingClass = tmdbRating >= 7 ? 'rating-green' : tmdbRating >= 5 ? 'rating-yellow' : tmdbRating !== 'N/A' ? 'rating-red' : '';
     document.querySelector('.landing-section .tmdb-rating').textContent = tmdbRating;
