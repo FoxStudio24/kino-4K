@@ -46,15 +46,13 @@ const countryMap = {
     'DE': 'Германия',
     'JP': 'Япония',
     'CN': 'Китай',
-    'IN': 'Индия',
     'CA': 'Канада',
     'AU': 'Австралия',
     'IT': 'Италия',
     'ES': 'Испания',
     'KR': 'Южная Корея',
     'BR': 'Бразилия',
-    'MX': 'Мексика',
-    // Добавьте другие страны по необходимости
+    'MX': 'Мексика'
 };
 
 // Динамические стили с Montserrat
@@ -63,9 +61,9 @@ style.textContent = `
     .movie-logo { max-width: 300px; max-height: 200px; margin-bottom: 20px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5)); }
     .movie-title-logo { max-width: 300px; max-height: 120px; margin-bottom: 15px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5)); }
     .button-container { display: flex; justify-content: flex-end; margin-top: 10px; }
-    .player-button { padding: 7px 25px; background-color: rgba(255 255 255 / 17%); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; margin-left: 10px; backdrop-filter: blur(5px); }
+    .player-button { padding: 7px 25px; background-color: rgba(255, 255, 255, 0.17); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; margin-left: 10px; backdrop-filter: blur(5px); }
     .player-button:hover { background-color: rgba(120, 120, 120, 0.7); }
-    .player-button.active { background-color: #272727; backdrop-filter: none; }
+    .player-button.active { background-color: #8b75cb; backdrop-filter: none; }
     .player-button.hidden { display: none; }
     .video-player { width: 100%; height: 500px; max-width: 800px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
     .video-player iframe { width: 100%; height: 100%; border: none; border-radius: 10px; }
@@ -84,7 +82,7 @@ style.textContent = `
         max-height: 4.5em; 
         font-family: 'Montserrat', sans-serif; 
         font-size: 14px; 
-        line-height: 1; 
+        line-height: 1.5; 
     }
     .tagline {
         font-family: 'Montserrat', sans-serif;
@@ -104,7 +102,7 @@ style.textContent = `
     .ratings-container { display: flex; align-items: center; margin-top: 5px; gap: 10px; }
     .modal-age-rating { font-size: 12px; color: #fff; background-color: #555; padding: 2px 9px; border-radius: 10px; }
     .actors-button-container { text-align: right; margin-top: 10px; }
-    .actors-button, .trailer-button { padding: 7px 25px; background-color: rgba(255 255 255 / 17%); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; backdrop-filter: blur(5px); margin-left: 10px; }
+    .actors-button, .trailer-button { padding: 7px 25px; background-color: rgba(255, 255, 255, 0.17); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; backdrop-filter: blur(5px); margin-left: 10px; }
     .actors-button:hover, .trailer-button:hover { background-color: rgba(120, 120, 120, 0.7); }
     .actors-list, .trailer-container { display: none; margin-top: 20px; overflow-x: auto; padding-bottom: 10px; transition: all 0.3s ease-in-out; max-height: 0; }
     .actors-list.active, .trailer-container.active { display: block; max-height: 248px; }
@@ -346,6 +344,26 @@ async function getAgeRating(movie) {
     }
 }
 
+// Проверка, произведен ли фильм в Индии
+async function isFromIndia(movie) {
+    const mediaType = movie.first_air_date ? 'tv' : 'movie';
+    const url = `${TMDB_BASE_URL}/${mediaType}/${movie.id}?api_key=${TMDB_API_KEY}&language=ru-RU`;
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const productionCountries = data.production_countries || [];
+        const originCountry = data.origin_country || [];
+        const isIndiaInvolved = productionCountries.some(country => country.iso_3166_1 === 'IN') || 
+                               (Array.isArray(originCountry) && originCountry.includes('IN')) || 
+                               originCountry === 'IN';
+        console.log(`Фильм: ${data.title || data.name}, Произведен в Индии: ${isIndiaInvolved}`);
+        return isIndiaInvolved;
+    } catch (error) {
+        console.error('Ошибка при проверке страны производства:', error);
+        return false;
+    }
+}
+
 // Создание плиток фильмов
 async function createMovieTile(movie, isFullscreen = false) {
     const tile = document.createElement('div');
@@ -451,8 +469,8 @@ async function createSearchResultTile(result) {
     return tile;
 }
 
-// Загрузка фильмов
-function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries = 3) {
+// Загрузка фильмов с фильтрацией Индии
+async function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries = 3) {
     return fetch(TMDB_BASE_URL + endpoint)
         .then(response => {
             if (!response.ok) throw new Error('Сеть ответила ошибкой');
@@ -460,12 +478,29 @@ function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, retries
         })
         .then(async data => {
             container.innerHTML = '';
-            if (container.id === 'new-releases-grid' && data.results.length > 0) {
-                const movie = data.results[0];
+            const filteredMovies = [];
+
+            for (const movie of data.results) {
+                const isIndian = await isFromIndia(movie);
+                if (!isIndian) {
+                    filteredMovies.push(movie);
+                } else {
+                    console.log(`Фильм "${movie.title || movie.name}" исключен из рекомендаций (страна: Индия)`);
+                }
+            }
+
+            if (filteredMovies.length === 0) {
+                container.innerHTML = '<p>Нет доступных фильмов, удовлетворяющих критериям.</p>';
+                checkAllLoaded();
+                return;
+            }
+
+            if (container.id === 'new-releases-grid' && filteredMovies.length > 0) {
+                const movie = filteredMovies[0];
                 const movieTile = await createMovieTile(movie, isFullscreen);
                 container.appendChild(movieTile);
             } else {
-                for (const movie of data.results) {
+                for (const movie of filteredMovies) {
                     const movieTile = await createMovieTile(movie, isFullscreen);
                     container.appendChild(movieTile);
                 }
@@ -567,11 +602,12 @@ async function displayMovieInfo(data, movie, logoData) {
     const releaseYear = data.release_date ? parseInt(data.release_date.split('-')[0]) : data.first_air_date ? parseInt(data.first_air_date.split('-')[0]) : 'N/A';
     const countries = data.production_countries?.length > 0 
         ? data.production_countries.map(country => countryMap[country.iso_3166_1] || country.name).join(', ') 
-        : 'N/A'; // Используем русские названия стран
+        : 'N/A';
 
     let kpId = null;
     let vibixAvailable = false;
     let lumexAvailable = false;
+    let vidfastAvailable = true; // Предполагаем, что VidFast всегда доступен
     let kpRating = 'N/A';
     let hasActors = false;
     let hasTrailers = false;
@@ -645,7 +681,7 @@ async function displayMovieInfo(data, movie, logoData) {
                 </span>` : ''}
             ${kpRating !== 'N/A' ? `
                 <span class="rating-span kp-rating ${kpRatingClass}">
-                    <img src="https://www.kinopoisk.ru/b1n55f215/4ac89cn2mOY/MxrT9ZWTdsQtBZUvoYwEUfhJQdtvNJYt3pIpT3mMrSzFI1HTVx_2ZwGVwNrTtCZStHikDJlTPR96T3UMpt4m2PafFnMGQPKFrQMWbTGOVtXpyVAHYj6d5pVaJ4HylactgyUHUNbdZmfGVsTaQHOwWb6o4I5aBTPaNhEySO0drhE3RI3rkFh8Qi7FFSTxSg2dIIjeg6y0mChUGmgN9xHhLUip3lvYn6iqBRUB3Fs3tpc3OihE1EG9E3aZ-IAjU2sUtg4AbF_ZsIJsBhSreQ4IGOBL0cKps9OkWV2mzjqV4StNa1ZaXhXop8QYBVuXNT5Uc3uiRFpEfJg-lX1EpZljlPUFCi2S1zmB4IjV63eFTxkmSV9Er7CWItGVYUc30yDkz61V3xxf72sNHsvRWju-k7ixaE5ZRjPeP1fyROGV5hy_j0yjF59xDacOEy62yotcqkBfDWQ8XqPYWa1O_xZurU3jGZyd220tjpnNWpe39ZW08q0A2cM1m7VevUGmk-YVNk0AotEXP0StwhTn_s3OVG-JUYPlup3sHhEuTfAULesHo1yX2pclLo8VgdpbvDkUc32jixhA9Bm_1DXIZ12nHjuBDaoeEfcAqEKeZLCNhpAiAFVNpL2W7RnaKQD12ifmRCGSWlmTp-GIHoKcFzl-1Lny7cKSwTuUO1IyDSAVrZZ1jUpnW1myQemIEuu5hMTcYA-eA-k-F22W0WAB-Nsn4k2tWJrfHmghh96Imx41-188cKDFVwwwWPfQsQuh3mqRu8VGrtKX84iuQx4ivE6G1mKPV0hmv93sWFRrTnJabaFD6dLbnZsg6sAaBVlTu3iV_ThlxFvLtRa_VjvJZRNkHrxBQGRZ0vhKpMVW7LsEjVDqQNQJLPZQ7F9d74F-mq7sB2Mal9HVYOmFXsOTmPW0VrOxYkQRCDmTMZr3w2dV5h66DsOsHVa3xSxI260xzU5cLsvfDaH2k6pYm-4Bdp4gKg3m3FHZG6chSF4FmtE1uNo9u-PN2QC70PWV9MggHKKXPM-A6hpa-Y9uSV7icU1El6iLlYxushZgGBFvyDeVbqPKqR-a2R2sb8hQgZDVtr9U8LQkTZCLOV_00TrFrFejmnJOyS8SUD5ELAnUq3kNQR3gDVdLrXjX5p8fqgn53artiuHe1t9d7-FAVMoUmrY-nvm9oIPUDfRTfxx3DGOWqlHzzASsUlryymbA3q1-zgFYL80eyS5w1-TQECjPfx0g4oiiWZucVWsqBpkM3hf9c50wuGiEl40-W_YZ8geg1edddszJpxfQewLoAtRtuY8IlCCL0wSlM9XmUZMjQvqTpmWErFRXFpVtaQxYAVkQO3nQezmpj5IJvlh7XbCDrR7u1vbByezTmvpEbsOSYXrKzZmgxN8I5HfRK5iTYM09HS0mTaHRUZYX7WuAVQGT2bM0Ur3zK4YQADgfsxQ1AejcLlk2AcIo1dZ2hGkI3Sb6zoXVLY7WQWY63CVf3O2HOJ6t7YTu2lnUWifjhxEJ0pn7fBt_-29NHcqxXv0W-AwgXCfeuwLEZJAdvwCoCVYq8oXFVumB2Ervtd_iX1kuxfKVryELYBeYH56upUiUwFTVfLBafL1nghoIOhrykPsIaNNinrMIA-AQ135M5kuTJzrEABnhR5MFZ3fT5FgQags2U-1jxaEZXlbV7eaJGIzUnj-wXDV7bwLTgLyZf909CSdfr5x7CAwqUZb0CyEEGi57y0SZa0zYzeC00SqW0CnI_VenLcJp0ZHanSenwxAIXdL8PtI0OKsOVIo93z9eNIvlkiWYvgFMrx5YOEUliBYuOwJAFK4E0Evk-hFoVBGqAjAc4OuA4dHeFxZsqwVXwFNQe_cd8bmgC1uKvRe6nfnE59znlTqFxepS23ENo0yba_AFh1BoBpVGL3rRYhCabUM2Xm7ohquZlFXSoSnL34YRWfb5kP_zYoTYCntRu5I5SOvb6Jc3AYno2Ro4C-UDkun5hgedLwucxuV60S3ZGmpOvdolYkPqV99f1qHnAJwD2FV9M5T9suLGkwQykfsR8cSoWmjYtYABIh7Yc8howRljNIwHEefA1EtstJssX5fth75eaSDN6xfTmVLma0xWQVPWsb3a-POhxVJMNZEynr3MIFYvUDqNRqbWVXQF5sKdrP9DxdDjCNlNq_fcatOb6c4z1S6uQive2ZZbYSbPF4DWGHM32vI1oAuRSDhWdZX5y-cfJBH8SAssExczjSzJk6E2SkBWLcnQze4-Vy9RE-dIP9IpY0WgGdfYV6YpBJ3GFdG799U9sqAHHYm7mDLdMIlgHmoecgFJ7B_YeQqjDZJleMSBmKEA0ArrtRcr2J-iQTlSre0C5dCYlZ4rqgPcCpaaczgbcPAlylnOMp_1l7RL71TilXMHwKTa0bRF40JUr_6GiVaoQFSFrDCQLJIXYIF11GLkzW5UExZUoGXLGovVkf03nDn5oM9UiXqW_px3AKVb7tl2yYTo21I_y2YMVW68hIkfL4RUjGh2WChekygO-lSl6IDt3FlWXW6gSF-Anpa6Nxyyc2qEkUA9Vjod88AhHS0Z80ZC7RgYMo0kQ1Svt0OH2WbLHwphchEnE9PmwzEfKWlEaRmW1BOmogQdTRYWsvlX-rFoxRnFcd60FrRHoJcjl7WEAiuTnrhF4YSc7PjLDFZrRJACrLSUZlYdIEb-1SmhiuJRHBYcryoHEA0TEvK0n_j4bAuYynyX9t16x6TT6tGyzMJrHhN5RCXGmqs6gw-eYQYXSeN9ky5ekOnHcpJq5MzhEJtS0y-iwNBL3tb0PFByNaiHFUDxWPrZ-wak2ivQuUFC41AWPsKmghkqeYoAHmiFU4GhuF_rW1IgRbiU6WlGodxUHtYrLwSaiZGY9fXctTPrwpyAMl7zV7PO4FWklfNECWUdmjOHqEWa4TGEBp7pxVCLZLaX5pYU4U0-EuljQi5YVt4arC8LFUUSGzvwl792bQwXg7nTfo/static/images/icons/icon-kp-bw-inv.svg" alt="Kinopoisk" class="rating-logo">
+                    <img src="https://www.kinopoisk.ru/favicon.ico" alt="Kinopoisk" class="rating-logo">
                     ${kpRating}
                 </span>` : ''}
             ${ageRating !== 'N/A' ? `<span class="modal-age-rating">${ageRating}</span>` : ''}
@@ -663,11 +699,13 @@ async function displayMovieInfo(data, movie, logoData) {
             <div id="kinobox-player" class="video-player"></div>
             <div id="vibix-player" class="video-player" style="display: none;"></div>
             <div id="lumex-player" class="video-player" style="display: none;"></div>
+            <div id="vidfast-player" class="video-player" style="display: none;"></div>
         </div>
         <div class="button-container">
             <button class="player-button active" id="kinobox-button">Kinobox</button>
             <button class="player-button ${!vibixAvailable ? 'hidden' : ''}" id="vibix-button">Vibix</button>
             <button class="player-button ${!lumexAvailable ? 'hidden' : ''}" id="lumex-button">Lumex</button>
+            <button class="player-button" id="vidfast-button">VidFast(en)</button>
         </div>
         <button id="add-to-favorites">
             <img src="${isFavorite(data) ? 'icons/delete.png' : 'icons/add.png'}" alt="${isFavorite(data) ? 'Удалить из избранного' : 'Добавить в избранное'}" class="favorites-icon"/>
@@ -771,34 +809,42 @@ async function displayMovieInfo(data, movie, logoData) {
         : { tmdb: data.id, type: mediaType === 'tv' ? 'serial' : 'movie' };
     console.log(`Kinobox использует: ${kpId ? `Kinopoisk ID: ${kpId}` : `TMDB ID: ${data.id}`}`);
 
-    const kinobox = new Kinobox('#kinobox-player', {
-        search: kinoboxSearch,
-        players: { 
-            'turbo': true,
-            'alloha': true, 
-            'lumex': true, 
-            'collaps': true, 
-            'videoapi': false, 
-            'hddb': false 
-        },
-        params: { season: 1, episode: 1 },
-        ui: { mobile: true }
-    });
+    // Проверка, что Kinobox определен
+    if (typeof Kinobox !== 'undefined') {
+        const kinobox = new Kinobox('#kinobox-player', {
+            search: kinoboxSearch,
+            players: { 
+                'turbo': true,
+                'alloha': true,
+                'lumex': true,
+                'collaps': true,
+                'videoapi': false,
+                'hddb': false 
+            },
+            params: { season: 1, episode: 1 },
+            ui: { mobile: true }
+        });
 
-    try {
-        await kinobox.init();
-        console.log('Kinobox инициализирован');
-    } catch (error) {
-        console.error('Ошибка инициализации Kinobox:', error);
-        document.getElementById('kinobox-player').innerHTML = '<p>Не удалось загрузить плеер Kinobox</p>';
+        try {
+            await kinobox.init();
+            console.log('Kinobox инициализирован');
+        } catch (error) {
+            console.error('Ошибка инициализации Kinobox:', error);
+            document.getElementById('kinobox-player').innerHTML = '<p>Не удалось загрузить плеер Kinobox</p>';
+        }
+    } else {
+        console.error('Kinobox не подключен. Убедитесь, что скрипт Kinobox загружен.');
+        document.getElementById('kinobox-player').innerHTML = '<p>Плеер Kinobox недоступен</p>';
     }
 
     const kinoboxPlayer = document.getElementById('kinobox-player');
     const vibixPlayer = document.getElementById('vibix-player');
     const lumexPlayer = document.getElementById('lumex-player');
+    const vidfastPlayer = document.getElementById('vidfast-player');
     const kinoboxButton = document.getElementById('kinobox-button');
     const vibixButton = document.getElementById('vibix-button');
     const lumexButton = document.getElementById('lumex-button');
+    const vidfastButton = document.getElementById('vidfast-button');
 
     async function loadVibixPlayer() {
         if (!kpId) {
@@ -865,45 +911,93 @@ async function displayMovieInfo(data, movie, logoData) {
         }
     }
 
+    async function loadVidfastPlayer() {
+        try {
+            const externalIdsUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/external_ids?api_key=${TMDB_API_KEY}`;
+            const externalIdsResponse = await fetch(externalIdsUrl);
+            const externalIdsData = await externalIdsResponse.json();
+            const imdbId = externalIdsData.imdb_id || null;
+            const tmdbId = data.id;
+
+            let iframeSrc;
+            if (mediaType === 'movie') {
+                iframeSrc = `https://vidfast.pro/movie/${imdbId || tmdbId}?autoPlay=true&color=16A085`;
+            } else {
+                iframeSrc = `https://vidfast.pro/tv/${imdbId || tmdbId}/1/1?autoPlay=true&nextButton=true&autoNext=true&color=16A085`;
+            }
+
+            console.log(`VidFast iframe URL: ${iframeSrc}`);
+            vidfastPlayer.innerHTML = `
+                <iframe src="${iframeSrc}" 
+                        width="100%" 
+                        height="100%" 
+                        frameborder="0" 
+                        allowfullscreen 
+                        allow="autoplay *; fullscreen *"></iframe>
+            `;
+            console.log('VidFast плеер загружен');
+        } catch (error) {
+            console.error('Ошибка загрузки VidFast:', error);
+            vidfastPlayer.innerHTML = '<p>Ошибка загрузки плеера VidFast</p>';
+        }
+    }
+
     kinoboxButton.onclick = () => {
         kinoboxPlayer.style.display = 'block';
         vibixPlayer.style.display = 'none';
         lumexPlayer.style.display = 'none';
+        vidfastPlayer.style.display = 'none';
         kinoboxButton.classList.add('active');
         vibixButton.classList.remove('active');
         lumexButton.classList.remove('active');
+        vidfastButton.classList.remove('active');
         console.log('Переключено на Kinobox');
     };
 
-    if (vibixButton) {
-        vibixButton.onclick = () => {
-            kinoboxPlayer.style.display = 'none';
-            vibixPlayer.style.display = 'block';
-            lumexPlayer.style.display = 'none';
-            vibixButton.classList.add('active');
-            kinoboxButton.classList.remove('active');
-            lumexButton.classList.remove('active');
-            if (!vibixPlayer.children.length) {
-                console.log('Загрузка Vibix...');
-                loadVibixPlayer();
-            }
-        };
-    }
+    vibixButton.onclick = () => {
+        kinoboxPlayer.style.display = 'none';
+        vibixPlayer.style.display = 'block';
+        lumexPlayer.style.display = 'none';
+        vidfastPlayer.style.display = 'none';
+        vibixButton.classList.add('active');
+        kinoboxButton.classList.remove('active');
+        lumexButton.classList.remove('active');
+        vidfastButton.classList.remove('active');
+        if (!vibixPlayer.children.length) {
+            console.log('Загрузка Vibix...');
+            loadVibixPlayer();
+        }
+    };
 
-    if (lumexButton) {
-        lumexButton.onclick = () => {
-            kinoboxPlayer.style.display = 'none';
-            vibixPlayer.style.display = 'none';
-            lumexPlayer.style.display = 'block';
-            lumexButton.classList.add('active');
-            kinoboxButton.classList.remove('active');
-            vibixButton.classList.remove('active');
-            if (!lumexPlayer.children.length) {
-                console.log('Загрузка Lumex...');
-                loadLumexPlayer();
-            }
-        };
-    }
+    lumexButton.onclick = () => {
+        kinoboxPlayer.style.display = 'none';
+        vibixPlayer.style.display = 'none';
+        lumexPlayer.style.display = 'block';
+        vidfastPlayer.style.display = 'none';
+        lumexButton.classList.add('active');
+        kinoboxButton.classList.remove('active');
+        vibixButton.classList.remove('active');
+        vidfastButton.classList.remove('active');
+        if (!lumexPlayer.children.length) {
+            console.log('Загрузка Lumex...');
+            loadLumexPlayer();
+        }
+    };
+
+    vidfastButton.onclick = () => {
+        kinoboxPlayer.style.display = 'none';
+        vibixPlayer.style.display = 'none';
+        lumexPlayer.style.display = 'none';
+        vidfastPlayer.style.display = 'block';
+        vidfastButton.classList.add('active');
+        kinoboxButton.classList.remove('active');
+        vibixButton.classList.remove('active');
+        lumexButton.classList.remove('active');
+        if (!vidfastPlayer.children.length) {
+            console.log('Загрузка VidFast...');
+            loadVidfastPlayer();
+        }
+    };
 
     document.getElementById('add-to-favorites').onclick = () => toggleFavorite(data);
     document.getElementById('close-modal').onclick = closeMovieInfo;
@@ -950,8 +1044,13 @@ function toggleFavorite(movie) {
 function updateFavoritesGrid() {
     favoritesGrid.innerHTML = '';
     favorites.forEach(async movie => {
-        const movieTile = await createMovieTile(movie);
-        favoritesGrid.appendChild(movieTile);
+        const isIndian = await isFromIndia(movie);
+        if (!isIndian) {
+            const movieTile = await createMovieTile(movie);
+            favoritesGrid.appendChild(movieTile);
+        } else {
+            console.log(`Фильм "${movie.title}" исключен из избранного (страна: Индия)`);
+        }
     });
 }
 
@@ -966,7 +1065,7 @@ function closeFavorites() {
     enableBodyScroll();
 }
 
-// Поиск фильмов с фильтрами
+// Поиск фильмов с фильтрацией Индии
 async function searchMovies(query) {
     searchResultsGrid.innerHTML = `
         <div class="loading-indicator">
@@ -986,6 +1085,18 @@ async function searchMovies(query) {
         let filteredResults = data.results.filter(result => 
             result.media_type === 'movie' || result.media_type === 'tv'
         );
+
+        const nonIndianResults = [];
+        for (const result of filteredResults) {
+            const isIndian = await isFromIndia(result);
+            if (!isIndian) {
+                nonIndianResults.push(result);
+            } else {
+                console.log(`Фильм "${result.title || result.name}" исключен из поиска (страна: Индия)`);
+            }
+        }
+
+        filteredResults = nonIndianResults;
 
         switch (currentFilter) {
             case 'tv':
