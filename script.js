@@ -578,7 +578,6 @@ async function displayMovieInfo(data, movie, logoData) {
     let kpId = null;
     let vibixAvailable = false;
     let lumexAvailable = false;
-    let vidfastAvailable = true;
     let kpRating = 'N/A';
     let hasActors = false;
     let hasTrailers = false;
@@ -641,13 +640,11 @@ async function displayMovieInfo(data, movie, logoData) {
             <div id="kinobox-player" class="video-player"></div>
             <div id="vibix-player" class="video-player" style="display: none;"></div>
             <div id="lumex-player" class="video-player" style="display: none;"></div>
-            <div id="vidfast-player" class="video-player" style="display: none;"></div>
         </div>
         <div class="button-container">
             <button class="player-button active" id="kinobox-button">Kinobox</button>
             <button class="player-button ${!vibixAvailable ? 'hidden' : ''}" id="vibix-button">Vibix</button>
             <button class="player-button ${!lumexAvailable ? 'hidden' : ''}" id="lumex-button">Lumex</button>
-            <button class="player-button" id="vidfast-button">VidFast(en)</button>
         </div>
         <button id="add-to-favorites">
             <img src="${isFavorite(data) ? 'icons/delete.png' : 'icons/add.png'}" alt="${isFavorite(data) ? 'Удалить из избранного' : 'Добавить в избранное'}" class="favorites-icon"/>
@@ -728,11 +725,6 @@ async function displayMovieInfo(data, movie, logoData) {
     const kinoboxPlayer = document.getElementById('kinobox-player');
     const vibixPlayer = document.getElementById('vibix-player');
     const lumexPlayer = document.getElementById('lumex-player');
-    const vidfastPlayer = document.getElementById('vidfast-player');
-    const kinoboxButton = document.getElementById('kinobox-button');
-    const vibixButton = document.getElementById('vibix-button');
-    const lumexButton = document.getElementById('lumex-button');
-    const vidfastButton = document.getElementById('vidfast-button');
 
     async function loadVibixPlayer() {
         if (!kpId) return vibixPlayer.innerHTML = '<p>Kinopoisk ID не найден</p>';
@@ -759,51 +751,26 @@ async function displayMovieInfo(data, movie, logoData) {
         `;
     }
 
-    async function loadVidfastPlayer() {
-        const externalIdsData = await fetch(`${TMDB_BASE_URL}/${mediaType}/${data.id}/external_ids?api_key=${TMDB_API_KEY}`).then(res => res.json());
-        const imdbId = externalIdsData.imdb_id || data.id;
-        const iframeSrc = mediaType === 'movie' 
-            ? `https://vidfast.pro/movie/${imdbId}?autoPlay=true&color=16A085`
-            : `https://vidfast.pro/tv/${imdbId}/1/1?autoPlay=true&nextButton=true&autoNext=true&color=16A085`;
-
-        // Проверка на допустимый домен для предотвращения перенаправлений
-        if (!iframeSrc.startsWith('https://vidfast.pro/')) {
-            vidfastPlayer.innerHTML = '<p>Ошибка: недоверенный источник видео.</p>';
-            return;
-        }
-
-        vidfastPlayer.innerHTML = `
-            <iframe src="${iframeSrc}" 
-                    width="100%" 
-                    height="100%" 
-                    frameborder="0" 
-                    allowfullscreen 
-                    allow="autoplay *; fullscreen *" 
-                    sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                    referrerpolicy="strict-origin-when-cross-origin"></iframe>
-        `;
-    }
+    const kinoboxButton = document.getElementById('kinobox-button');
+    const vibixButton = document.getElementById('vibix-button');
+    const lumexButton = document.getElementById('lumex-button');
 
     kinoboxButton.onclick = () => {
         kinoboxPlayer.style.display = 'block';
         vibixPlayer.style.display = 'none';
         lumexPlayer.style.display = 'none';
-        vidfastPlayer.style.display = 'none';
         kinoboxButton.classList.add('active');
         vibixButton.classList.remove('active');
         lumexButton.classList.remove('active');
-        vidfastButton.classList.remove('active');
     };
 
     vibixButton.onclick = () => {
         kinoboxPlayer.style.display = 'none';
         vibixPlayer.style.display = 'block';
         lumexPlayer.style.display = 'none';
-        vidfastPlayer.style.display = 'none';
         vibixButton.classList.add('active');
         kinoboxButton.classList.remove('active');
         lumexButton.classList.remove('active');
-        vidfastButton.classList.remove('active');
         if (!vibixPlayer.children.length) loadVibixPlayer();
     };
 
@@ -811,24 +778,10 @@ async function displayMovieInfo(data, movie, logoData) {
         kinoboxPlayer.style.display = 'none';
         vibixPlayer.style.display = 'none';
         lumexPlayer.style.display = 'block';
-        vidfastPlayer.style.display = 'none';
         lumexButton.classList.add('active');
         kinoboxButton.classList.remove('active');
         vibixButton.classList.remove('active');
-        vidfastButton.classList.remove('active');
         if (!lumexPlayer.children.length) loadLumexPlayer();
-    };
-
-    vidfastButton.onclick = () => {
-        kinoboxPlayer.style.display = 'none';
-        vibixPlayer.style.display = 'none';
-        lumexPlayer.style.display = 'none';
-        vidfastPlayer.style.display = 'block';
-        vidfastButton.classList.add('active');
-        kinoboxButton.classList.remove('active');
-        vibixButton.classList.remove('active');
-        lumexButton.classList.remove('active');
-        if (!vidfastPlayer.children.length) loadVidfastPlayer();
     };
 
     document.getElementById('add-to-favorites').onclick = () => toggleFavorite(data);
@@ -845,7 +798,7 @@ function displayMovieInfoError() {
 }
 
 function closeMovieInfo() {
-    const players = ['kinobox-player', 'vibix-player', 'lumex-player', 'vidfast-player'].map(id => document.getElementById(id));
+    const players = ['kinobox-player', 'vibix-player', 'lumex-player'].map(id => document.getElementById(id));
     const trailerContainer = document.getElementById('trailer-container');
 
     players.forEach(player => {
