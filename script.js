@@ -715,7 +715,7 @@ async function displayMovieInfo(data, movie, logoData) {
     if (typeof Kinobox !== 'undefined') {
         const kinobox = new Kinobox('#kinobox-player', {
             search: kinoboxSearch,
-            players: { 'turbo': true, 'alloha': true, 'lumex': true, 'collaps': true },
+            players: {  'alloha': true,'turbo': true, 'lumex': true, 'collaps': true },
             params: { season: 1, episode: 1 },
             ui: { mobile: true }
         });
