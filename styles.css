@@ -269,6 +269,10 @@ main {
 .watch-button:active {
     transform: scale(0.95);
 }
+.fullscreen-slider .slider-button.prev,
+.fullscreen-slider .slider-button.next {
+    display: none;
+}
 
 .slider-button {
     position: absolute;
@@ -856,16 +860,10 @@ footer {
         transform: scale(1.05);
         box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     }
-
-    .movie-slider:hover .slider-button {
-        opacity: 1;
-    }
-
-    .slider-button:hover {
-        transform: translateY(-50%) scale(1.1);
-        background-color: rgba(255, 255, 255, 0.4);
-    }
-
+@media (min-width: 768px) {  /* Размер экрана для ПК и планшетов */
+    .movie-tile:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     .movie-tile {
         transition: opacity 0.3s ease-in-out;
     }
