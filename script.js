@@ -72,7 +72,7 @@ style.textContent = `
     .rating-green { background-color: #28a745; }
     .rating-yellow { background-color: #d39e00; }
     .rating-red { background-color: #dc3545; }
-    .rating-logo { width: 30px; height: 30px; vertical-align: middle; }
+    .rating-logo { width: 22px; height: 22px; vertical-align: middle; }
     .overview-text { 
         display: -webkit-box; 
         -webkit-line-clamp: 3; 
@@ -245,7 +245,7 @@ function initializeSliderControls(sectionId, grid) {
     function slide(direction) {
         const visibleWidth = container.parentElement.offsetWidth;
         const position = currentSlidePositions[sectionId];
-        const moveAmount = direction === 'next' ? 800 : -800;
+        const moveAmount = direction === 'next' ? 250 : -250;
         const newPosition = Math.max(0, Math.min(position + moveAmount, container.scrollWidth - visibleWidth));
         currentSlidePositions[sectionId] = newPosition;
         container.style.transform = `translateX(-${newPosition}px)`;
@@ -619,12 +619,11 @@ async function displayMovieInfo(data, movie, logoData) {
         <div class="ratings-container">
             ${tmdbRating !== 'N/A' ? `
                 <span class="rating-span tmdb-rating ${tmdbRatingClass}">
-                    <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-5bdc75aaebeb75dc7ae79426ddd9be3b2be1e342510f8202baf6bffa71d7f5c4.svg" alt="TMDB" class="rating-logo">
                     ${tmdbRating}
                 </span>` : ''}
             ${kpRating !== 'N/A' ? `
                 <span class="rating-span kp-rating ${kpRatingClass}">
-                    <img src="https://www.kinopoisk.ru/favicon.ico" alt="Kinopoisk" class="rating-logo">
+                    <img src="https://raw.githubusercontent.com/FoxStudio24/kino-4K/refs/heads/main/icons/icon-kp.png" alt="Kinopoisk" class="rating-logo">
                     ${kpRating}
                 </span>` : ''}
             ${ageRating !== 'N/A' ? `<span class="modal-age-rating">${ageRating}</span>` : ''}

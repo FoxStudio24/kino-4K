@@ -138,10 +138,6 @@ main {
     opacity: 1;
 }
 
-.fullscreen-slider .slider-button {
-    display: none;
-}
-
 .header-logo {
     user-select: none;
     pointer-events: none;
@@ -278,67 +274,42 @@ main {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.23);
     color: white;
     border: none;
     padding: 20px 15px;
     font-size: 20px;
     cursor: pointer;
     z-index: 10;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    backdrop-filter: blur(8px);
 }
+.slider-button img {
+   width: 24px; /* Установите нужный размер изображения */
+   height: 24px;
+   vertical-align: middle;
+   }
 
-.slider-button:hover {
-    transform: translateY(-50%) scale(1.1);
-    background: rgba(255, 255, 255, 0.35);
-}
+
 
 .slider-button.prev {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: none;
-    border-radius: 8px;
-    background: none;
-    padding: 0;
-    top: 50%;
-    left: 5px;
-    transform: translateY(-50%);
-    width: 50px;
-    height: 70px;
-    color: rgba(255, 255, 255, 0.78);
-    transition: transform 0.3s ease, background-color 0.3s ease;
-}
-
-.slider-button.prev:hover {
-    transform: translateY(-50%) scale(1.1);
-    background: rgb(0 0 0 / 35%);
+    top: 40%;
+    width: 70px;
+    height: 400px;
+    background: linear-gradient(to right, black, transparent);
 }
 
 .slider-button.next {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: none;
-    border-radius: 8px;
-    background: none;
-    padding: 0;
-    top: 50%;
-    right: 5px;
-    transform: translateY(-50%);
-    width: 50px;
-    height: 70px;
-    color: rgba(255, 255, 255, 0.78);
-    transition: transform 0.3s ease, background-color 0.3s ease;
+    top: 40%;
+    right: -5px;
+    width: 70px;
+    height: 400px;
+    background: linear-gradient(to left, black, transparent);
 }
 
-.slider-button.next:hover {
-    transform: translateY(-50%) scale(1.1);
-    background: rgb(0 0 0 / 35%);
-}
 
 .movie-slider {
     position: relative;
@@ -362,28 +333,7 @@ main {
 }
 
 .movie-tile:hover {
-    transform: scale(1.02);
-}
-
-.movie-tile::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url('https://i.gifer.com/3ww9.gif');
-    background-size: cover;
-    background-position: center;
-    filter: blur(25px);
-    transform: scale(0.7);
-    z-index: 1;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-}
-
-.movie-tile:hover::before {
-    opacity: 1;
+    transform: scale(1.01);
 }
 
 .movie-tile img {
@@ -441,12 +391,16 @@ main {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.466);
+    background: rgb(0 0 0 / 21%);; /* Сделали верхнее затемнение сильнее */
+    backdrop-filter: blur(12px); /* Увеличили блюр */
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 0)); /* Верхняя часть затемнения растянута */
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 0));
+    height: 70%; /* Увеличил высоту эффекта */
     z-index: -1;
 }
 
 .movie-poster {
-    max-width: 180px;
+    max-width: 220px;
     float: left;
     margin-right: 20px;
     margin-bottom: 20px;
@@ -869,7 +823,11 @@ footer {
 
     .rating-logo {
         max-width: 60px;
+		 background: url('icons\icon-kp.png') no-repeat center;
+         width: 100px;
+         height: 100px;
     }
+	
 
     .kinobox_wrapper, 
     .kinobox_wrapper * {
