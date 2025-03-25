@@ -28,6 +28,25 @@ header {
     width: 100%;
     margin: 0 auto;
 }
+@media (max-width: 768px) {
+    .header-content {
+        flex-wrap: wrap; /* Разрешаем перенос строк */
+        justify-content: center; /* Центрируем элементы */
+    }
+
+    .header-content > *:first-child {
+        width: 100%; /* Первый элемент на всю ширину */
+        text-align: center; /* Центрируем его */
+    }
+
+    .header-content > *:nth-child(n+2) { /* Все, кроме первого */
+        width: auto; /* Чтобы элементы шли в одной строке */
+        display: flex;
+        justify-content: center;
+        gap: 10px; /* Отступы между элементами */
+    }
+}
+
 
 .header-logo {
     display: flex;
@@ -208,6 +227,16 @@ main {
     width: 300px;
     padding-top: 60px; /* Отступ сверху для рейтингов */
 }
+@media (max-width: 768px) { /* Применяется только на мобильных устройствах */
+    .fullscreen-content {
+        left: 50%;
+        bottom: 20px;
+        transform: translateX(-50%);
+        width: 90%; /* Можно подстроить, чтобы не выходило за границы */
+        max-width: 300px; /* Оставляем ограничение по ширине */
+    }
+}
+
 
 .fullscreen-ratings-top {
     position: absolute;
@@ -286,8 +315,8 @@ main {
     z-index: 10;
 }
 .slider-button img {
-   width: 24px; /* Установите нужный размер изображения */
-   height: 24px;
+   width: 40px; /* Установите нужный размер изображения */
+   height: 40px;
    vertical-align: middle;
    }
 
@@ -387,6 +416,12 @@ main {
     overflow-y: auto;
     z-index: 99999999999;
 }
+@media (max-width: 768px) { /* Для мобильных устройств */
+    .modal-content {
+        border-radius: 0;
+    }
+}
+
 
 .modal-content::before {
     content: '';
