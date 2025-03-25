@@ -61,7 +61,7 @@ style.textContent = `
     .movie-logo { max-width: 300px; max-height: 200px; margin-bottom: 20px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5)); }
     .movie-title-logo { max-width: 300px; max-height: 120px; margin-bottom: 15px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5)); }
     .button-container { display: flex; justify-content: flex-end; margin-top: 10px; }
-    .player NAACP-button { padding: 7px 25px; background-color: rgba(255, 255, 255, 0.17); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; margin-left: 10px; backdrop-filter: blur(5px); }
+    .player-button { padding: 7px 25px; background-color: rgba(255, 255, 255, 0.17); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; margin-left: 10px; backdrop-filter: blur(5px); }
     .player-button:hover { background-color: rgba(120, 120, 120, 0.7); }
     .player-button.active { background-color: #8b75cb; backdrop-filter: none; }
     .player-button.hidden { display: none; }
@@ -765,13 +765,22 @@ async function displayMovieInfo(data, movie, logoData) {
         const iframeSrc = mediaType === 'movie' 
             ? `https://vidfast.pro/movie/${imdbId}?autoPlay=true&color=16A085`
             : `https://vidfast.pro/tv/${imdbId}/1/1?autoPlay=true&nextButton=true&autoNext=true&color=16A085`;
+
+        // Проверка на допустимый домен для предотвращения перенаправлений
+        if (!iframeSrc.startsWith('https://vidfast.pro/')) {
+            vidfastPlayer.innerHTML = '<p>Ошибка: недоверенный источник видео.</p>';
+            return;
+        }
+
         vidfastPlayer.innerHTML = `
             <iframe src="${iframeSrc}" 
                     width="100%" 
                     height="100%" 
                     frameborder="0" 
                     allowfullscreen 
-                    allow="autoplay *; fullscreen *"></iframe>
+                    allow="autoplay *; fullscreen *" 
+                    sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                    referrerpolicy="strict-origin-when-cross-origin"></iframe>
         `;
     }
 
