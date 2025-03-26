@@ -118,24 +118,51 @@ style.textContent = `
     .search-meta { font-size: 12px; color: #ccc; margin: 5px 0; font-family: 'Montserrat', sans-serif; }
     .search-filters { margin-bottom: 15px; display: flex; gap: 10px; justify-content: flex-start; }
     .filter-button { padding: 5px 15px; background-color: rgba(255, 255, 255, 0.1); color: white; border: none; border-radius: 20px; cursor: pointer; transition: background-color 0.3s; }
-    .filter-button:hover { background-color: rgba(255, 255, 255, 0.3); }
+    .filter-button:hover { background-color: rgba(255, 255, 255 Cayenne0.3); }
     .filter-button.active { background-color: #8b75cb; }
 `;
 document.head.appendChild(style);
 
-// Улучшенная функция поиска Kinopoisk ID
+// Улучшенная функция поиска Kinopoisk ID с логированием
 async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaType = 'movie') {
+    console.log(`Поиск Kinopoisk ID для: title="${title}", year="${year}", originalTitle="${originalTitle}", mediaType="${mediaType}"`);
+
     try {
         const searchType = mediaType === 'tv' ? 'TV_SERIES' : 'FILM';
         const yearMin = year ? parseInt(year) - 1 : null;
         const yearMax = year ? parseInt(year) + 1 : null;
 
-        // Формируем URL с учетом года и типа контента
+        // Функция для вычисления схожести строк (Levenshtein distance)
+        function getSimilarity(str1, str2) {
+            if (!str1 || !str2) return 0;
+            str1 = str1.toLowerCase().replace(/[^a-zа-я0-9]/g, '');
+            str2 = str2.toLowerCase().replace(/[^a-zа-я0-9]/g, '');
+            const len1 = str1.length, len2 = str2.length;
+            const matrix = Array(len2 + 1).fill(null).map(() => Array(len1 + 1).fill(null));
+
+            for (let i = 0; i <= len1; i++) matrix[0][i] = i;
+            for (let j = 0; j <= len2; j++) matrix[j][0] = j;
+
+            for (let j = 1; j <= len2; j++) {
+                for (let i = 1; i <= len1; i++) {
+                    const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+                    matrix[j][i] = Math.min(
+                        matrix[j - 1][i] + 1,
+                        matrix[j][i - 1] + 1,
+                        matrix[j - 1][i - 1] + indicator
+                    );
+                }
+            }
+            return 1 - matrix[len2][len1] / Math.max(len1, len2);
+        }
+
+        // Формируем запрос с учетом года
         let url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(title)}&page=1`;
         if (yearMin && yearMax) {
             url += `&yearFrom=${yearMin}&yearTo=${yearMax}`;
         }
 
+        console.log(`Запрос к API Kinopoisk: ${url}`);
         const response = await fetch(url, {
             headers: {
                 'X-API-KEY': KINOPOISK_API_KEY,
@@ -147,12 +174,13 @@ async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaTyp
         const data = await response.json();
 
         if (!data.items || data.items.length === 0) {
-            // Если ничего не найдено по основному названию, пробуем оригинальное
+            console.log('Ничего не найдено по основному названию.');
             if (originalTitle && originalTitle !== title) {
                 url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(originalTitle)}&page=1`;
                 if (yearMin && yearMax) {
                     url += `&yearFrom=${yearMin}&yearTo=${yearMax}`;
                 }
+                console.log(`Пробуем оригинальное название: ${url}`);
                 const altResponse = await fetch(url, {
                     headers: {
                         'X-API-KEY': KINOPOISK_API_KEY,
@@ -161,16 +189,49 @@ async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaTyp
                 });
                 if (!altResponse.ok) throw new Error(`Ошибка HTTP: ${altResponse.status}`);
                 const altData = await altResponse.json();
-                if (altData.items && altData.items.length > 0) {
-                    return altData.items[0].kinopoiskId;
+                if (!altData.items || altData.items.length === 0) {
+                    console.log('Ничего не найдено и по оригинальному названию.');
+                    return null;
                 }
+                const candidates = altData.items.map(item => {
+                    const titleMatch = item.nameRu ? getSimilarity(item.nameRu, title) : 0;
+                    const originalMatch = item.nameOriginal ? getSimilarity(item.nameOriginal, originalTitle) : 0;
+                    const yearMatch = year && item.year ? Math.abs(parseInt(item.year) - parseInt(year)) <= 1 : true;
+                    const score = Math.max(titleMatch, originalMatch) * (yearMatch ? 1 : 0.5);
+                    console.log(`Кандидат: ${item.nameRu || item.nameOriginal}, год: ${item.year}, score: ${score}`);
+                    return { item, score };
+                }).sort((a, b) => b.score - a.score);
+
+                if (candidates.length > 0 && candidates[0].score > 0.7) {
+                    console.log(`Найден лучший кандидат: ${candidates[0].item.nameRu || candidates[0].item.nameOriginal}, ID: ${candidates[0].item.kinopoiskId}`);
+                    return candidates[0].item.kinopoiskId;
+                }
+                console.log('Нет подходящих кандидатов по оригинальному названию.');
+                return null;
             }
             return null;
         }
 
-        // Берем первый результат, так как фильтрация по году уже учтена в запросе
-        const bestMatch = data.items[0];
-        return bestMatch.kinopoiskId;
+        // Оцениваем кандидатов
+        const candidates = data.items.map(item => {
+            const titleRuMatch = item.nameRu ? getSimilarity(item.nameRu, title) : 0;
+            const titleEnMatch = item.nameEn ? getSimilarity(item.nameEn, title) : 0;
+            const originalMatch = originalTitle && item.nameOriginal ? getSimilarity(item.nameOriginal, originalTitle) : 0;
+            const yearMatch = year && item.year ? Math.abs(parseInt(item.year) - parseInt(year)) <= 1 : true;
+            const score = Math.max(titleRuMatch * 0.8, titleEnMatch * 0.8, originalMatch * 1.0) * (yearMatch ? 1 : 0.5);
+            console.log(`Кандидат: ${item.nameRu || item.nameEn || item.nameOriginal}, год: ${item.year}, score: ${score}`);
+            return { item, score };
+        }).filter(candidate => candidate.score > 0.6) // Порог схожести
+        .sort((a, b) => b.score - a.score);
+
+        if (candidates.length > 0) {
+            const bestMatch = candidates[0].item;
+            console.log(`Выбран лучший кандидат: ${bestMatch.nameRu || bestMatch.nameEn || bestMatch.nameOriginal}, ID: ${bestMatch.kinopoiskId}`);
+            return bestMatch.kinopoiskId;
+        }
+
+        console.log('Нет подходящих кандидатов с достаточной схожестью.');
+        return null;
     } catch (error) {
         console.error('Ошибка при поиске Kinopoisk ID:', error);
         return null;
@@ -501,7 +562,7 @@ async function displayMovieInfo(data, movie, logoData) {
     const modalContent = movieInfoModal.querySelector('.modal-content');
     modalContent.style.backgroundImage = data.backdrop_path 
         ? `url(${BACKDROP_URL}${data.backdrop_path})`
-        : 'url(icons/poster.png)';
+        : '之旅(icons/poster.png)';
     
     const title = data.title || data.name;
     const overview = data.overview || 'Описание отсутствует.';
