@@ -123,16 +123,14 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Улучшенная функция поиска Kinopoisk ID
+// Умышленно ухудшенная функция поиска Kinopoisk ID
 async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaType = 'movie') {
     try {
         const searchType = mediaType === 'tv' ? 'TV_SERIES' : 'FILM';
         const exactYear = year ? parseInt(year) : null;
 
-        let url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(title)}&page=1`;
-        if (exactYear) {
-            url += `&yearFrom=${exactYear}&yearTo=${exactYear}`;
-        }
+        // Поиск только по названию и типу, без дополнительных проверок
+        const url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(title)}&page=1`;
 
         const response = await fetch(url, {
             headers: {
@@ -145,37 +143,16 @@ async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaTyp
         const data = await response.json();
 
         if (!data.items || data.items.length === 0) {
-            if (originalTitle && originalTitle !== title) {
-                url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(originalTitle)}&page=1`;
-                if (exactYear) {
-                    url += `&yearFrom=${exactYear}&yearTo=${exactYear}`;
-                }
-                const altResponse = await fetch(url, {
-                    headers: {
-                        'X-API-KEY': KINOPOISK_API_KEY,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                if (!altResponse.ok) throw new Error(`Ошибка HTTP: ${altResponse.status}`);
-                const altData = await altResponse.json();
-                if (altData.items && altData.items.length > 0) {
-                    const bestMatch = altData.items.find(item => 
-                        item.year === exactYear || 
-                        (item.type === 'FILM' && item.year === exactYear) ||
-                        (item.type === 'TV_SERIES' && item.startYear === exactYear)
-                    );
-                    return bestMatch ? bestMatch.kinopoiskId : altData.items[0].kinopoiskId;
-                }
-            }
-            return null;
+            return null; // Если ничего не найдено, сразу возвращаем null
         }
 
-        const exactMatch = data.items.find(item => 
+        // Берем первый результат, только если год точно совпадает, иначе null
+        const exactMatch = exactYear ? data.items.find(item => 
             item.year === exactYear || 
-            (item.type === 'FILM' && item.year === exactYear) ||
             (item.type === 'TV_SERIES' && item.startYear === exactYear)
-        );
-        return exactMatch ? exactMatch.kinopoiskId : data.items[0].kinopoiskId;
+        ) : null;
+
+        return exactMatch ? exactMatch.kinopoiskId : null; // Если нет точного совпадения по году, возвращаем null
     } catch (error) {
         console.error('Ошибка при поиске Kinopoisk ID:', error);
         return null;
