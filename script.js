@@ -127,100 +127,50 @@ document.head.appendChild(style);
 async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaType = 'movie') {
     try {
         const searchType = mediaType === 'tv' ? 'TV_SERIES' : 'FILM';
-        let page = 1;
-        let found = false;
-        let bestMatch = null;
+        const yearMin = year ? parseInt(year) - 1 : null;
+        const yearMax = year ? parseInt(year) + 1 : null;
 
-        function getSimilarity(str1, str2) {
-            if (!str1 || !str2) return 0;
-            str1 = str1.toLowerCase();
-            str2 = str2.toLowerCase();
-            const len1 = str1.length, len2 = str2.length;
-            const matrix = Array(len2 + 1).fill(null).map(() => Array(len1 + 1).fill(null));
-
-            for (let i = 0; i <= len1; i++) matrix[0][i] = i;
-            for (let j = 0; j <= len2; j++) matrix[j][0] = j;
-
-            for (let j = 1; j <= len2; j++) {
-                for (let i = 1; i <= len1; i++) {
-                    const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
-                    matrix[j][i] = Math.min(
-                        matrix[j - 1][i] + 1,
-                        matrix[j][i - 1] + 1,
-                        matrix[j - 1][i - 1] + indicator
-                    );
-                }
-            }
-            return 1 - matrix[len2][len1] / Math.max(len1, len2);
+        // Формируем URL с учетом года и типа контента
+        let url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(title)}&page=1`;
+        if (yearMin && yearMax) {
+            url += `&yearFrom=${yearMin}&yearTo=${yearMax}`;
         }
 
-        while (page <= 3 && !found) {
-            const url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(title)}&page=${page}`;
-            const response = await fetch(url, {
-                headers: {
-                    'X-API-KEY': KINOPOISK_API_KEY,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) throw new Error(`Ошибка HTTP: ${response.status}`);
-            const data = await response.json();
-
-            if (!data.items || data.items.length === 0) break;
-
-            const candidates = data.items
-                .map(item => {
-                    const titleRuMatch = item.nameRu ? getSimilarity(item.nameRu, title) : 0;
-                    const titleEnMatch = item.nameEn ? getSimilarity(item.nameEn, title) : 0;
-                    const originalTitleMatch = originalTitle && item.nameOriginal ? getSimilarity(item.nameOriginal, originalTitle) : 0;
-                    const yearMatch = year && item.year ? Math.abs(parseInt(item.year) - parseInt(year)) <= 1 : true;
-
-                    const score = Math.max(titleRuMatch * 0.8, titleEnMatch * 0.8, originalTitleMatch * 1.0) * (yearMatch ? 1 : 0.5);
-                    return { item, score };
-                })
-                .filter(candidate => candidate.score > 0.4)
-                .sort((a, b) => b.score - a.score);
-
-            if (candidates.length > 0) {
-                bestMatch = candidates[0].item;
-                found = true;
-                break;
+        const response = await fetch(url, {
+            headers: {
+                'X-API-KEY': KINOPOISK_API_KEY,
+                'Content-Type': 'application/json'
             }
-            page++;
-        }
+        });
 
-        if (!found && originalTitle && originalTitle !== title) {
-            const url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(originalTitle)}&page=1`;
-            const response = await fetch(url, {
-                headers: {
-                    'X-API-KEY': KINOPOISK_API_KEY,
-                    'Content-Type': 'application/json'
+        if (!response.ok) throw new Error(`Ошибка HTTP: ${response.status}`);
+        const data = await response.json();
+
+        if (!data.items || data.items.length === 0) {
+            // Если ничего не найдено по основному названию, пробуем оригинальное
+            if (originalTitle && originalTitle !== title) {
+                url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(originalTitle)}&page=1`;
+                if (yearMin && yearMax) {
+                    url += `&yearFrom=${yearMin}&yearTo=${yearMax}`;
                 }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                const candidates = data.items
-                    .map(item => {
-                        const originalTitleMatch = item.nameOriginal ? getSimilarity(item.nameOriginal, originalTitle) : 0;
-                        const titleRuMatch = item.nameRu ? getSimilarity(item.nameRu, originalTitle) : 0;
-                        const titleEnMatch = item.nameEn ? getSimilarity(item.nameEn, originalTitle) : 0;
-                        const yearMatch = year && item.year ? Math.abs(parseInt(item.year) - parseInt(year)) <= 1 : true;
-
-                        const score = Math.max(originalTitleMatch * 1.0, titleRuMatch * 0.8, titleEnMatch * 0.8) * (yearMatch ? 1 : 0.5);
-                        return { item, score };
-                    })
-                    .filter(candidate => candidate.score > 0.4)
-                    .sort((a, b) => b.score - a.score);
-
-                if (candidates.length > 0) {
-                    bestMatch = candidates[0].item;
-                    found = true;
+                const altResponse = await fetch(url, {
+                    headers: {
+                        'X-API-KEY': KINOPOISK_API_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!altResponse.ok) throw new Error(`Ошибка HTTP: ${altResponse.status}`);
+                const altData = await altResponse.json();
+                if (altData.items && altData.items.length > 0) {
+                    return altData.items[0].kinopoiskId;
                 }
             }
+            return null;
         }
 
-        return bestMatch ? bestMatch.kinopoiskId : null;
+        // Берем первый результат, так как фильтрация по году уже учтена в запросе
+        const bestMatch = data.items[0];
+        return bestMatch.kinopoiskId;
     } catch (error) {
         console.error('Ошибка при поиске Kinopoisk ID:', error);
         return null;
@@ -513,7 +463,6 @@ function enableBodyScroll() {
     document.body.style.height = '';
 }
 
-// Обновленная функция showMovieInfo с закрытием других модальных окон
 async function showMovieInfo(movie) {
     const modalContent = movieInfoModal.querySelector('.modal-content');
     modalContent.innerHTML = `
@@ -522,7 +471,6 @@ async function showMovieInfo(movie) {
         </div>
     `;
 
-    // Закрываем модальные окна поиска и избранного, если они открыты
     if (searchResultsModal.style.display === 'flex') {
         closeSearchResults();
     }
@@ -715,7 +663,7 @@ async function displayMovieInfo(data, movie, logoData) {
     if (typeof Kinobox !== 'undefined') {
         const kinobox = new Kinobox('#kinobox-player', {
             search: kinoboxSearch,
-            players: {  'alloha': true,'turbo': true, 'lumex': true, 'collaps': true },
+            players: { 'alloha': true, 'turbo': true, 'lumex': true, 'collaps': true },
             params: { season: 1, episode: 1 },
             ui: { mobile: true }
         });
