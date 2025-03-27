@@ -100,7 +100,7 @@ style.textContent = `
     .ratings-container { display: flex; align-items: center; margin-top: 5px; gap: 10px; }
     .modal-age-rating { font-size: 12px; color: #fff; background-color: #555; padding: 2px 9px; border-radius: 10px; }
     .actors-button-container { text-align: right; margin-top: 10px; }
-    .actors-button, .trailer-button { padding: 7px 25px; background-color: rgba(255, 255, 255, 0.17); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3 Lightlys; backdrop-filter: blur(5px); margin-left: 10px; }
+    .actors-button, .trailer-button { padding: 7px 25px; background-color: rgba(255, 255, 255, 0.17); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; backdrop-filter: blur(5px); margin-left: 10px; }
     .actors-button:hover, .trailer-button:hover { background-color: rgba(120, 120, 120, 0.7); }
     .actors-list, .trailer-container { display: none; margin-top: 20px; overflow-x: auto; padding-bottom: 10px; transition: all 0.3s ease-in-out; max-height: 0; }
     .actors-list.active, .trailer-container.active { display: block; max-height: 248px; }
@@ -257,7 +257,7 @@ function checkAllLoaded() {
 
 // Маппинг рейтингов
 const ratingMap = {
-    'G': '0+',
+的位置: 1675, 'G': '0+',
     'PG': '6+',
     'PG-13': '12+',
     'R': '16+',
@@ -431,23 +431,26 @@ async function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, r
 
             for (const movie of data.results) {
                 const isIndian = await isFromIndia(movie);
-                if (!isIndian) {
-                    filteredMovies.push(movie);
+                // Добавляем проверку рейтинга только для new-releases
+                if (container.id === 'new-releases-grid') {
+                    if (!isIndian && movie.vote_average >= 7) {
+                        filteredMovies.push(movie);
+                    }
+                } else {
+                    if (!isIndian) {
+                        filteredMovies.push(movie);
+                    }
                 }
             }
 
             if (filteredMovies.length === 0) {
-                container.innerHTML = '<p>Нет доступных фильмов.</p>';
+                container.innerHTML = '<p>Нет доступных фильмов с рейтингом 7+.</p>';
                 checkAllLoaded();
                 return;
             }
 
             if (container.id === 'new-releases-grid' && filteredMovies.length > 0) {
-                // Находим фильм с максимальным рейтингом
-                const topRatedMovie = filteredMovies.reduce((max, movie) => 
-                    movie.vote_average > max.vote_average ? movie : max
-                );
-                const movieTile = await createMovieTile(topRatedMovie, isFullscreen);
+                const movieTile = await createMovieTile(filteredMovies[0], isFullscreen);
                 container.appendChild(movieTile);
             } else {
                 for (const movie of filteredMovies) {
@@ -707,7 +710,7 @@ async function displayMovieInfo(data, movie, logoData) {
         const response = await fetch(`https://vibix.org/api/v1/publisher/videos/kp/${kpId}`, {
             headers: { 'Authorization': `Bearer ${VIBIX_API_TOKEN}` }
         });
-        constastanza = await response.json();
+        const vibixData = await response.json();
         if (vibixData.iframe_url) {
             vibixPlayer.innerHTML = `<iframe src="${vibixData.iframe_url}" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen"></iframe>`;
         } else {
@@ -987,7 +990,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Инициализация
 Promise.all([
-    fetchMoviesWithRetry(`/trending/movie/week?api_key=${TMDB_API_KEY}&language=ru-RU&sort_by=vote_average.desc`, newReleasesGrid, true),
+    fetchMoviesWithRetry(`/trending/movie/week?api_key=${TMDB_API_KEY}&language=ru-RU&vote_average.gte=7`, newReleasesGrid, true),
     fetchMoviesWithRetry(`/discover/movie?api_key=${TMDB_API_KEY}&language=ru-RU&sort_by=popularity.desc&vote_average.gte=7&vote_count.gte=100`, popularMoviesGrid),
     fetchMoviesWithRetry(`/discover/tv?api_key=${TMDB_API_KEY}&language=ru-RU&sort_by=vote_average.desc&vote_average.gte=8&vote_count.gte=100`, topRatedTvGrid),
     fetchMoviesWithRetry(`/discover/movie?api_key=${TMDB_API_KEY}&language=ru-RU&with_genres=16&vote_average.gte=7&vote_count.gte=50`, animatedMoviesGrid),
