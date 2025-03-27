@@ -315,9 +315,11 @@ main {
     z-index: 10;
 }
 .slider-button img {
-   width: 40px; /* Установите нужный размер изображения */
-   height: 40px;
+   width: 22px; /* Установите нужный размер изображения */
+   height: px;
    vertical-align: middle;
+   user-select: none;
+   pointer-events: none;
    }
 
 
@@ -373,7 +375,6 @@ main {
     width: 100%;
     height: auto;
     border-radius: 15px;
-    border: 1px solid #ffffff42;
     position: relative;
     z-index: 1;
 }
@@ -533,11 +534,21 @@ h2 {
 .search-icon {
     width: 30px;
     height: 30px;
+	user-select: none; 
+	pointer-events: none;
 }
 
 .favorites-icon {
     width: 30px;
     height: 30px;
+	user-select: none; 
+	pointer-events: none;
+	
+
+}
+img {
+    user-select: none; 
+	pointer-events: none;
 }
 
 .menu_list ul {
