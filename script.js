@@ -50,7 +50,9 @@ const countryMap = {
     'AU': 'Австралия',
     'IT': 'Италия',
     'ES': 'Испания',
-    'KR': 'Южная Корея'
+    'KR': 'Южная Корея',
+    'BR': 'Бразилия',
+    'MX': 'Мексика'
 };
 
 // Стили
@@ -115,22 +117,20 @@ style.textContent = `
     .loading-indicator img { width: 50px; height: 50px; }
     .search-meta { font-size: 12px; color: #ccc; margin: 5px 0; font-family: 'Montserrat', sans-serif; }
     .search-filters { margin-bottom: 15px; display: flex; gap: 10px; justify-content: flex-start; }
-    .filter-button { padding: 5px 15px; background-color: rgba(255, 255, 255, 0.1); color: white; border:=none; border-radius: 20px; cursor: pointer; transition: background-color 0.3s; }
+    .filter-button { padding: 5px 15px; background-color: rgba(255, 255, 255, 0.1); color: white; border: none; border-radius: 20px; cursor: pointer; transition: background-color 0.3s; }
     .filter-button:hover { background-color: rgba(255, 255, 255, 0.3); }
     .filter-button.active { background-color: #8b75cb; }
 `;
 document.head.appendChild(style);
 
-// Улучшенная функция поиска Kinopoisk ID
-async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaType = 'movie', tmdbId) {
+// Умышленно ухудшенная функция поиска Kinopoisk ID
+async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaType = 'movie') {
     try {
         const searchType = mediaType === 'tv' ? 'TV_SERIES' : 'FILM';
         const exactYear = year ? parseInt(year) : null;
 
-        let url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(title)}&page=1`;
-        if (exactYear) {
-            url += `&yearFrom=${exactYear}&yearTo=${exactYear}`;
-        }
+        // Поиск только по названию и типу, без дополнительных проверок
+        const url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(title)}&page=1`;
 
         const response = await fetch(url, {
             headers: {
@@ -142,62 +142,20 @@ async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaTyp
         if (!response.ok) throw new Error(`Ошибка HTTP: ${response.status}`);
         const data = await response.json();
 
-        if (data.items && data.items.length > 0) {
-            const exactMatch = data.items.find(item => {
-                const itemYear = item.type === 'FILM' ? item.year : item.startYear;
-                const titleMatch = item.nameRu.toLowerCase() === title.toLowerCase() || 
-                                (item.nameEn && item.nameEn.toLowerCase() === title.toLowerCase());
-                const yearMatch = exactYear && itemYear === exactYear;
-                const typeMatch = (item.type === 'FILM' && mediaType === 'movie') || 
-                                (item.type === 'TV_SERIES' && mediaType === 'tv');
-                return titleMatch && yearMatch && typeMatch;
-            });
-
-            if (exactMatch) {
-                console.log(`Найдено точное совпадение для "${title}" (${year}): Kinopoisk ID ${exactMatch.kinopoiskId}`);
-                return exactMatch.kinopoiskId;
-            }
-
-            if (originalTitle && originalTitle !== title) {
-                url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(originalTitle)}&page=1`;
-                if (exactYear) {
-                    url += `&yearFrom=${exactYear}&yearTo=${exactYear}`;
-                }
-                const altResponse = await fetch(url, {
-                    headers: {
-                        'X-API-KEY': KINOPOISK_API_KEY,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                const altData = await altResponse.json();
-
-                if (altData.items && altData.items.length > 0) {
-                    const altExactMatch = altData.items.find(item => {
-                        const itemYear = item.type === 'FILM' ? item.year : item.startYear;
-                        const titleMatch = item.nameOriginal?.toLowerCase() === originalTitle.toLowerCase() || 
-                                        (item.nameEn && item.nameEn.toLowerCase() === originalTitle.toLowerCase());
-                        const yearMatch = exactYear && itemYear === exactYear;
-                        const typeMatch = (item.type === 'FILM' && mediaType === 'movie') || 
-                                        (item.type === 'TV_SERIES' && mediaType === 'tv');
-                        return titleMatch && yearMatch && typeMatch;
-                    });
-
-                    if (altExactMatch) {
-                        console.log(`Найдено точное совпадение по оригинальному названию для "${originalTitle}" (${year}): Kinopoisk ID ${altExactMatch.kinopoiskId}`);
-                        return altExactMatch.kinopoiskId;
-                    }
-                }
-            }
-
-            console.warn(`Точное совпадение для "${title}" (${year}) не найдено, возвращаем TMDB ID: ${tmdbId}`);
-            return tmdbId;
+        if (!data.items || data.items.length === 0) {
+            return null; // Если ничего не найдено, сразу возвращаем null
         }
 
-        console.warn(`Kinopoisk ID для "${title}" (${year}) не найден, возвращаем TMDB ID: ${tmdbId}`);
-        return tmdbId;
+        // Берем первый результат, только если год точно совпадает, иначе null
+        const exactMatch = exactYear ? data.items.find(item => 
+            item.year === exactYear || 
+            (item.type === 'TV_SERIES' && item.startYear === exactYear)
+        ) : null;
+
+        return exactMatch ? exactMatch.kinopoiskId : null; // Если нет точного совпадения по году, возвращаем null
     } catch (error) {
         console.error('Ошибка при поиске Kinopoisk ID:', error);
-        return tmdbId;
+        return null;
     }
 }
 
@@ -257,7 +215,7 @@ function checkAllLoaded() {
 
 // Маппинг рейтингов
 const ratingMap = {
-的位置: 1675, 'G': '0+',
+    'G': '0+',
     'PG': '6+',
     'PG-13': '12+',
     'R': '16+',
@@ -431,20 +389,11 @@ async function fetchMoviesWithRetry(endpoint, container, isFullscreen = false, r
 
             for (const movie of data.results) {
                 const isIndian = await isFromIndia(movie);
-                // Добавляем проверку рейтинга только для new-releases
-                if (container.id === 'new-releases-grid') {
-                    if (!isIndian && movie.vote_average >= 7) {
-                        filteredMovies.push(movie);
-                    }
-                } else {
-                    if (!isIndian) {
-                        filteredMovies.push(movie);
-                    }
-                }
+                if (!isIndian) filteredMovies.push(movie);
             }
 
             if (filteredMovies.length === 0) {
-                container.innerHTML = '<p>Нет доступных фильмов с рейтингом 7+.</p>';
+                container.innerHTML = '<p>Нет доступных фильмов.</p>';
                 checkAllLoaded();
                 return;
             }
@@ -557,6 +506,8 @@ async function displayMovieInfo(data, movie, logoData) {
         : 'N/A';
 
     let kpId = null;
+    let vibixAvailable = false;
+    let lumexAvailable = false;
     let kpRating = 'N/A';
     let hasActors = false;
     let hasTrailers = false;
@@ -568,14 +519,16 @@ async function displayMovieInfo(data, movie, logoData) {
             data.title || data.name,
             releaseYear,
             data.original_title || data.original_name,
-            mediaType,
-            data.id
+            mediaType
         );
 
-        if (typeof kpId === 'number' || /^\d+$/.test(kpId)) {
+        if (kpId) {
             kpRating = await getKinopoiskRating(kpId);
-        } else {
-            console.log(`Kinopoisk ID не найден, используется TMDB ID: ${kpId}`);
+            const vibixResponse = await fetch(`https://vibix.org/api/v1/publisher/videos/kp/${kpId}`, {
+                headers: { 'Authorization': `Bearer ${VIBIX_API_TOKEN}` }
+            });
+            vibixAvailable = vibixResponse.ok && (await vibixResponse.json()).iframe_url;
+            lumexAvailable = true;
         }
 
         const creditsData = await fetch(`${TMDB_BASE_URL}/${mediaType}/${data.id}/credits?api_key=${TMDB_API_KEY}&language=ru-RU`).then(res => res.json());
@@ -597,7 +550,7 @@ async function displayMovieInfo(data, movie, logoData) {
                 <span class="rating-span tmdb-rating ${tmdbRatingClass}">
                     ${tmdbRating}
                 </span>` : ''}
-            ${kpRating !== 'N/A' && (typeof kpId === 'number' || /^\d+$/.test(kpId)) ? `
+            ${kpRating !== 'N/A' ? `
                 <span class="rating-span kp-rating ${kpRatingClass}">
                     <img src="https://raw.githubusercontent.com/FoxStudio24/kino-4K/refs/heads/main/icons/icon-kp.png" alt="Kinopoisk" class="rating-logo">
                     ${kpRating}
@@ -606,7 +559,7 @@ async function displayMovieInfo(data, movie, logoData) {
         </div>
         <p class="overview-text">${overview}</p>
         <p class="country-year">${countries} · ${releaseYear}</p>
-        ${typeof kpId !== 'number' && !/^\d+$/.test(kpId) ? '<p style="color: #ff5555;">Этот фильм пока недоступен на Kinopoisk.</p>' : ''}
+        ${!kpId ? '<p style="color: #ff5555;">Kinopoisk ID не найден</p>' : ''}
         <div class="actors-button-container">
             ${hasActors ? '<button id="toggle-actors-button" class="actors-button">Показать актеров</button>' : ''}
             ${hasTrailers ? '<button id="toggle-trailer-button" class="trailer-button">Показать трейлер</button>' : ''}
@@ -620,8 +573,8 @@ async function displayMovieInfo(data, movie, logoData) {
         </div>
         <div class="button-container">
             <button class="player-button active" id="kinobox-button">Kinobox</button>
-            <button class="player-button" id="vibix-button">Vibix</button>
-            <button class="player-button" id="lumex-button">Lumex</button>
+            <button class="player-button ${!vibixAvailable ? 'hidden' : ''}" id="vibix-button">Vibix</button>
+            <button class="player-button ${!lumexAvailable ? 'hidden' : ''}" id="lumex-button">Lumex</button>
         </div>
         <button id="add-to-favorites">
             <img src="${isFavorite(data) ? 'icons/delete.png' : 'icons/add.png'}" alt="${isFavorite(data) ? 'Удалить из избранного' : 'Добавить в избранное'}" class="favorites-icon"/>
@@ -684,7 +637,7 @@ async function displayMovieInfo(data, movie, logoData) {
         };
     }
 
-    const kinoboxSearch = (typeof kpId === 'number' || /^\d+$/.test(kpId)) 
+    const kinoboxSearch = kpId 
         ? { kinopoisk: kpId, type: mediaType === 'tv' ? 'serial' : 'movie' }
         : { tmdb: data.id, type: mediaType === 'tv' ? 'serial' : 'movie' };
 
@@ -703,10 +656,7 @@ async function displayMovieInfo(data, movie, logoData) {
     const lumexPlayer = document.getElementById('lumex-player');
 
     async function loadVibixPlayer() {
-        if (typeof kpId !== 'number' && !/^\d+$/.test(kpId)) {
-            vibixPlayer.innerHTML = '<p>Kinopoisk ID не найден, видео недоступно на Vibix</p>';
-            return;
-        }
+        if (!kpId) return vibixPlayer.innerHTML = '<p>Kinopoisk ID не найден</p>';
         const response = await fetch(`https://vibix.org/api/v1/publisher/videos/kp/${kpId}`, {
             headers: { 'Authorization': `Bearer ${VIBIX_API_TOKEN}` }
         });
@@ -719,10 +669,7 @@ async function displayMovieInfo(data, movie, logoData) {
     }
 
     async function loadLumexPlayer() {
-        if (typeof kpId !== 'number' && !/^\d+$/.test(kpId)) {
-            lumexPlayer.innerHTML = '<p>Kinopoisk ID не найден, видео недоступно на Lumex</p>';
-            return;
-        }
+        if (!kpId) return lumexPlayer.innerHTML = '<p>Kinopoisk ID не найден</p>';
         lumexPlayer.innerHTML = `
             <iframe src="//p.lumex.cloud/GbaXAhTWVSqL?kp_id=${kpId}&autoplay=1" 
                     width="100%" 
@@ -990,7 +937,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Инициализация
 Promise.all([
-    fetchMoviesWithRetry(`/trending/movie/week?api_key=${TMDB_API_KEY}&language=ru-RU&vote_average.gte=7`, newReleasesGrid, true),
+    fetchMoviesWithRetry(`/trending/movie/week?api_key=${TMDB_API_KEY}&language=ru-RU`, newReleasesGrid, true),
     fetchMoviesWithRetry(`/discover/movie?api_key=${TMDB_API_KEY}&language=ru-RU&sort_by=popularity.desc&vote_average.gte=7&vote_count.gte=100`, popularMoviesGrid),
     fetchMoviesWithRetry(`/discover/tv?api_key=${TMDB_API_KEY}&language=ru-RU&sort_by=vote_average.desc&vote_average.gte=8&vote_count.gte=100`, topRatedTvGrid),
     fetchMoviesWithRetry(`/discover/movie?api_key=${TMDB_API_KEY}&language=ru-RU&with_genres=16&vote_average.gte=7&vote_count.gte=50`, animatedMoviesGrid),
