@@ -10,6 +10,7 @@ const VIBIX_API_TOKEN = '8506|eOybyt3t9bUnwdwexHVh6wLNFOyFiq8AQuMEDvfde091d426';
 // Переменные состояния
 let initialLoadComplete = false;
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+let watchedEpisodes = JSON.parse(localStorage.getItem('watchedEpisodes')) || {};
 let currentSlidePositions = {
     'popular-movies': 0,
     'top-rated-tv': 0,
@@ -17,6 +18,8 @@ let currentSlidePositions = {
     'russian-releases': 0
 };
 let currentFilter = 'all';
+let currentSeason = 1;
+let episodeSlidePositions = {};
 
 // DOM элементы
 const loadingScreen = document.querySelector('.loading-screen');
@@ -102,10 +105,10 @@ style.textContent = `
     .ratings-container { display: flex; align-items: center; margin-top: 5px; gap: 10px; }
     .modal-age-rating { font-size: 12px; color: #fff; background-color: #555; padding: 2px 9px; border-radius: 10px; }
     .actors-button-container { text-align: right; margin-top: 10px; }
-    .actors-button, .trailer-button { padding: 7px 25px; background-color: rgba(255, 255, 255, 0.17); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; backdrop-filter: blur(5px); margin-left: 10px; }
-    .actors-button:hover, .trailer-button:hover { background-color: rgba(120, 120, 120, 0.7); }
-    .actors-list, .trailer-container { display: none; margin-top: 20px; overflow-x: auto; padding-bottom: 10px; transition: all 0.3s ease-in-out; max-height: 0; }
-    .actors-list.active, .trailer-container.active { display: block; max-height: 248px; }
+    .actors-button, .trailer-button, .seasons-button { padding: 7px 25px; background-color: rgba(255, 255, 255, 0.17); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; backdrop-filter: blur(5px); margin-left: 10px; }
+    .actors-button:hover, .trailer-button:hover, .seasons-button:hover { background-color: rgba(120, 120, 120, 0.7); }
+    .actors-list, .trailer-container, .seasons-container { display: none; margin-top: 20px; transition: all 0.3s ease-in-out; max-height: 0; }
+    .actors-list.active, .trailer-container.active, .seasons-container.active { display: block; max-height: 1000px; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); padding: 10px; border-radius: 10px; }
     .actors-list::-webkit-scrollbar, .trailer-container::-webkit-scrollbar { height: 8px; }
     .actors-list::-webkit-scrollbar-thumb, .trailer-container::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.3); border-radius: 4px; }
     .actors-list::-webkit-scrollbar-track, .trailer-container::-webkit-scrollbar-track { background-color: transparent; }
@@ -120,6 +123,151 @@ style.textContent = `
     .filter-button { padding: 5px 15px; background-color: rgba(255, 255, 255, 0.1); color: white; border: none; border-radius: 20px; cursor: pointer; transition: background-color 0.3s; }
     .filter-button:hover { background-color: rgba(255, 255, 255, 0.3); }
     .filter-button.active { background-color: #8b75cb; }
+    .seasons-button-container { text-align: right; margin-top: 10px; }
+    .season-selector { margin: 20px 0; text-align: center; }
+    .season-selector select { 
+        padding: 5px 10px; 
+        background-color: rgba(255, 255, 255, 0.1); 
+        color: white; 
+        border: none; 
+        border-radius: 5px; 
+        font-family: 'Montserrat', sans-serif; 
+        font-size: 14px; 
+        cursor: pointer; 
+    }
+    .season-selector select:focus { outline: none; }
+    .season-info { 
+        background-color: rgba(0, 0, 0, 0.7); 
+        padding: 10px; 
+        border-radius: 10px; 
+        margin-bottom: 20px; 
+        font-family: 'Montserrat', sans-serif; 
+        color: white; 
+    }
+    .season-info h3 { margin: 0 0 10px 0; font-size: 18px; }
+    .season-info p { margin: 5px 0; color: #ccc; font-size: 14px; }
+    .season-info .rating { 
+        display: inline-block; 
+        padding: 2px 6px; 
+        border-radius: 10px; 
+        color: white; 
+        font-size: 12px; 
+        font-weight: bold; 
+    }
+    .episode-list-container { 
+        position: relative; 
+        margin-top: 20px; 
+        display: flex; 
+        align-items: stretch; 
+    }
+    .episode-list { 
+        flex: 1; 
+        display: flex; 
+        flex-direction: column; 
+        gap: 10px; 
+        transition: transform 0.3s ease; 
+    }
+    .episode-item { 
+        display: flex; 
+        align-items: center; 
+        background-color: rgba(255, 255, 255, 0.05); 
+        padding: 10px; 
+        border-radius: 10px; 
+        font-family: 'Montserrat', sans-serif
+        color: white; 
+        position: relative; 
+        flex: 0 0 auto; 
+    }
+    .episode-item.watched { 
+        filter: grayscale(100%); 
+        opacity: 0.7; 
+    }
+    .episode-item img { 
+        width: 160px; 
+        height: 90px; 
+        object-fit: cover; 
+        border-radius: 5px; 
+    }
+    .episode-item .episode-number {
+    font-size: 30px;
+    background: linear-gradient(135deg, #8b75cb, #9b79d6, #b79cec, #6a4fbb);
+    padding: 25px 10px 5px 5px; /* Увеличиваем отступы сверху и снизу */
+    font-style: italic;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: cover; /* Подгонка градиента по тексту */
+    display: inline-block;
+    font-weight: bold;
+    margin-right: 10px;
+    color: #ccc;
+    font-family: 'Boldonse', sans-serif;
+    margin-left: -40px;
+
+	
+}
+
+    .episode-item .episode-info { flex: 1; }
+    .episode-item .episode-info h4 { margin: 0 0 5px 0; font-size: 16px; }
+    .episode-item .episode-info p { margin: 0; color: #ccc; font-size: 14px;  display: -webkit-box;-webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;text-overflow: ellipsis; }
+    .episode-item .episode-rating-duration { text-align: right; }
+    .episode-item .episode-rating-duration p { margin: 0; color: #ccc; font-size: 14px; }
+    .episode-item .episode-rating-duration .rating { 
+        display: inline-block; 
+        padding: 2px 6px; 
+        border-radius: 10px; 
+        color: white; 
+        font-size: 12px; 
+        font-weight: bold; 
+        margin-top: 5px; 
+    }
+    .episode-item .watched-button { 
+        position: absolute; 
+        top: 10px; 
+        right: 10px; 
+        padding: 5px 10px; 
+        background-color: rgba(255, 255, 255, 0.17); 
+        color: white; 
+        border: none; 
+        border-radius: 5px; 
+        cursor: pointer; 
+        font-family: 'Montserrat', sans-serif; 
+        font-size: 12px; 
+        transition: background-color 0.3s; 
+    }
+    .episode-item .watched-button:hover { 
+        background-color: rgba(120, 120, 120, 0.7); 
+    }
+    .episode-slider-controls { 
+        display: flex; 
+        flex-direction: column; 
+        justify-content: center; 
+        margin-left: 10px; 
+        gap: 10px; 
+    }
+    .episode-slider-button { 
+        background-color: rgba(255, 255, 255, 0.17); 
+        color: white; 
+        border: none; 
+        border-radius: 50%; 
+        width: 40px; 
+        height: 40px; 
+        cursor: pointer; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        transition: background-color 0.3s; 
+    }
+    .episode-slider-button:hover { 
+        background-color: rgba(120, 120, 120, 0.7); 
+    }
+    .episode-slider-button.disabled { 
+        background-color: rgba(255, 255, 255, 0.05); 
+        cursor: not-allowed; 
+    }
+    .episode-slider-button img { 
+        width: 20px; 
+        height: 20px; 
+    }
 `;
 document.head.appendChild(style);
 
@@ -129,7 +277,6 @@ async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaTyp
         const searchType = mediaType === 'tv' ? 'TV_SERIES' : 'FILM';
         const exactYear = year ? parseInt(year) : null;
 
-        // Поиск только по названию и типу, без дополнительных проверок
         const url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(title)}&page=1`;
 
         const response = await fetch(url, {
@@ -143,16 +290,15 @@ async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaTyp
         const data = await response.json();
 
         if (!data.items || data.items.length === 0) {
-            return null; // Если ничего не найдено, сразу возвращаем null
+            return null;
         }
 
-        // Берем первый результат, только если год точно совпадает, иначе null
         const exactMatch = exactYear ? data.items.find(item => 
             item.year === exactYear || 
             (item.type === 'TV_SERIES' && item.startYear === exactYear)
         ) : null;
 
-        return exactMatch ? exactMatch.kinopoiskId : null; // Если нет точного совпадения по году, возвращаем null
+        return exactMatch ? exactMatch.kinopoiskId : null;
     } catch (error) {
         console.error('Ошибка при поиске Kinopoisk ID:', error);
         return null;
@@ -511,6 +657,7 @@ async function displayMovieInfo(data, movie, logoData) {
     let kpRating = 'N/A';
     let hasActors = false;
     let hasTrailers = false;
+    let hasSeasons = false;
 
     try {
         const externalIdsUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/external_ids?api_key=${TMDB_API_KEY}`;
@@ -536,6 +683,8 @@ async function displayMovieInfo(data, movie, logoData) {
 
         const videosData = await fetch(`${TMDB_BASE_URL}/${mediaType}/${data.id}/videos?api_key=${TMDB_API_KEY}&language=ru-RU`).then(res => res.json());
         hasTrailers = videosData.results.filter(video => video.type === 'Trailer' && video.site === 'YouTube').length > 0;
+
+        hasSeasons = mediaType === 'tv' && data.number_of_seasons > 0;
     } catch (error) {
         console.error('Ошибка при получении дополнительных данных:', error);
     }
@@ -576,6 +725,10 @@ async function displayMovieInfo(data, movie, logoData) {
             <button class="player-button ${!vibixAvailable ? 'hidden' : ''}" id="vibix-button">Vibix</button>
             <button class="player-button ${!lumexAvailable ? 'hidden' : ''}" id="lumex-button">Lumex</button>
         </div>
+        <div class="seasons-button-container">
+            ${hasSeasons ? '<button id="toggle-seasons-button" class="seasons-button">Показать о сериях</button>' : ''}
+        </div>
+        <div id="seasons-container" class="seasons-container"></div>
         <button id="add-to-favorites">
             <img src="${isFavorite(data) ? 'icons/delete.png' : 'icons/add.png'}" alt="${isFavorite(data) ? 'Удалить из избранного' : 'Добавить в избранное'}" class="favorites-icon"/>
         </button>
@@ -634,6 +787,23 @@ async function displayMovieInfo(data, movie, logoData) {
             trailerContainer.classList.toggle('active');
             toggleTrailerButton.textContent = trailerContainer.classList.contains('active') ? 'Скрыть трейлер' : 'Показать трейлер';
             trailerContainer.style.display = trailerContainer.classList.contains('active') ? 'block' : 'none';
+        };
+    }
+
+    if (hasSeasons) {
+        const toggleSeasonsButton = document.getElementById('toggle-seasons-button');
+        const seasonsContainer = document.getElementById('seasons-container');
+        let seasonsLoaded = false;
+
+        toggleSeasonsButton.onclick = async () => {
+            if (!seasonsLoaded) {
+                await loadSeasons(data.id, seasonsContainer);
+                seasonsLoaded = true;
+            }
+
+            seasonsContainer.classList.toggle('active');
+            toggleSeasonsButton.textContent = seasonsContainer.classList.contains('active') ? 'Скрыть о сериях' : 'Показать о сериях';
+            seasonsContainer.style.display = seasonsContainer.classList.contains('active') ? 'block' : 'none';
         };
     }
 
@@ -716,6 +886,170 @@ async function displayMovieInfo(data, movie, logoData) {
     document.getElementById('close-modal').onclick = closeMovieInfo;
 }
 
+async function loadSeasons(seriesId, seasonsContainer) {
+    try {
+        const seriesData = await fetch(`${TMDB_BASE_URL}/tv/${seriesId}?api_key=${TMDB_API_KEY}&language=ru-RU`).then(res => res.json());
+        const seasons = seriesData.seasons.filter(season => season.season_number > 0);
+
+        if (seasons.length === 0) {
+            seasonsContainer.innerHTML = '<p>Сезоны не найдены.</p>';
+            return;
+        }
+
+        const seasonSelector = document.createElement('div');
+        seasonSelector.className = 'season-selector';
+        const select = document.createElement('select');
+        seasons.forEach(season => {
+            const option = document.createElement('option');
+            option.value = season.season_number;
+            option.textContent = `Сезон ${season.season_number}`;
+            select.appendChild(option);
+        });
+        seasonSelector.appendChild(select);
+        seasonsContainer.appendChild(seasonSelector);
+
+        async function displaySeason(seasonNumber) {
+            const seasonData = await fetch(`${TMDB_BASE_URL}/tv/${seriesId}/season/${seasonNumber}?api_key=${TMDB_API_KEY}&language=ru-RU`).then(res => res.json());
+            
+            const seasonInfo = document.createElement('div');
+            seasonInfo.className = 'season-info';
+            const seasonRating = seasonData.episodes.reduce((sum, ep) => sum + (ep.vote_average || 0), 0) / seasonData.episodes.length || 'N/A';
+            const ratingClass = seasonRating >= 7 ? 'rating-green' : seasonRating >= 5 ? 'rating-yellow' : seasonRating !== 'N/A' ? 'rating-red' : '';
+            const formattedRating = seasonRating !== 'N/A' ? seasonRating.toFixed(1) : 'N/A';
+            seasonInfo.innerHTML = `
+                <h3>Сезон ${seasonNumber}</h3>
+                <p>Рейтинг: <span class="rating ${ratingClass}">${formattedRating}</span> • Дата релиза: ${seasonData.air_date ? new Date(seasonData.air_date).toLocaleDateString('ru-RU') : 'N/A'} • Серий: ${seasonData.episodes.length}</p>
+            `;
+
+            const episodeListContainer = document.createElement('div');
+            episodeListContainer.className = 'episode-list-container';
+            episodeListContainer.id = `episode-list-container-${seasonNumber}`;
+
+            const episodeList = document.createElement('div');
+            episodeList.className = 'episode-list';
+            episodeList.id = `episode-list-${seasonNumber}`;
+
+            seasonData.episodes.forEach((episode, index) => {
+                const episodeKey = `${seriesId}-${seasonNumber}-${episode.episode_number}`;
+                const isWatched = watchedEpisodes[episodeKey] || false;
+                const episodeItem = document.createElement('div');
+                episodeItem.className = `episode-item ${isWatched ? 'watched' : ''}`;
+                episodeItem.dataset.episodeKey = episodeKey;
+                const episodeRating = episode.vote_average ? episode.vote_average.toFixed(1) : 'N/A';
+                const epRatingClass = episodeRating >= 7 ? 'rating-green' : episodeRating >= 5 ? 'rating-yellow' : episodeRating !== 'N/A' ? 'rating-red' : '';
+                const runtime = episode.runtime ? `${episode.runtime} мин` : 'N/A';
+                const overview = episode.overview || 'Описание отсутствует.';
+                episodeItem.innerHTML = `
+                    <img src="${episode.still_path ? `${IMG_URL}${episode.still_path}` : 'icons/poster.png'}" alt="Episode ${episode.episode_number}">
+                    <div class="episode-number">${String(episode.episode_number).padStart(2, '0')}</div>
+                    <div class="episode-info">
+                        <h4>${episode.name || 'Эпизод без названия'}</h4>
+                        <p>${overview}</p>
+                    </div>
+                    <div class="episode-rating-duration">
+                        <p>${runtime}</p>
+                        ${episodeRating !== 'N/A' ? `<span class="rating ${epRatingClass}">${episodeRating}</span>` : ''}
+                    </div>
+                    <button class="watched-button">${isWatched ? 'Отменить' : 'Просмотрено'}</button>
+                `;
+
+                const watchedButton = episodeItem.querySelector('.watched-button');
+                watchedButton.onclick = () => {
+                    const isCurrentlyWatched = episodeItem.classList.contains('watched');
+                    if (isCurrentlyWatched) {
+                        episodeItem.classList.remove('watched');
+                        watchedButton.textContent = 'Просмотрено';
+                        delete watchedEpisodes[episodeKey];
+                    } else {
+                        episodeItem.classList.add('watched');
+                        watchedButton.textContent = 'Отменить';
+                        watchedEpisodes[episodeKey] = true;
+                    }
+                    localStorage.setItem('watchedEpisodes', JSON.stringify(watchedEpisodes));
+                };
+
+                episodeList.appendChild(episodeItem);
+            });
+
+            const sliderControls = document.createElement('div');
+            sliderControls.className = 'episode-slider-controls';
+            sliderControls.innerHTML = `
+                <button class="episode-slider-button prev" id="episode-prev-${seasonNumber}">
+                    <img src="icons/up-arrow.png" alt="Previous">
+                </button>
+                <button class="episode-slider-button next" id="episode-next-${seasonNumber}">
+                    <img src="icons/down-arrow.png" alt="Next">
+                </button>
+            `;
+
+            episodeListContainer.appendChild(episodeList);
+            episodeListContainer.appendChild(sliderControls);
+
+            const existingInfo = seasonsContainer.querySelector('.season-info');
+            const existingList = seasonsContainer.querySelector('.episode-list-container');
+            if (existingInfo) existingInfo.remove();
+            if (existingList) existingList.remove();
+            seasonsContainer.appendChild(seasonInfo);
+            seasonsContainer.appendChild(episodeListContainer);
+
+            // Инициализация слайдера для эпизодов
+            initializeEpisodeSlider(seasonNumber, seasonData.episodes.length);
+        }
+
+        currentSeason = 1;
+        await displaySeason(currentSeason);
+
+        select.onchange = async (event) => {
+            currentSeason = parseInt(event.target.value);
+            await displaySeason(currentSeason);
+        };
+    } catch (error) {
+        console.error('Ошибка при загрузке сезонов:', error);
+        seasonsContainer.innerHTML = '<p>Не удалось загрузить сезоны.</p>';
+    }
+}
+
+function initializeEpisodeSlider(seasonNumber, totalEpisodes) {
+    const episodeList = document.getElementById(`episode-list-${seasonNumber}`);
+    const prevButton = document.getElementById(`episode-prev-${seasonNumber}`);
+    const nextButton = document.getElementById(`episode-next-${seasonNumber}`);
+    const episodesPerPage = 3;
+
+    if (!episodeSlidePositions[seasonNumber]) {
+        episodeSlidePositions[seasonNumber] = 0;
+    }
+
+    function updateEpisodeVisibility() {
+        const position = episodeSlidePositions[seasonNumber];
+        const episodeItems = episodeList.querySelectorAll('.episode-item');
+
+        episodeItems.forEach((item, index) => {
+            if (index >= position && index < position + episodesPerPage) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        prevButton.classList.toggle('disabled', position === 0);
+        nextButton.classList.toggle('disabled', position + episodesPerPage >= totalEpisodes);
+    }
+
+    function slideEpisodes(direction) {
+        const position = episodeSlidePositions[seasonNumber];
+        const newPosition = direction === 'next' 
+            ? Math.min(position + episodesPerPage, totalEpisodes - episodesPerPage) 
+            : Math.max(position - episodesPerPage, 0);
+
+        episodeSlidePositions[seasonNumber] = newPosition;
+        updateEpisodeVisibility();
+    }
+
+    prevButton.onclick = () => slideEpisodes('prev');
+    nextButton.onclick = () => slideEpisodes('next');
+    updateEpisodeVisibility();
+}
+
 function displayMovieInfoError() {
     const modalContent = movieInfoModal.querySelector('.modal-content');
     modalContent.innerHTML = `
@@ -728,6 +1062,7 @@ function displayMovieInfoError() {
 function closeMovieInfo() {
     const players = ['kinobox-player', 'vibix-player', 'lumex-player'].map(id => document.getElementById(id));
     const trailerContainer = document.getElementById('trailer-container');
+    const seasonsContainer = document.getElementById('seasons-container');
 
     players.forEach(player => {
         if (player && player.style.display === 'block') {
@@ -743,6 +1078,13 @@ function closeMovieInfo() {
         trailerContainer.classList.remove('active');
         trailerContainer.style.display = 'none';
         document.getElementById('toggle-trailer-button').textContent = 'Показать трейлер';
+    }
+
+    if (seasonsContainer && seasonsContainer.classList.contains('active')) {
+        seasonsContainer.classList.remove('active');
+        seasonsContainer.style.display = 'none';
+        const toggleSeasonsButton = document.getElementById('toggle-seasons-button');
+        if (toggleSeasonsButton) toggleSeasonsButton.textContent = 'Показать о сериях';
     }
 
     movieInfoModal.style.display = 'none';
