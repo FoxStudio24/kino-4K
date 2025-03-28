@@ -84,7 +84,7 @@ header button, .close-modal {
     height: 50px;
     font-size: 24px;
     color: #fff;
-    background-image: linear-gradient(0.54turn, rgb(255 255 255) 11%, rgb(134 112 201) 100%);
+    background: linear-gradient(312deg, #8b75cb, #9b79d6, #b79cec, #6a4fbb);
     background-size: 400%;
     border-radius: 30px;
     border: none;

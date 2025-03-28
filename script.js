@@ -58,7 +58,7 @@ const countryMap = {
     'MX': 'Мексика'
 };
 
-// Стили
+// Стили с изменениями для мобильных устройств
 const style = document.createElement('style');
 style.textContent = `
     .movie-logo { max-width: 300px; max-height: 200px; margin-bottom: 20px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5)); }
@@ -66,7 +66,7 @@ style.textContent = `
     .button-container { display: flex; justify-content: flex-end; margin-top: 10px; }
     .player-button { padding: 7px 25px; background-color: rgba(255, 255, 255, 0.17); color: white; border: none; border-radius: 25px; cursor: pointer; transition: background-color 0.3s; margin-left: 10px; backdrop-filter: blur(5px); }
     .player-button:hover { background-color: rgba(120, 120, 120, 0.7); }
-    .player-button.active { background-color: #8b75cb; backdrop-filter: none; }
+    .player-button.active { background: linear-gradient(135deg, #8b75cb, #9b79d6, #b79cec, #6a4fbb); backdrop-filter: none; }
     .player-button.hidden { display: none; }
     .video-player { width: 100%; height: 500px; max-width: 800px; margin: 0 auto; border-radius: 10px; overflow: hidden; }
     .video-player iframe { width: 100%; height: 100%; border: none; border-radius: 10px; }
@@ -122,12 +122,12 @@ style.textContent = `
     .search-filters { margin-bottom: 15px; display: flex; gap: 10px; justify-content: flex-start; }
     .filter-button { padding: 5px 15px; background-color: rgba(255, 255, 255, 0.1); color: white; border: none; border-radius: 20px; cursor: pointer; transition: background-color 0.3s; }
     .filter-button:hover { background-color: rgba(255, 255, 255, 0.3); }
-    .filter-button.active { background-color: #8b75cb; }
+    .filter-button.active { background: linear-gradient(135deg, #8b75cb, #9b79d6, #b79cec, #6a4fbb); }
     .seasons-button-container { text-align: right; margin-top: 10px; }
-    .season-selector { margin: 20px 0; text-align: center; }
+    .season-selector { margin: -15px 0; text-align: center; }
     .season-selector select { 
         padding: 5px 10px; 
-        background-color: rgba(255, 255, 255, 0.1); 
+        background-color: rgb(0 0 0); 
         color: white; 
         border: none; 
         border-radius: 5px; 
@@ -173,7 +173,7 @@ style.textContent = `
         background-color: rgba(255, 255, 255, 0.05); 
         padding: 10px; 
         border-radius: 10px; 
-        font-family: 'Montserrat', sans-serif
+        font-family: 'Montserrat', sans-serif;
         color: white; 
         position: relative; 
         flex: 0 0 auto; 
@@ -189,26 +189,35 @@ style.textContent = `
         border-radius: 5px; 
     }
     .episode-item .episode-number {
-    font-size: 30px;
-    background: linear-gradient(135deg, #8b75cb, #9b79d6, #b79cec, #6a4fbb);
-    padding: 25px 10px 5px 5px; /* Увеличиваем отступы сверху и снизу */
-    font-style: italic;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-size: cover; /* Подгонка градиента по тексту */
-    display: inline-block;
-    font-weight: bold;
-    margin-right: 10px;
-    color: #ccc;
-    font-family: 'Boldonse', sans-serif;
-    margin-left: -40px;
-
-	
-}
-
+        font-size: 30px;
+        background: linear-gradient(135deg, #8b75cb, #9b79d6, #b79cec, #6a4fbb);
+        padding: 25px 10px 5px 5px;
+        font-style: italic;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-size: cover;
+        display: inline-block;
+        font-weight: bold;
+        margin-right: 10px;
+        color: #ccc;
+        font-family: 'Boldonse', sans-serif;
+        margin-left: -40px;
+    }
     .episode-item .episode-info { flex: 1; }
-    .episode-item .episode-info h4 { margin: 0 0 5px 0; font-size: 16px; }
-    .episode-item .episode-info p { margin: 0; color: #ccc; font-size: 14px;  display: -webkit-box;-webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;text-overflow: ellipsis; }
+    .episode-item .episode-info h4 { 
+        margin: 0 0 5px 0; 
+        font-size: 16px; 
+    }
+    .episode-item .episode-info p { 
+        margin: 0; 
+        color: #ccc; 
+        font-size: 14px; 
+        display: -webkit-box; 
+        -webkit-line-clamp: 3; 
+        -webkit-box-orient: vertical; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+    }
     .episode-item .episode-rating-duration { text-align: right; }
     .episode-item .episode-rating-duration p { margin: 0; color: #ccc; font-size: 14px; }
     .episode-item .episode-rating-duration .rating { 
@@ -268,16 +277,54 @@ style.textContent = `
         width: 20px; 
         height: 20px; 
     }
+    /* Медиазапросы для мобильных устройств */
+    @media (max-width: 768px) {
+        .episode-item .episode-info p {
+            display: none; /* Скрываем описание на мобильных устройствах */
+        }
+        .episode-item .episode-info h4 {
+            font-size: 13px; /* Уменьшаем шрифт заголовка до 13px на мобильных устройствах */
+        }
+    }
 `;
 document.head.appendChild(style);
 
-// Умышленно ухудшенная функция поиска Kinopoisk ID
-async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaType = 'movie') {
+// Очень точная функция поиска Kinopoisk ID
+async function getKinopoiskIdByTitle(tmdbId, title, year, originalTitle = null, mediaType = 'movie') {
     try {
+        const externalIdsUrl = `${TMDB_BASE_URL}/${mediaType}/${tmdbId}/external_ids?api_key=${TMDB_API_KEY}`;
+        const externalIdsResponse = await fetch(externalIdsUrl);
+        if (!externalIdsResponse.ok) throw new Error(`Ошибка TMDB external_ids: ${externalIdsResponse.status}`);
+        const externalIdsData = await externalIdsResponse.json();
+        
+        if (externalIdsData.kinopoisk_id) {
+            const kpUrl = `${KINOPOISK_BASE_URL}/films/${externalIdsData.kinopoisk_id}`;
+            const kpResponse = await fetch(kpUrl, {
+                headers: {
+                    'X-API-KEY': KINOPOISK_API_KEY,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (!kpResponse.ok) throw new Error(`Ошибка Kinopoisk API: ${kpResponse.status}`);
+            const kpData = await kpResponse.json();
+
+            const kpYear = kpData.year || (kpData.startYear ? kpData.startYear : null);
+            const exactYear = year ? parseInt(year) : null;
+            const kpTitle = kpData.nameRu || kpData.nameOriginal;
+            
+            if (exactYear && kpYear === exactYear && 
+                (kpTitle.toLowerCase() === title.toLowerCase() || 
+                 (originalTitle && kpTitle.toLowerCase() === originalTitle.toLowerCase()))) {
+                return externalIdsData.kinopoisk_id;
+            }
+        }
+
         const searchType = mediaType === 'tv' ? 'TV_SERIES' : 'FILM';
         const exactYear = year ? parseInt(year) : null;
-
-        const url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(title)}&page=1`;
+        let url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(title)}&page=1`;
+        if (exactYear) {
+            url += `&yearFrom=${exactYear}&yearTo=${exactYear}`;
+        }
 
         const response = await fetch(url, {
             headers: {
@@ -290,13 +337,41 @@ async function getKinopoiskIdByTitle(title, year, originalTitle = null, mediaTyp
         const data = await response.json();
 
         if (!data.items || data.items.length === 0) {
+            if (originalTitle && originalTitle !== title) {
+                url = `${KINOPOISK_BASE_URL}/films?type=${searchType}&keyword=${encodeURIComponent(originalTitle)}&page=1`;
+                if (exactYear) {
+                    url += `&yearFrom=${exactYear}&yearTo=${exactYear}`;
+                }
+                const altResponse = await fetch(url, {
+                    headers: {
+                        'X-API-KEY': KINOPOISK_API_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!altResponse.ok) throw new Error(`Ошибка HTTP: ${altResponse.status}`);
+                const altData = await altResponse.json();
+
+                if (altData.items && altData.items.length > 0) {
+                    const exactMatch = exactYear ? altData.items.find(item => 
+                        item.year === exactYear || 
+                        (item.type === 'TV_SERIES' && item.startYear === exactYear)
+                    ) : altData.items[0];
+                    if (exactMatch) {
+                        return exactMatch.kinopoiskId;
+                    }
+                }
+            }
             return null;
         }
 
         const exactMatch = exactYear ? data.items.find(item => 
-            item.year === exactYear || 
-            (item.type === 'TV_SERIES' && item.startYear === exactYear)
-        ) : null;
+            (item.year === exactYear || (item.type === 'TV_SERIES' && item.startYear === exactYear)) &&
+            (item.nameRu.toLowerCase() === title.toLowerCase() || 
+             (originalTitle && item.nameOriginal.toLowerCase() === originalTitle.toLowerCase()))
+        ) : data.items.find(item => 
+            item.nameRu.toLowerCase() === title.toLowerCase() || 
+            (originalTitle && item.nameOriginal.toLowerCase() === originalTitle.toLowerCase())
+        );
 
         return exactMatch ? exactMatch.kinopoiskId : null;
     } catch (error) {
@@ -660,9 +735,8 @@ async function displayMovieInfo(data, movie, logoData) {
     let hasSeasons = false;
 
     try {
-        const externalIdsUrl = `${TMDB_BASE_URL}/${mediaType}/${data.id}/external_ids?api_key=${TMDB_API_KEY}`;
-        const externalIdsData = await fetch(externalIdsUrl).then(res => res.json());
-        kpId = externalIdsData.kinopoisk_id || await getKinopoiskIdByTitle(
+        kpId = await getKinopoiskIdByTitle(
+            data.id,
             data.title || data.name,
             releaseYear,
             data.original_title || data.original_name,
@@ -992,7 +1066,6 @@ async function loadSeasons(seriesId, seasonsContainer) {
             seasonsContainer.appendChild(seasonInfo);
             seasonsContainer.appendChild(episodeListContainer);
 
-            // Инициализация слайдера для эпизодов
             initializeEpisodeSlider(seasonNumber, seasonData.episodes.length);
         }
 
