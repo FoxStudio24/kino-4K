@@ -58,7 +58,7 @@ const countryMap = {
     'MX': 'Мексика'
 };
 
-// Стили с изменениями для мобильных устройств
+// Стили с изменениями для мобильных устройств и уведомлений
 const style = document.createElement('style');
 style.textContent = `
     .movie-logo { max-width: 300px; max-height: 200px; margin-bottom: 20px; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5)); }
@@ -277,6 +277,58 @@ style.textContent = `
         width: 20px; 
         height: 20px; 
     }
+    /* Стили для уведомлений */
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        align-items: center;
+        background: rgb(0 0 0 / 49%);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: opacity 0.5s ease, transform 0.5s ease;
+		backdrop-filter: blur(5px);
+		
+    }
+    .notification.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    @keyframes img-pop {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+        rotate: -180deg;
+    }
+    70% {
+        transform: scale(1.2);
+        opacity: 1;
+        rotate: 15deg;
+    }
+    100% {
+        transform: scale(1);
+        rotate: 0deg;
+    }
+}
+
+.notification img {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    animation: img-pop 0.6s ease-out;
+}
+
+    .notification p {
+        margin: 0;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 14px;
+    }
     /* Медиазапросы для мобильных устройств */
     @media (max-width: 768px) {
         .episode-item .episode-info p {
@@ -288,6 +340,28 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Функция для показа уведомлений
+function showNotification(message, iconSrc) {
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.innerHTML = `
+        <img src="${iconSrc}" alt="Icon">
+        <p>${message}</p>
+    `;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
+
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            notification.remove();
+        }, 500);
+    }, 4000);
+}
 
 // Очень точная функция поиска Kinopoisk ID
 async function getKinopoiskIdByTitle(tmdbId, title, year, originalTitle = null, mediaType = 'movie') {
@@ -750,6 +824,8 @@ async function displayMovieInfo(data, movie, logoData) {
             });
             vibixAvailable = vibixResponse.ok && (await vibixResponse.json()).iframe_url;
             lumexAvailable = true;
+        } else {
+            showNotification('Кинопоиск ID не найден', 'icons/icon-kp.png');
         }
 
         const creditsData = await fetch(`${TMDB_BASE_URL}/${mediaType}/${data.id}/credits?api_key=${TMDB_API_KEY}&language=ru-RU`).then(res => res.json());
@@ -782,7 +858,6 @@ async function displayMovieInfo(data, movie, logoData) {
         </div>
         <p class="overview-text">${overview}</p>
         <p class="country-year">${countries} · ${releaseYear}</p>
-        ${!kpId ? '<p style="color: #ff5555;">Kinopoisk ID не найден</p>' : ''}
         <div class="actors-button-container">
             ${hasActors ? '<button id="toggle-actors-button" class="actors-button">Показать актеров</button>' : ''}
             ${hasTrailers ? '<button id="toggle-trailer-button" class="trailer-button">Показать трейлер</button>' : ''}
@@ -1170,6 +1245,7 @@ function isFavorite(movie) {
 
 function toggleFavorite(movie) {
     const index = favorites.findIndex(fav => fav.id === movie.id);
+    const addToFavoritesButton = document.getElementById('add-to-favorites');
     if (index === -1) {
         favorites.push({
             id: movie.id,
@@ -1177,10 +1253,12 @@ function toggleFavorite(movie) {
             poster_path: movie.poster_path,
             media_type: movie.media_type || (movie.first_air_date ? 'tv' : 'movie')
         });
-        alert('Фильм добавлен в избранное');
+        showNotification('Фильм добавлен в избранное', 'icons/delete.png');icons/add.png
+        addToFavoritesButton.innerHTML = `<img src="icons/add.png" alt="Удалить из избранного" class="favorites-icon"/>`;
     } else {
         favorites.splice(index, 1);
-        alert('Фильм удален из избранного');
+        showNotification('Фильм удален из избранного', 'icons/add.png');
+        addToFavoritesButton.innerHTML = `<img src="icons/delete.png" alt="Добавить в избранное" class="favorites-icon"/>`;
     }
     localStorage.setItem('favorites', JSON.stringify(favorites));
     updateFavoritesGrid();
