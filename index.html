@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>КИНО+</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Шапка -->
+    <header class="header">
+        <div class="search-bar">
+            <input type="text" id="search-input" placeholder="Поиск..." />
+            <img src="ico\search-svgrepo-com.svg" alt="Search Icon" class="search-icon" id="search-icon">
+        </div>
+    </header>
+
+    <!-- Главный раздел (Блок 1) -->
+    <section class="hero" id="hero">
+        <div class="hero-content">
+            <img id="hero-logo" src="" alt="Логотип фильма" class="hero-logo">
+            <div id="hero-logo-text" class="hero-logo-text"></div>
+            <p id="hero-description"></p>
+            <button id="hero-watch-btn" class="watch-btn">
+                Смотреть
+            </button>
+        </div>
+    </section>
+
+    <!-- Блок 2: Новые фильмы -->
+    <section class="category">
+        <h2>Новые фильмы</h2>
+        <div class="movie-row" id="new-movies"></div>
+    </section>
+
+    <!-- Блок 3: Новые сериалы -->
+    <section class="category">
+        <h2>Новые сериалы</h2>
+        <div class="movie-row" id="new-series"></div>
+    </section>
+
+    <!-- Блок 4: Новые мультфильмы -->
+    <section class="category">
+        <h2>Новые мультфильмы</h2>
+        <div class="movie-row" id="new-animations"></div>
+    </section>
+
+    <!-- Модальное окно для фильма -->
+    <div id="movie-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">×</span>
+            <div class="modal-backdrop" id="modal-backdrop">
+                <div class="modal-logo-container">
+                    <img id="modal-logo" src="" alt="Логотип фильма" class="modal-logo">
+                    <div id="modal-logo-text" class="modal-logo-text"></div>
+                    <div class="modal-buttons">
+                        <button class="modal-watch-btn" id="modal-watch-btn">Смотреть</button>
+                        <button class="modal-trailer-btn">
+                            <img src="ico\YouTube.svg" alt="YouTube Icon" class="youtube-icon">
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-details">
+                <div class="details-left">
+                    <div class="info-row">
+                        <span id="modal-year"></span>
+                        <span id="modal-seasons"></span>
+                    </div>
+                    <div class="info-row">
+                        <span id="modal-age-rating" class="age-rating"></span>
+                        <span id="modal-rating" class="rating"></span>
+                    </div>
+                    <div class="overview">
+                        <h3>Обзор</h3>
+                        <p id="modal-overview"></p>
+                    </div>
+                </div>
+                <div class="details-right">
+                    <div class="cast">
+                        <h3>В ролях</h3>
+                        <p id="modal-cast"></p>
+                    </div>
+                    <div class="genres">
+                        <h3>Жанры</h3>
+                        <p id="modal-genres"></p>
+                    </div>
+                    <div class="original-title">
+                        <h3>Оригинальное название</h3>
+                        <p id="modal-original-title"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-trailers" id="modal-trailers">
+                <h3>Трейлеры и другое</h3>
+                <div class="trailers-row" id="trailers-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для трейлера -->
+    <div id="trailer-modal" class="modal">
+        <div class="trailer-modal-content">
+            <span class="trailer-close-btn">×</span>
+            <div id="trailer-video" class="trailer-video"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для поиска -->
+    <div id="search-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">×</span>
+            <div class="search-results">
+                <div class="search-category">
+                    <h3>Фильмы</h3>
+                    <div class="movie-row" id="search-movies"></div>
+                </div>
+                <div class="search-category">
+                    <h3>Сериалы</h3>
+                    <div class="movie-row" id="search-series"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для плеера -->
+    <div id="player-modal" class="modal">
+        <div class="player-modal-content">
+            <span class="player-close-btn">×</span>
+            <div id="kinobox-player" class="kinobox-player"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="kinobox.js"></script>
+</body>
+</html>
