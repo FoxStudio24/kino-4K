@@ -85,9 +85,11 @@ async function fetchNewMovies() {
     displayMovies(data.results, newMoviesRow, 'movie');
 }
 
-// Получить новые сериалы
+// Получить популярные сериалы с улучшенными рекомендациями
 async function fetchNewSeries() {
-    const response = await fetch(`${BASE_URL}/tv/on_the_air?api_key=${API_KEY}&language=ru-RU`);
+    const response = await fetch(
+        `${BASE_URL}/discover/tv?api_key=${API_KEY}&language=ru-RU&sort_by=popularity.desc&vote_average.gte=7&vote_count.gte=1000&first_air_date.lte=2025-04-17`
+    );
     const data = await response.json();
     displayMovies(data.results, newSeriesRow, 'tv');
 }
