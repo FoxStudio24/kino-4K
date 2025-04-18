@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>КИНО+</title>
+    <title>Сериалы - КИНО+</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <!-- Шапка -->
     <header class="header">
         <div class="nav-tabs">
-            <a href="index.html" class="active">Главная</a>
+            <a href="index.html">Главная</a>
             <a href="movies.html">Фильмы</a>
-            <a href="series.html">Сериалы</a>
+            <a href="series.html" class="active">Сериалы</a>
         </div>
         <div class="search-bar">
             <input type="text" id="search-input" placeholder="Поиск..." />
@@ -20,32 +20,22 @@
         </div>
     </header>
 
-    <!-- Главный раздел (Блок 1) -->
-    <section class="hero" id="hero">
-        <div class="hero-content">
-            <img id="hero-logo" src="" alt="Логотип" class="hero-logo">
-            <div id="hero-logo-text" class="hero-logo-text"></div>
-            <p id="hero-description"></p>
-            <button id="hero-watch-btn" class="watch-btn">Смотреть</button>
-        </div>
-    </section>
-
-    <!-- Блок 2: Новые фильмы -->
-    <section class="category">
-        <h2>Новые фильмы</h2>
-        <div class="movie-row" id="new-movies"></div>
-    </section>
-
-    <!-- Блок 3: Новые сериалы -->
+    <!-- Блок 1: Новые сериалы -->
     <section class="category">
         <h2>Новые сериалы</h2>
         <div class="movie-row" id="new-series"></div>
     </section>
 
-    <!-- Блок 4: Новые мультфильмы -->
+    <!-- Блок 2: В тренде -->
     <section class="category">
-        <h2>Новые мультфильмы</h2>
-        <div class="movie-row" id="new-animations"></div>
+        <h2>В тренде</h2>
+        <div class="movie-row" id="trending-series"></div>
+    </section>
+
+    <!-- Блок 3: Легендарные сериалы -->
+    <section class="category">
+        <h2>Легендарные сериалы</h2>
+        <div class="movie-row" id="legendary-series"></div>
     </section>
 
     <!-- Модальное окно для фильма -->
@@ -135,7 +125,7 @@
     </div>
 
     <script src="nav.js"></script>
-    <script src="script.js"></script>
+    <script src="series.js"></script>
     <script src="kinobox.js"></script>
 </body>
 </html>

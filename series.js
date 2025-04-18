@@ -3,14 +3,9 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/original';
 const NO_PICTURE_URL = 'ico/No picture.svg';
 
-const hero = document.getElementById('hero');
-const heroLogo = document.getElementById('hero-logo');
-const heroLogoText = document.getElementById('hero-logo-text');
-const heroDescription = document.getElementById('hero-description');
-const heroWatchBtn = document.getElementById('hero-watch-btn');
-const newMoviesRow = document.getElementById('new-movies');
 const newSeriesRow = document.getElementById('new-series');
-const newAnimationsRow = document.getElementById('new-animations');
+const trendingSeriesRow = document.getElementById('trending-series');
+const legendarySeriesRow = document.getElementById('legendary-series');
 const modal = document.getElementById('movie-modal');
 const modalBackdrop = document.getElementById('modal-backdrop');
 const modalLogo = document.getElementById('modal-logo');
@@ -56,47 +51,6 @@ async function getPoster(id, type) {
     return data.poster_path ? `${IMG_URL}${data.poster_path}` : NO_PICTURE_URL;
 }
 
-// Получить случайный трендовый фильм или сериал для hero
-async function fetchHeroContent() {
-    // Получаем трендовые фильмы
-    const movieResponse = await fetch(`${BASE_URL}/trending/movie/week?api_key=${API_KEY}&language=ru-RU`);
-    const movieData = await movieResponse.json();
-    const movies = movieData.results.map(item => ({ ...item, type: 'movie' }));
-
-    // Получаем трендовые сериалы
-    const seriesResponse = await fetch(`${BASE_URL}/trending/tv/week?api_key=${API_KEY}&language=ru-RU`);
-    const seriesData = await seriesResponse.json();
-    const series = seriesData.results.map(item => ({ ...item, type: 'tv' }));
-
-    // Объединяем и выбираем случайный элемент
-    const allContent = [...movies, ...series];
-    const content = allContent[Math.floor(Math.random() * allContent.length)];
-
-    hero.style.backgroundImage = `url(${IMG_URL}${content.backdrop_path})`;
-    const logoUrl = await getLogo(content.id, content.type);
-    if (logoUrl) {
-        heroLogo.src = logoUrl;
-        heroLogo.style.display = 'block';
-        heroLogoText.style.display = 'none';
-    } else {
-        heroLogo.style.display = 'none';
-        heroLogoText.textContent = content.title || content.name;
-        heroLogoText.style.display = 'block';
-    }
-    heroDescription.textContent = content.overview || 'Описание отсутствует';
-    heroWatchBtn.dataset.id = content.id;
-    heroWatchBtn.dataset.type = content.type;
-}
-
-// Получить новые фильмы
-async function fetchNewMovies() {
-    const response = await fetch(
-        `${BASE_URL}/movie/now_playing?api_key=${API_KEY}&language=ru-RU`
-    );
-    const data = await response.json();
-    displayMovies(data.results, newMoviesRow, 'movie');
-}
-
 // Получить новые сериалы
 async function fetchNewSeries() {
     const response = await fetch(
@@ -106,13 +60,20 @@ async function fetchNewSeries() {
     displayMovies(data.results, newSeriesRow, 'tv');
 }
 
-// Получить новые мультфильмы
-async function fetchNewAnimations() {
+// Получить трендовые сериалы
+async function fetchTrendingSeries() {
+    const response = await fetch(`${BASE_URL}/trending/tv/week?api_key=${API_KEY}&language=ru-RU`);
+    const data = await response.json();
+    displayMovies(data.results, trendingSeriesRow, 'tv');
+}
+
+// Получить легендарные сериалы
+async function fetchLegendarySeries() {
     const response = await fetch(
-        `${BASE_URL}/discover/movie?api_key=${API_KEY}&language=ru-RU&with_genres=16&sort_by=release_date.desc&release_date.lte=2025-04-18&vote_count.gte=100`
+        `${BASE_URL}/discover/tv?api_key=${API_KEY}&language=ru-RU&sort_by=vote_average.desc&vote_count.gte=1000&first_air_date.lte=2015-01-01`
     );
     const data = await response.json();
-    displayMovies(data.results, newAnimationsRow, 'movie');
+    displayMovies(data.results, legendarySeriesRow, 'tv');
 }
 
 // Отобразить фильмы/сериалы в рядах
@@ -182,7 +143,7 @@ async function getTrailers(id, type) {
 // Отобразить трейлеры
 function displayTrailers(trailers, id, type) {
     trailersGrid.innerHTML = '';
-    if (trailers.length === 0) {
+    if (trailers.length == 0) {
         modalTrailers.classList.remove('visible');
         return;
     }
@@ -358,14 +319,6 @@ modalWatchBtn.addEventListener('click', async () => {
     document.body.classList.add('no-scroll');
 });
 
-// Кнопка "Смотреть" в hero
-heroWatchBtn.addEventListener('click', () => {
-    const id = heroWatchBtn.dataset.id;
-    const type = heroWatchBtn.dataset.type;
-    openModal(id, type);
-    document.body.classList.add('no-scroll');
-});
-
 // Поиск
 async function performSearch(query) {
     if (!query) {
@@ -375,15 +328,55 @@ async function performSearch(query) {
 
     const movieResponse = await fetch(`${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=ru-RU`);
     const movieData = await movieResponse.json();
-    displayMovies(movieData.results, searchMoviesRow, 'movie');
-
     const seriesResponse = await fetch(`${BASE_URL}/search/tv?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=ru-RU`);
     const seriesData = await seriesResponse.json();
+
+    searchMoviesRow.innerHTML = '';
+    searchSeriesRow.innerHTML = '';
+
+    displayMovies(movieData.results, searchMoviesRow, 'movie');
     displayMovies(seriesData.results, searchSeriesRow, 'tv');
 
     searchModal.style.display = 'block';
     document.body.classList.add('no-scroll');
     searchInput.value = '';
+}
+
+// Отобразить фильмы/сериалы в рядах
+function displayMovies(movies, container, type) {
+    container.innerHTML = '';
+    movies.slice(0, 10).forEach(movie => {
+        const movieCard = document.createElement('div');
+        movieCard.classList.add('movie-card');
+        const posterUrl = movie.poster_path ? `${IMG_URL}${movie.poster_path}` : NO_PICTURE_URL;
+        const rating = movie.vote_average ? parseFloat(movie.vote_average.toFixed(1)) : null;
+        let ratingClass = 'movie-card-rating';
+        if (!rating) {
+            ratingClass += ' dark-red';
+        } else if (rating >= 6.5) {
+            ratingClass += ' high';
+        } else if (rating < 6.5 && rating >= 5) {
+            ratingClass += ' low';
+        } else if (rating < 5 && rating >= 4) {
+            ratingClass += ' very-low';
+        } else {
+            ratingClass += ' dark-red';
+        }
+        movieCard.innerHTML = `
+            <img src="${posterUrl}" alt="${movie.title || movie.name}">
+            <div class="gradient-overlay"></div>
+            <p>${movie.title || movie.name}</p>
+            <span class="${ratingClass}">${rating ? rating.toFixed(1) : 'N/A'}</span>
+        `;
+        movieCard.dataset.id = movie.id;
+        movieCard.dataset.type = type;
+        movieCard.addEventListener('click', () => {
+            openModal(movie.id, type);
+            searchModal.style.display = 'none';
+            document.body.classList.add('no-scroll');
+        });
+        container.appendChild(movieCard);
+    });
 }
 
 searchInput.addEventListener('keypress', (e) => {
@@ -397,7 +390,6 @@ searchIcon.addEventListener('click', () => {
 });
 
 // Инициализация
-fetchHeroContent();
-fetchNewMovies();
 fetchNewSeries();
-fetchNewAnimations();
+fetchTrendingSeries();
+fetchLegendarySeries();
