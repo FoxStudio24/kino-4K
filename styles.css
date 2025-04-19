@@ -41,6 +41,10 @@ img {
     display: flex;
     gap: 20px;
     position: relative;
+    user-select: none;      /* Для предотвращения выделения текста */
+    -webkit-user-select: none; /* Для Safari */
+    -moz-user-select: none;    /* Для Firefox */
+    -ms-user-select: none;     /* Для IE/Edge */
 }
 
 .nav-tabs a {
@@ -113,7 +117,7 @@ img {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), #141414);
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0), #141414);
     z-index: 1;
 }
 
@@ -148,25 +152,43 @@ img {
     font-weight: 400;
 }
 
-.watch-btn {
-    background-color: white;
-    color: black;
+.hero-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.watch-btn, .info-btn {
     border: none;
-    width: 200px;
+    width: 150px;
     height: 40px;
     font-size: 1rem;
     cursor: pointer;
-    border-radius: 25px;
+    border-radius: 20px;
     font-family: 'Montserrat', sans-serif;
     font-weight: 500;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.watch-btn {
+    background-color: white;
+    color: black;
 }
 
 .watch-btn:hover {
-    transform: scale(1.0);
+    transform: scale(1.05);
+}
+
+.info-btn {
+    background-color: #666;
+    color: #fff;
+}
+
+.info-btn:hover {
+    background-color: #888;
+    transform: scale(1.05);
 }
 
 .category {
@@ -184,6 +206,10 @@ img {
     display: inline-flex;
     align-items: center;
     gap: 10px;
+    user-select: none;      /* Для предотвращения выделения текста */
+    -webkit-user-select: none; /* Для Safari */
+    -moz-user-select: none;    /* Для Firefox */
+    -ms-user-select: none;     /* Для IE/Edge */
 }
 
 .count-badge {
@@ -214,6 +240,7 @@ img {
 
 .movie-card {
     flex: 0 0 auto;
+    background-color: #555;
     width: 200px;
     height: 300px;
     text-align: center;
@@ -283,7 +310,7 @@ img {
     position: absolute;
     top: 10px;
     right: 10px;
-    padding: 5px 8px;
+    padding: 5px 15px;
     border-radius: 15px;
     font-size: 0.9rem;
     color: white;
@@ -507,6 +534,10 @@ img {
     font-size: 1rem;
     color: #b3b3b3;
     font-weight: 400;
+    user-select: none;      /* Для предотвращения выделения текста */
+    -webkit-user-select: none; /* Для Safari */
+    -moz-user-select: none;    /* Для Firefox */
+    -ms-user-select: none;     /* Для IE/Edge */
 }
 
 .age-rating {
@@ -543,6 +574,10 @@ img {
     margin: 12px 0;
     color: #b3b3b3;
     font-weight: 700;
+    user-select: none;      /* Для предотвращения выделения текста */
+    -webkit-user-select: none; /* Для Safari */
+    -moz-user-select: none;    /* Для Firefox */
+    -ms-user-select: none;     /* Для IE/Edge */
 }
 
 .overview p, .cast p, .genres p, .original-title p {
@@ -667,14 +702,15 @@ img {
     z-index: 1010;
 }
 
+/* Стили для модального окна плеера */
 .player-modal-content {
+    background-color: #000;
+    max-width: 80%;
+    width: 100%;
+    margin: auto;
     position: relative;
-    margin: 10% auto;
-    width: 80%;
-    max-width: 960px;
-    background-color: #141414;
-    border-radius: 12px;
-    padding: 20px;
+    border-radius: 8px;
+    overflow: hidden;
     opacity: 0;
     transform: scale(0.95);
     animation: modalFadeIn 0.5s ease forwards;
@@ -684,31 +720,47 @@ img {
     animation: modalFadeOut 0.5s ease forwards;
 }
 
+.kinobox-player {
+    width: 100%;
+    height: 100%;
+}
+
+.player-wrapper {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+}
+
+.player-wrapper iframe,
+.player-wrapper .kinobox_player {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
 .player-close-btn {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    font-size: 2rem;
+    top: 24px;
+    right: 24px;
+    font-size: 2.04rem;
     color: white;
     cursor: pointer;
     background-color: rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 15px;
+    border-radius: 50%;
     width: 36px;
     height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 6px;
-    z-index: 1010;
-}
-
-.kinobox-player {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    z-index: 1005;
-    border-radius: 12px;
-    overflow: hidden;
+    z-index: 999;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
 .search-results {
@@ -724,6 +776,7 @@ img {
     font-weight: 700;
     margin-bottom: 10px;
 }
+
 .movie-card-info {
     position: absolute;
     top: 10px;

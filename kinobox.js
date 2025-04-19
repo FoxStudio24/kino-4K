@@ -1,12 +1,16 @@
-function initKinoboxPlayer(id, type, posterUrl) {
+function initKinoboxPlayer(id, type, backdropUrl) {
     const playerContainer = document.getElementById('kinobox-player');
-    playerContainer.innerHTML = '<div class="kinobox_player"></div>';
+    playerContainer.innerHTML = `
+        <div class="player-wrapper">
+            <div class="kinobox_player"></div>
+        </div>
+    `;
 
     // Очистка предыдущих скриптов Kinobox
     const existingScripts = document.querySelectorAll('script[src="https://kinobox.tv/kinobox.min.js"]');
     existingScripts.forEach(script => script.remove());
 
-    // Добавление скрипта Kinobox
+    // Инициализация Kinobox
     const script = document.createElement('script');
     script.src = 'https://kinobox.tv/kinobox.min.js';
     script.onload = () => {
@@ -30,7 +34,9 @@ function initKinoboxPlayer(id, type, posterUrl) {
             },
             params: {
                 all: {
-                    poster: posterUrl || 'https://via.placeholder.com/500x750?text=Poster+Not+Available'
+                    poster: backdropUrl || 'https://via.placeholder.com/1280x720?text=Backdrop+Not+Available',
+                    language: 'ru',
+                    server: 'ru'
                 }
             },
             events: {
