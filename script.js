@@ -61,15 +61,20 @@ async function fetchHeroContent() {
     // Получаем трендовые фильмы
     const movieResponse = await fetch(`${BASE_URL}/trending/movie/week?api_key=${API_KEY}&language=ru-RU`);
     const movieData = await movieResponse.json();
-    const movies = movieData.results.map(item => ({ ...item, type: 'movie' }));
+    const movies = movieData.results
+        .filter(item => item.vote_average >= 7 && item.overview && item.backdrop_path)
+        .map(item => ({ ...item, type: 'movie' }));
 
     // Получаем трендовые сериалы
     const seriesResponse = await fetch(`${BASE_URL}/trending/tv/week?api_key=${API_KEY}&language=ru-RU`);
     const seriesData = await seriesResponse.json();
-    const series = seriesData.results.map(item => ({ ...item, type: 'tv' }));
+    const series = seriesData.results
+        .filter(item => item.vote_average >= 7 && item.overview && item.backdrop_path)
+        .map(item => ({ ...item, type: 'tv' }));
 
     // Объединяем и выбираем случайный элемент
     const allContent = [...movies, ...series];
+    if (allContent.length === 0) return; // Защита от пустого массива
     const content = allContent[Math.floor(Math.random() * allContent.length)];
 
     hero.style.backgroundImage = `url(${IMG_URL}${content.backdrop_path})`;
