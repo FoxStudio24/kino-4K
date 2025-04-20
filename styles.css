@@ -507,6 +507,58 @@ img {
     opacity: 0.5;
     pointer-events: none;
 }
+.modal-logo-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.modal-controls {
+    display: flex;
+    gap: 5px; /* Расстояние между кнопками */
+    margin-left: auto; /* Прижимает .modal-controls к правому краю */
+    margin-right: 50px; /* Небольшой отступ справа */
+    padding: 0;
+}
+
+.modal-trailer-btn,
+.modal-fullscreen-toggle {
+    background-color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+}
+
+.modal-trailer-btn img,
+.modal-fullscreen-toggle img {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+}
+
+.modal-trailer-btn:hover,
+.modal-fullscreen-toggle:hover {
+    transform: scale(1.1);
+}
 
 .youtube-icon, .favorite-icon {
     width: 24px;
@@ -799,4 +851,9 @@ img {
     color: white;
     font-weight: 500;
     background-color: #808080; /* Серый фон */
+}
+.modal-trailer-btn img {
+    width: 24px; /* Настройте размер по необходимости */
+    height: 24px;
+    vertical-align: middle;
 }

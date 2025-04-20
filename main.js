@@ -45,6 +45,19 @@ const playerCloseBtn = document.querySelector('.player-close-btn');
 const trailersGrid = document.getElementById('trailers-grid');
 const modalTrailers = document.getElementById('modal-trailers');
 
+// Загрузка YouTube IFrame API
+let youtubeScriptLoaded = false;
+function loadYouTubeAPI() {
+    if (!youtubeScriptLoaded) {
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        youtubeScriptLoaded = true;
+    }
+}
+loadYouTubeAPI();
+
 // Функция для получения логотипа (только русский)
 async function getLogo(id, type) {
     const response = await fetch(`${BASE_URL}/${type}/${id}/images?api_key=${API_KEY}`);
@@ -254,8 +267,8 @@ function displayTrailers(trailers, id, type) {
     });
 }
 
-// Получить трейлер с YouTube
-async function getTrailer(id, type) {
+// Получить первый трейлер с YouTube
+async function getFirstTrailer(id, type) {
     const response = await fetch(`${BASE_URL}/${type}/${id}/videos?api_key=${API_KEY}&language=ru-RU`);
     const data = await response.json();
     let trailer = data.results.find(video => video.type === 'Trailer' && video.site === 'YouTube' && video.iso_639_1 === 'ru');
@@ -267,7 +280,7 @@ async function getTrailer(id, type) {
 
 // Открыть модальное окно с трейлером
 async function openTrailerModal(id, type) {
-    const trailerKey = await getTrailer(id, type);
+    const trailerKey = await getFirstTrailer(id, type);
     if (trailerKey) {
         trailerVideo.innerHTML = `
             <iframe width="100%" height="100%" src="https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=1&rel=0&showinfo=0&modestbranding=1" 
@@ -282,13 +295,43 @@ async function openTrailerModal(id, type) {
     }
 }
 
+// Переменная для хранения экземпляра YouTube-плеера
+let playerInstance = null;
+
 // Открыть модальное окно с деталями фильма
 async function openModal(id, type) {
     const response = await fetch(`${BASE_URL}/${type}/${id}?api_key=${API_KEY}&append_to_response=credits&language=ru-RU`);
     const data = await response.json();
     
-    modalBackdrop.style.backgroundImage = `url(${IMG_URL}${data.backdrop_path || NO_PICTURE_URL})`;
+    const backdropUrl = data.backdrop_path ? `${IMG_URL}${data.backdrop_path}` : NO_PICTURE_URL;
+    
+    // Очистка и восстановление начальной структуры modalBackdrop с логотипом
     const logoUrl = await getLogo(id, type);
+    modalBackdrop.innerHTML = `
+        <div class="modal-logo-container">
+            <img id="modal-logo" src="${logoUrl || ''}" alt="Логотип фильма" class="modal-logo" style="display: ${logoUrl ? 'block' : 'none'};">
+            <div id="modal-logo-text" class="modal-logo-text" style="display: ${logoUrl ? 'none' : 'block'};">${data.title || data.name}</div>
+            <div class="modal-buttons">
+                <button class="modal-watch-btn" id="modal-watch-btn">Смотреть</button>
+                <div class="modal-controls">
+                    <button class="modal-trailer-btn" data-muted="true" style="display: none;">
+                        <img src="ico/Звуквыключен.png" alt="Звук выключен">
+                    </button>
+                    <button class="modal-fullscreen-toggle" style="display: none;">
+                        <img src="ico/Fullscreen.png" alt="Полноэкранный режим">
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    modalBackdrop.style.backgroundImage = `url(${backdropUrl})`;
+    
+    // Привязываем обработчик для кнопки "Смотреть" сразу после создания
+    const initialModalWatchBtn = document.getElementById('modal-watch-btn');
+    initialModalWatchBtn.addEventListener('click', () => {
+        window.launchPlayer();
+    });
+
     if (logoUrl) {
         modalLogo.src = logoUrl;
         modalLogo.style.display = 'block';
@@ -327,11 +370,8 @@ async function openModal(id, type) {
     modalGenres.textContent = data.genres.map(genre => genre.name).join(', ') || 'Жанры отсутствуют';
     modalOriginalTitle.textContent = data.original_title || data.original_name || '';
 
-    const trailerKey = await getTrailer(id, type);
-    if (trailerKey) {
-        trailerBtn.classList.remove('disabled');
-        trailerBtn.onclick = () => openTrailerModal(id, type);
-    } else {
+    const trailerKey = await getFirstTrailer(id, type);
+    if (!trailerKey) {
         trailerBtn.classList.add('disabled');
         trailerBtn.onclick = null;
     }
@@ -344,6 +384,137 @@ async function openModal(id, type) {
 
     modal.style.display = 'block';
     document.body.classList.add('no-scroll');
+
+    // Автозапуск трейлера через 5 секунд
+    let trailerTimeout;
+    function startTrailer() {
+        trailerTimeout = setTimeout(async () => {
+            const trailerKey = await getFirstTrailer(id, type);
+            if (trailerKey) {
+                modalBackdrop.style.backgroundImage = 'none';
+                modalBackdrop.innerHTML = `
+                    <div style="position: relative; width: 100%; height: 100%; overflow: hidden;">
+                        <iframe id="trailer-iframe" style="position: absolute; top: -80px; left: 0; width: 100%; height: calc(100% + 80px); transform: scale(1.2); transform-origin: center center;" 
+                        src="https://www.youtube.com/embed/${trailerKey}?enablejsapi=1&autoplay=1&mute=1&controls=0&rel=0&showinfo=0&modestbranding=1" 
+                        frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                    </div>
+                    <div class="modal-logo-container">
+                        <img id="modal-logo" src="${logoUrl || ''}" alt="Логотип фильма" class="modal-logo" style="display: ${logoUrl ? 'block' : 'none'};">
+                        <div id="modal-logo-text" class="modal-logo-text" style="display: ${logoUrl ? 'none' : 'block'};">${data.title || data.name}</div>
+                        <div class="modal-buttons">
+                            <button class="modal-watch-btn" id="modal-watch-btn" data-id="${id}" data-type="${type}">Смотреть</button>
+                            <div class="modal-controls">
+                                <button class="modal-trailer-btn" data-muted="true" style="display: block;">
+                                    <img src="ico/Звуквыключен.png" alt="Звук выключен">
+                                </button>
+                                <button class="modal-fullscreen-toggle" style="display: block;">
+                                    <img src="ico/Fullscreen.png" alt="Полноэкранный режим">
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                const iframe = modalBackdrop.querySelector('#trailer-iframe');
+                playerInstance = new YT.Player(iframe, {
+                    events: {
+                        'onReady': (event) => {
+                            event.target.playVideo(); // Явный запуск видео
+                        },
+                        'onStateChange': (event) => {
+                            if (event.data === YT.PlayerState.ENDED) {
+                                modalBackdrop.innerHTML = `
+                                    <div class="modal-logo-container">
+                                        <img id="modal-logo" src="${logoUrl || ''}" alt="Логотип фильма" class="modal-logo" style="display: ${logoUrl ? 'block' : 'none'};">
+                                        <div id="modal-logo-text" class="modal-logo-text" style="display: ${logoUrl ? 'none' : 'block'};">${data.title || data.name}</div>
+                                        <div class="modal-buttons">
+                                            <button class="modal-watch-btn" id="modal-watch-btn" data-id="${id}" data-type="${type}">Смотреть</button>
+                                            <div class="modal-controls">
+                                                <button class="modal-trailer-btn" data-muted="true" style="display: none;">
+                                                    <img src="ico/Звуквыключен.png" alt="Звук выключен">
+                                                </button>
+                                                <button class="modal-fullscreen-toggle" style="display: none;">
+                                                    <img src="ico/Fullscreen.png" alt="Полноэкранный режим">
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                                modalBackdrop.style.backgroundImage = `url(${backdropUrl})`;
+                                // Перепривязываем обработчик для кнопки "Смотреть"
+                                const newModalWatchBtn = document.getElementById('modal-watch-btn');
+                                newModalWatchBtn.addEventListener('click', () => {
+                                    window.launchPlayer();
+                                });
+                                // Кнопка звука и полноэкранного режима скрыты, поэтому обработчики не нужны
+                                playerInstance = null; // Очищаем экземпляр плеера
+                            }
+                        }
+                    }
+                });
+
+                // Привязываем обработчик для кнопки "Смотреть" после автозапуска трейлера
+                const newModalWatchBtn = document.getElementById('modal-watch-btn');
+                newModalWatchBtn.addEventListener('click', () => {
+                    window.launchPlayer();
+                });
+
+                // Привязываем обработчик для кнопки звука
+                const newTrailerBtn = document.querySelector('.modal-trailer-btn');
+                if (trailerKey) {
+                    newTrailerBtn.onclick = () => toggleMute(newTrailerBtn);
+                }
+
+                // Привязываем обработчик для кнопки полноэкранного режима
+                const fullscreenBtn = document.querySelector('.modal-fullscreen-toggle');
+                fullscreenBtn.addEventListener('click', () => {
+                    const iframe = document.querySelector('#trailer-iframe');
+                    if (!document.fullscreenElement) {
+                        iframe.requestFullscreen().catch(err => {
+                            console.error(`Ошибка при попытке включить полноэкранный режим: ${err.message}`);
+                        });
+                    } else {
+                        document.exitFullscreen();
+                    }
+                });
+            }
+        }, 5000);
+    }
+
+    // Функция для переключения звука
+    function toggleMute(button) {
+        if (!playerInstance) return;
+        const isMuted = button.dataset.muted === 'true';
+        if (isMuted) {
+            playerInstance.unMute();
+            button.dataset.muted = 'false';
+            button.innerHTML = '<img src="ico/Звуквключен.png" alt="Звук включен">';
+        } else {
+            playerInstance.mute();
+            button.dataset.muted = 'true';
+            button.innerHTML = '<img src="ico/Звуквыключен.png" alt="Звук выключен">';
+        }
+    }
+
+    // Инициализация кнопки звука
+    if (trailerKey) {
+        trailerBtn.onclick = () => toggleMute(trailerBtn);
+    }
+
+    // Ждем загрузки YouTube API
+    if (window.YT && window.YT.Player) {
+        startTrailer();
+    } else {
+        window.onYouTubeIframeAPIReady = startTrailer;
+    }
+
+    // Очистка таймера при закрытии модального окна
+    closeBtn.addEventListener('click', () => {
+        clearTimeout(trailerTimeout);
+        if (playerInstance) {
+            playerInstance.destroy();
+            playerInstance = null;
+        }
+    }, { once: true });
 }
 
 // Закрыть модальное окно фильма
@@ -354,6 +525,25 @@ closeBtn.addEventListener('click', () => {
         modal.style.display = 'none';
         modalContent.classList.remove('closing');
         document.body.classList.remove('no-scroll');
+        // Восстанавливаем начальную структуру modalBackdrop
+        modalBackdrop.innerHTML = `
+            <div class="modal-logo-container">
+                <img id="modal-logo" src="" alt="Логотип фильма" class="modal-logo">
+                <div id="modal-logo-text" class="modal-logo-text"></div>
+                <div class="modal-buttons">
+                    <button class="modal-watch-btn" id="modal-watch-btn">Смотреть</button>
+                    <div class="modal-controls">
+                        <button class="modal-trailer-btn" data-muted="true" style="display: none;">
+                            <img src="ico/Звуквыключен.png" alt="Звук выключен">
+                        </button>
+                        <button class="modal-fullscreen-toggle" style="display: none;">
+                            <img src="ico/Fullscreen.png" alt="Полноэкранный режим">
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        modalBackdrop.style.backgroundImage = '';
     }, 500);
 });
 
@@ -395,6 +585,11 @@ playerCloseBtn.addEventListener('click', () => {
 
 // Функция запуска плеера (только Kinobox)
 window.launchPlayer = async function() {
+    // Если YouTube-плеер активен, ставим его на паузу
+    if (playerInstance && playerInstance.getPlayerState && playerInstance.getPlayerState() === YT.PlayerState.PLAYING) {
+        playerInstance.pauseVideo();
+    }
+
     const id = modalWatchBtn.dataset.id || (heroWatchBtn && heroWatchBtn.dataset.id);
     const type = modalWatchBtn.dataset.type || (heroWatchBtn && heroWatchBtn.dataset.type);
     const images = await getImages(id, type);
