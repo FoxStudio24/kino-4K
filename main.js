@@ -1,3 +1,46 @@
+document.addEventListener('DOMContentLoaded', () => {
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingProgress = loadingOverlay.querySelector('.loading-progress');
+
+    // Начало анимации загрузки
+    function showLoading() {
+        document.body.classList.add('loading');
+        loadingProgress.style.width = '30%';
+        setTimeout(() => {
+            loadingProgress.style.width = '60%';
+        }, 200);
+    }
+
+    // Скрытие оверлея загрузки и включение прокрутки
+    function hideLoading() {
+        loadingProgress.style.width = '100%';
+        setTimeout(() => {
+            loadingOverlay.style.display = 'none';
+            loadingProgress.style.width = '0';
+            document.body.classList.remove('loading');
+        }, 300);
+    }
+
+    // Запуск анимации при загрузке страницы
+    showLoading();
+    window.addEventListener('load', hideLoading);
+
+    // Обновление полосы прокрутки
+    function updateScrollProgress() {
+        const scrollProgress = document.getElementById('scroll-progress');
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        const scrollPercentage = ((scrollTop + windowHeight) / documentHeight) * 100;
+        scrollProgress.style.width = `${Math.min(scrollPercentage, 100)}%`;
+    }
+
+    // Инициализация полосы прокрутки
+    updateScrollProgress();
+    window.addEventListener('scroll', updateScrollProgress);
+    window.addEventListener('resize', updateScrollProgress); // Обновление при изменении размера окна
+});
+
 const API_KEY = '06936145fe8e20be28b02e26b55d3ce6';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/original';
@@ -58,13 +101,22 @@ function loadYouTubeAPI() {
 }
 loadYouTubeAPI();
 
-// Функция для получения логотипа (только русский)
+// Функция для получения логотипа (только русский) с таймаутом
 async function getLogo(id, type) {
-    const response = await fetch(`${BASE_URL}/${type}/${id}/images?api_key=${API_KEY}`);
-    const data = await response.json();
-    const logos = data.logos || [];
-    const ruLogo = logos.find(logo => logo.iso_639_1 === 'ru');
-    return ruLogo ? `${IMG_URL}${ruLogo.file_path}` : null;
+    const timeoutPromise = new Promise((resolve) => {
+        setTimeout(() => resolve(null), 2000); // 2 секунды таймаут
+    });
+
+    const fetchPromise = fetch(`${BASE_URL}/${type}/${id}/images?api_key=${API_KEY}`)
+        .then(response => response.json())
+        .then(data => {
+            const logos = data.logos || [];
+            const ruLogo = logos.find(logo => logo.iso_639_1 === 'ru');
+            return ruLogo ? `${IMG_URL}${ruLogo.file_path}` : null;
+        })
+        .catch(() => null);
+
+    return Promise.race([fetchPromise, timeoutPromise]);
 }
 
 // Получить постер и задний фон для плеера
