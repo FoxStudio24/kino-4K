@@ -16,17 +16,18 @@
 
     <!-- Шапка -->
     <header class="header">
+        <form action="" class="search-bar">
+            <input type="search" name="search" pattern=".*\S.*" required>
+            <button class="search-btn" type="submit">
+                <img src="ico\search-svgrepo-com.svg" alt="Search" class="search-icon">
+            </button>
+        </form>
         <div class="nav-tabs">
             <a href="index.html" class="active">Главная</a>
             <a href="movies.html">Фильмы</a>
             <a href="series.html">Сериалы</a>
         </div>
-        <div class="search-bar">
-            <input type="text" id="search-input" placeholder="Поиск..." />
-            <img src="ico/search-svgrepo-com.svg" alt="Search Icon" class="search-icon" id="search-icon">
-        </div>
     </header>
-
     <!-- Главный раздел (Блок 1) -->
     <section class="hero" id="hero">
         <div class="hero-content">
@@ -110,7 +111,6 @@
             </div>
         </div>
     </div>
-
     <!-- Модальное окно для трейлера -->
     <div id="trailer-modal" class="modal">
         <div class="trailer-modal-content">
@@ -143,10 +143,10 @@
             <div id="kinobox-player" class="kinobox-player"></div>
         </div>
     </div>
-
+        </div>
     <script src="nav.js"></script>
     <script src="main.js"></script>
     <script src="kinobox.js"></script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93643ecedee8b0b2',t:'MTc0NTY1MTI2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c8ac1c09c1bccb',t:'MTc0NjcwNDMyMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

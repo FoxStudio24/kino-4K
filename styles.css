@@ -1,21 +1,77 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap');
+@font-face { 
+    font-family: 'buttonbold';
+    src: url('../Font/TTFirsNeue-DemiBold.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+} 
+@font-face { 
+    font-family: 'textbold';
+    src: url('../Font/TTFirsNeue-Bold.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+} 
+@font-face { 
+    font-family: 'text';
+    src: url('../Font/TTFirsNeue-Light.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+} 
+@font-face { 
+    font-family: 'textregular';
+    src: url('../Font/TTFirsNeue-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+} 
+/* Global Reset and Base Styles */
+* {
+    border: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+html {
+    scrollbar-width: thin;
+    scrollbar-color: #808080 transparent;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    background-color: transparent;
+    box-shadow: none;
+    border: none;
+}
+
+::-webkit-scrollbar-track {
+    background-color: transparent;
+    border-radius: 3px;
+    box-shadow: none;
+    border: none;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #808080;
+    border-radius: 3px;
+    border: none;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #666666;
+}
 
 body {
     margin: 0;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'text', sans-serif;
     font-weight: 400;
     background-color: #141414;
     color: white;
-}
-body {
     user-select: none;
-  }
-  
+}
 
-body.no-scroll {
+body.no-scroll, body.loading {
     overflow: hidden;
 }
 
+/* Image Styles */
 img {
     -webkit-user-drag: none;
     user-drag: none;
@@ -26,75 +82,83 @@ img {
     pointer-events: none;
 }
 
+/* Header Styles */
 .header {
     width: 100%;
-    background-color: rgba(0, 0, 0, 0.26);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    background: #007fff00;
     padding: 5px 20px;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     position: fixed;
     top: 0;
     z-index: 100;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.123); /* Adds a thin transparent white border at the bottom */
-}
-
-.nav-tabs {
-    display: flex;
     gap: 20px;
-    position: relative;
-    user-select: none;      /* Для предотвращения выделения текста */
-    -webkit-user-select: none; /* Для Safari */
-    -moz-user-select: none;    /* Для Firefox */
-    -ms-user-select: none;     /* Для IE/Edge */
 }
 
-.nav-tabs a {
-    color: white;
-    text-decoration: none;
-    font-size: 1rem;
-    font-weight: 500;
-    position: relative;
-    transition: color 0.3s ease, text-shadow 0.3s ease;
-}
-
-.nav-tabs a:hover {
-    color: #e0e0e0;
-}
-
-.nav-tabs a.active {
-    color: white;
-    text-shadow: 0 0 25px rgb(131, 131, 131), 0 0 25px rgb(153, 153, 153);
-}
-
-.nav-underline {
-    position: absolute;
-    bottom: -5px;
-    height: 2px;
-    background-color: white;
-    border-radius: 2px;
-    transition: left 0.3s ease, width 0.3s ease;
-}
-
+/* Search Bar Styles */
 .search-bar {
-    display: flex;
-    align-items: center;
-    background-color: #ffffff1e;
-    border-radius: 20px;
-    padding: 3px 10px;
-    margin-right: 30px;
+    position: relative;
+    display: inline-block;
+    width: 2.5em;
+    height: 2.5em;
+    transition: width 0.3s ease;
+}
+
+.search-bar.expanded {
+    width: 14em;
 }
 
 .search-bar input {
-    background: none;
-    border: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1px solid #ffffff1a;
+    padding: 1em;
+    opacity: 0;
+    transition: opacity 0.3s ease, border-radius 0.3s ease;
+    background-color: rgba(255, 255, 255, 0.11);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     color: white;
-    padding: 5px;
-    outline: none;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 400;
+    font-family: 'buttonbold', sans-serif;
+}
+
+.search-bar.expanded input {
+    opacity: 1;
+    border-radius: 1.5em;
+}
+
+.search-bar input.error {
+    border: 1px solid #ff4d4d;
+}
+
+.search-bar button {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5em;
+    height: 3em;
+    background: #00000000;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+}
+
+.search-bar button span {
+    font-size: 1.5em;
+}
+
+.search-bar.expanded button {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .search-bar .search-icon {
@@ -104,6 +168,47 @@ img {
     cursor: pointer;
 }
 
+/* Navigation Tabs */
+.nav-tabs {
+    display: flex;
+    gap: 20px;
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    align-items: center;
+    font-family: 'buttonbold', sans-serif
+}
+
+.nav-tabs a {
+    color: white;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    line-height: 1;
+}
+
+.nav-tabs a:hover {
+    color: #e0e0e0;
+}
+
+.nav-tabs a.active {
+    background-color: rgba(255, 255, 255, 0.13);
+    padding: 17px 12px;
+    border-radius: 25px;
+    height: 20px;
+    line-height: 1;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 0.5px solid rgba(255, 255, 255, 0.13);
+}
+
+/* Hero Section */
 .hero {
     position: relative;
     height: 70vh;
@@ -134,8 +239,8 @@ img {
 .hero-logo {
     max-width: 400px;
     margin-bottom: 10px;
-    image-rendering: optimizeQuality; /* Improves logo rendering quality */
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)); /* Adds subtle shadow for better clarity */
+    image-rendering: optimizeQuality;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 .hero-logo-text {
@@ -143,6 +248,7 @@ img {
     font-weight: 700;
     margin-bottom: 10px;
     display: none;
+    font-family: 'textbold', sans-serif;
 }
 
 .hero-content p {
@@ -174,6 +280,7 @@ img {
     align-items: center;
     justify-content: center;
     transition: transform 0.3s ease, background-color 0.3s ease;
+    font-family: 'buttonbold', sans-serif;
 }
 
 .watch-btn {
@@ -186,15 +293,19 @@ img {
 }
 
 .info-btn {
-    background-color: #666;
+    background-color: rgba(255, 255, 255, 0.13);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 0.5px solid rgba(255, 255, 255, 0.13);
     color: #fff;
 }
 
 .info-btn:hover {
-    background-color: #888;
+    background-color: #ffffff41;
     transform: scale(1.05);
 }
 
+/* Category Section */
 .category {
     padding: 20px;
 }
@@ -210,10 +321,11 @@ img {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    user-select: none;      /* Для предотвращения выделения текста */
-    -webkit-user-select: none; /* Для Safari */
-    -moz-user-select: none;    /* Для Firefox */
-    -ms-user-select: none;     /* Для IE/Edge */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    font-family: 'textbold', sans-serif;
 }
 
 .count-badge {
@@ -242,9 +354,10 @@ img {
     border-radius: 3px;
 }
 
+/* Movie Card */
 .movie-card {
     flex: 0 0 auto;
-    background-color: #555;
+    background-color: #181818;
     width: 200px;
     height: 300px;
     text-align: center;
@@ -259,12 +372,13 @@ img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 10px;
+    border: none;
+    outline: none;
     transition: transform 0.3s ease;
     position: relative;
     z-index: 1;
-    image-rendering: optimizeQuality; /* Improves poster rendering quality */
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)); /* Adds subtle shadow for better clarity */
+    image-rendering: optimizeQuality;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 .movie-card:hover img {
@@ -303,6 +417,7 @@ img {
     transition: opacity 0.3s ease, transform 0.3s ease;
     z-index: 3;
     text-align: center;
+    font-family: 'textbold', sans-serif;
 }
 
 .movie-card:hover p {
@@ -322,6 +437,7 @@ img {
     opacity: 0;
     transition: opacity 0.3s ease;
     z-index: 3;
+    font-family: 'textbold', sans-serif;
 }
 
 .movie-card:hover .movie-card-rating {
@@ -344,6 +460,31 @@ img {
     background-color: #8b0000;
 }
 
+.movie-card-info {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 3;
+}
+
+.movie-card:hover .movie-card-info {
+    opacity: 1;
+}
+
+.movie-card-age {
+    padding: 5px 8px;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    color: white;
+    font-weight: 500;
+    background-color: #808080;
+}
+
+/* Modal Styles */
 .modal {
     display: none;
     position: fixed;
@@ -407,8 +548,8 @@ img {
     background-color: rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
-    width: 36px;
-    height: 36px;
+    width: 46px;
+    height: 46px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -450,74 +591,10 @@ img {
     display: flex;
     flex-direction: column;
     gap: 12px;
-}
-
-.modal-buttons {
-    display: flex;
-    gap: 12px;
-}
-
-.modal-logo {
-    max-width: 300px;
-    image-rendering: optimizeQuality; /* Improves logo rendering quality */
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)); /* Adds subtle shadow for better clarity */
-}
-
-.modal-logo-text {
-    font-size: 1.8rem;
-    font-weight: 700;
-    display: none;
-}
-
-.modal-watch-btn {
-    background-color: rgb(255, 255, 255);
-    color: black;
-    border: none;
-    width: 200px;
-    height: 40px;
-    font-size: 1rem;
-    cursor: pointer;
-    border-radius: 25px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.3s ease;
-}
-
-.modal-watch-btn:hover {
-    transform: scale(1.05);
-}
-
-.modal-trailer-btn {
-    background-color: white;
-    border: none;
-    width: 40px;
-    height: 40px;
-    cursor: pointer;
-    border-radius: 25px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.3s ease;
-}
-
-.modal-trailer-btn:hover {
-    transform: scale(1.1);
-}
-
-.modal-trailer-btn.disabled {
-    opacity: 0.5;
-    pointer-events: none;
-}
-.modal-logo-container {
     width: 100%;
     max-width: 100%;
     padding: 0;
     margin: 0;
-    display: flex;
-    flex-direction: column;
     align-items: stretch;
 }
 
@@ -532,14 +609,47 @@ img {
 
 .modal-controls {
     display: flex;
-    gap: 5px; /* Расстояние между кнопками */
-    margin-left: auto; /* Прижимает .modal-controls к правому краю */
-    margin-right: 50px; /* Небольшой отступ справа */
+    gap: 5px;
+    margin-left: auto;
+    margin-right: 50px;
     padding: 0;
 }
 
-.modal-trailer-btn,
-.modal-fullscreen-toggle {
+.modal-logo {
+    max-width: 300px;
+    image-rendering: optimizeQuality;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.modal-logo-text {
+    font-size: 1.8rem;
+    font-weight: 700;
+    display: none;
+    font-family: 'textbold', sans-serif;
+}
+
+.modal-watch-btn {
+    background-color: rgb(255, 255, 255);
+    color: black;
+    border: none;
+    width: 200px;
+    height: 40px;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 25px;
+    font-family: 'buttonbold', sans-serif;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+}
+
+.modal-watch-btn:hover {
+    transform: scale(1.05);
+}
+
+.modal-trailer-btn, .modal-fullscreen-toggle {
     background-color: white;
     border: none;
     width: 40px;
@@ -552,16 +662,19 @@ img {
     transition: transform 0.3s ease;
 }
 
-.modal-trailer-btn img,
-.modal-fullscreen-toggle img {
+.modal-trailer-btn img, .modal-fullscreen-toggle img {
     width: 24px;
     height: 24px;
     vertical-align: middle;
 }
 
-.modal-trailer-btn:hover,
-.modal-fullscreen-toggle:hover {
+.modal-trailer-btn:hover, .modal-fullscreen-toggle:hover {
     transform: scale(1.1);
+}
+
+.modal-trailer-btn.disabled {
+    opacity: 0.5;
+    pointer-events: none;
 }
 
 .youtube-icon, .favorite-icon {
@@ -569,6 +682,7 @@ img {
     height: 24px;
 }
 
+/* Modal Details */
 .modal-details {
     display: flex;
     padding: 24px;
@@ -590,10 +704,11 @@ img {
     font-size: 1rem;
     color: #b3b3b3;
     font-weight: 400;
-    user-select: none;      /* Для предотвращения выделения текста */
-    -webkit-user-select: none; /* Для Safari */
-    -moz-user-select: none;    /* Для Firefox */
-    -ms-user-select: none;     /* Для IE/Edge */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    font-family: 'textbold', sans-serif;
 }
 
 .age-rating {
@@ -630,18 +745,21 @@ img {
     margin: 12px 0;
     color: #b3b3b3;
     font-weight: 700;
-    user-select: none;      /* Для предотвращения выделения текста */
-    -webkit-user-select: none; /* Для Safari */
-    -moz-user-select: none;    /* Для Firefox */
-    -ms-user-select: none;     /* Для IE/Edge */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    font-family: 'textbold', sans-serif;
 }
 
 .overview p, .cast p, .genres p, .original-title p {
     font-size: 1rem;
     line-height: 1.5;
     font-weight: 400;
+    font-family: 'textregular', sans-serif;
 }
 
+/* Modal Trailers */
 .modal-trailers {
     padding: 24px;
     display: none;
@@ -714,6 +832,7 @@ img {
     transform: scale(1.4);
 }
 
+/* Trailer Modal */
 .trailer-modal-content {
     position: relative;
     margin: 10% auto;
@@ -758,7 +877,7 @@ img {
     z-index: 1010;
 }
 
-/* Стили для модального окна плеера */
+/* Player Modal */
 .player-modal-content {
     background-color: #000;
     max-width: 80%;
@@ -783,13 +902,12 @@ img {
 
 .player-wrapper {
     position: relative;
-    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    padding-bottom: 56.25%;
     height: 0;
     overflow: hidden;
 }
 
-.player-wrapper iframe,
-.player-wrapper .kinobox_player {
+.player-wrapper iframe, .player-wrapper .kinobox_player {
     position: absolute;
     top: 0;
     left: 0;
@@ -807,8 +925,8 @@ img {
     background-color: rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
-    width: 36px;
-    height: 36px;
+    width: 46px;
+    height: 46px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -819,12 +937,14 @@ img {
     transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
+/* Search Results */
 .search-results {
     padding: 24px;
 }
 
 .search-category {
     margin-bottom: 20px;
+    font-family: 'textbold', sans-serif;
 }
 
 .search-category h2 {
@@ -833,35 +953,7 @@ img {
     margin-bottom: 10px;
 }
 
-.movie-card-info {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    display: flex;
-    gap: 5px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 3;
-}
-
-.movie-card:hover .movie-card-info {
-    opacity: 1;
-}
-
-.movie-card-age {
-    padding: 5px 8px;
-    border-radius: 15px;
-    font-size: 0.9rem;
-    color: white;
-    font-weight: 500;
-    background-color: #808080; /* Серый фон */
-}
-.modal-trailer-btn img {
-    width: 24px; /* Настройте размер по необходимости */
-    height: 24px;
-    vertical-align: middle;
-}
-/* Loading Overlay Styles */
+/* Loading Overlay */
 .loading-overlay {
     position: fixed;
     top: 0;
@@ -891,36 +983,117 @@ img {
     transition: width 0.3s ease;
 }
 
-body.loading {
-    overflow: hidden;
-}
-/* Custom Scrollbar Styles */
-html {
-    scrollbar-width: thin; /* Для Firefox */
-    scrollbar-color: #808080 transparent; /* Ползунок серый, трек прозрачный */
-}
-
-/* Для WebKit-браузеров (Chrome, Safari, Edge) */
-::-webkit-scrollbar {
-    width: 6px; /* Тонкий скроллбар */
-    background-color: transparent; /* Прозрачный фон полосы */
-    box-shadow: none; /* Без теней */
-    border: none; /* Без границ */
+.footer {
+    background-image: url('bac/bac2.jpg');
+    background-size: cover;
+    background-position: center;
+    color: #fff;
+    padding: 5px 0;
+    text-align: left;
+    margin-top: 40px;
 }
 
-::-webkit-scrollbar-track {
-    background-color: transparent; /* Прозрачный трек */
-    border-radius: 3px;
-    box-shadow: none; /* Без теней */
-    border: none; /* Без границ */
+.footer .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
-::-webkit-scrollbar-thumb {
-    background-color: #808080; /* Серый ползунок */
-    border-radius: 3px;
-    border: none; /* Без границ */
+.footer h2 {
+    font-size: 2.5rem;
+    margin-bottom: 5px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background-color: #666666; /* Темнее при наведении */
+.footer .tmdb-disclaimer {
+    font-size: 0.875rem;
+    opacity: 0.8;
+    line-height: 1.5;
+    max-width: 800px;
+}
+
+/* Text Animation Styles */
+.animated-text {
+    transform: scale(0.94);
+    animation: scale 3s forwards cubic-bezier(0.5, 1, 0.89, 1);
+    font-family: 'textbold', sans-serif;
+    color: white;
+}
+
+@keyframes scale {
+    100% {
+        transform: scale(1);
+    }
+}
+
+.animated-text span {
+    display: inline-block;
+    opacity: 0;
+    filter: blur(4px);
+}
+
+.animated-text span:nth-child(1) { animation: fade-in 0.8s 0.1s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(2) { animation: fade-in 0.8s 0.2s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(3) { animation: fade-in 0.8s 0.3s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(4) { animation: fade-in 0.8s 0.4s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(5) { animation: fade-in 0.8s 0.5s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(6) { animation: fade-in 0.8s 0.6s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(7) { animation: fade-in 0.8s 0.7s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(8) { animation: fade-in 0.8s 0.8s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(9) { animation: fade-in 0.8s 0.9s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(10) { animation: fade-in 0.8s 1.0s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(11) { animation: fade-in 0.8s 1.1s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(12) { animation: fade-in 0.8s 1.2s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(13) { animation: fade-in 0.8s 1.3s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(14) { animation: fade-in 0.8s 1.4s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(15) { animation: fade-in 0.8s 1.5s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(16) { animation: fade-in 0.8s 1.6s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(17) { animation: fade-in 0.8s 1.7s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(18) { animation: fade-in 0.8s 1.8s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(19) { animation: fade-in 0.8s 1.9s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+.animated-text span:nth-child(20) { animation: fade-in 0.8s 2.0s forwards cubic-bezier(0.11, 0, 0.5, 0); }
+
+@keyframes fade-in {
+    100% {
+        opacity: 1;
+        filter: blur(0);
+    }
+}
+
+/* Logo and Poster Animation Styles */
+.animated-logo, .animated-poster {
+    transform: scale(0.94);
+    opacity: 0;
+    filter: blur(4px);
+    animation: image-reveal 0.8s 0.2s forwards cubic-bezier(0.11, 0, 0.5, 0);
+}
+
+@keyframes image-reveal {
+    100% {
+        transform: scale(1);
+        opacity: 1;
+        filter: blur(0);
+    }
+}
+
+/* Ensure animation applies to specific elements */
+.hero-logo, .modal-logo {
+    display: none; /* Hidden by default, shown via JS */
+}
+
+.hero-logo.animated-logo, .modal-logo.animated-logo {
+    display: block;
+}
+
+.movie-card img.animated-poster {
+    display: block;
+}
+
+/* Modal backdrop animation */
+.modal-backdrop.animated-poster {
+    background-size: cover;
+    background-position: center;
 }
