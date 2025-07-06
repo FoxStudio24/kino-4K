@@ -304,6 +304,7 @@ class MultiPlayer {
             height: 100%;
             z-index: 999999;
             background-color: #141414;
+            font-family: 'buttonbold', sans-serif;
         `;
         
         const currentBalancer = this.balancers.find(b => b.id === this.currentPlayer);
@@ -339,6 +340,7 @@ class MultiPlayer {
                         cursor: pointer;
                         transition: all 0.3s ease;
                         min-width: 80px;
+                        font-family: 'buttonbold', sans-serif;
                     " onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
                         ${currentBalancer ? currentBalancer.name : 'Balancer'}
                         <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" style="transition: transform 0.3s ease;">
