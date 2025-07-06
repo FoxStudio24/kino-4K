@@ -454,47 +454,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Получить первый трейлер с YouTube
-    async function getFirstTrailer(id, type) {
-        const response = await fetch(`${BASE_URL}/${type}/${id}/videos?api_key=${API_KEY}&language=ru-RU`);
-        const data = await response.json();
-        let trailer = data.results.find(video => video.type === 'Trailer' && video.site === 'YouTube' && video.iso_639_1 === 'ru');
-
-        if (!trailer) {
-            trailer = data.results.find(video => video.type === 'Trailer' && video.site === 'YouTube');
-        }
-
-        return trailer ? trailer.key : null;
-    }
-
-    // Открыть модальное окно с трейлером
-    async function openTrailerModal(id, type) {
-        const trailerKey = await getFirstTrailer(id, type);
-        if (trailerKey) {
-            if (trailerVideo) {
-                trailerVideo.innerHTML = `
-                    <iframe width="100%" height="100%" 
-                            src="https://www.youtube.com/embed/${trailerKey}?autoplay=1" 
-                            frameborder="0" allowfullscreen></iframe>
-                `;
-            }
-            if (trailerModal) {
-                trailerModal.style.display = 'block';
-                document.body.classList.add('no-scroll');
-            }
-        } else {
-            if (trailerVideo) {
-                trailerVideo.innerHTML = '<p>Трейлер не найден.</p>';
-            }
-            if (trailerModal) {
-                trailerModal.style.display = 'block';
-                document.body.classList.add('no-scroll');
-            }
-        }
-    }
-
-    // Переменная для хранения экземпляра YouTube-плеера
-    let playerInstance = null;
 
     // Открыть модальное окно с деталями фильма
     async function openModal(id, type) {
@@ -513,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     <div class="modal-buttons">
                         <button id="modal-watch-btn" class="modal-watch-btn" data-id="${id}" data-type="${type}">
-                            ▶ Смотреть
+                             Смотреть
                         </button>
                     </div>
                 </div>

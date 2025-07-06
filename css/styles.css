@@ -317,6 +317,7 @@ img {
 
 .hero-logo {
     max-width: 400px;
+    max-height: 300px;
     margin-bottom: 10px;
     image-rendering: optimizeQuality;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
@@ -336,6 +337,8 @@ img {
     display: -webkit-box;
     -webkit-line-clamp: 3;
     line-clamp: 3;
+    line-clamp: 3;
+    box-orient: vertical;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -359,7 +362,7 @@ img {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s ease, background-color 0.3s ease;
+    transition: transform 0.2s ease, background-color 0.3s ease;;
 }
 
 .watch-btn {
@@ -718,6 +721,7 @@ img {
 
 .modal-logo {
     max-width: 300px;
+    max-height: 350px;
     image-rendering: optimizeQuality;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
