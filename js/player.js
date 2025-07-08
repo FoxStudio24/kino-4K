@@ -1,6 +1,8 @@
+
 // Обновленный плеер с защитой от блокировщиков рекламы
-class MultiPlayer {
-    constructor() {
+(function () {
+    // Define MultiPlayer class
+    var MultiPlayer = function () {
         this.playerContainer = null;
         this.iframe = null;
         this.currentPlayer = 'alloha'; // 'vibix', 'alloha', или 'lumex'
@@ -21,16 +23,16 @@ class MultiPlayer {
         
         // Список балансеров с тегами
         this.balancers = [
-            { id: 'alloha', name: 'Alloha', tags: ['4K'] },
+            { id: 'alloha', name: 'Alloha.tv', tags: ['4K'] },
             { id: 'vibix', name: 'Vibix', tags: ['HD'] },
-            { id: 'lumex', name: 'Lumex', tags: ['1080p'] }
+            { id: 'lumex', name: 'Lumex', tags: ['HD'] }
         ];
-    }
+    };
 
     // Безопасный fetch с обработкой ошибок
-    async safeFetch(url, options = {}) {
+    MultiPlayer.prototype.safeFetch = async function (url, options) {
         try {
-            const response = await fetch(url, options);
+            var response = await fetch(url, options || {});
             if (!response.ok) {
                 throw new Error('HTTP error! status: ' + response.status);
             }
@@ -39,54 +41,54 @@ class MultiPlayer {
             console.error('Fetch error:', error);
             throw error;
         }
-    }
+    };
 
     // Создает HTML для тегов балансера
-    createBalancerTags(tags) {
+    MultiPlayer.prototype.createBalancerTags = function (tags) {
         if (!tags || tags.length === 0) return '';
         
-        return tags.map(tag => `
-            <span class="balancer-tag" style="
-                background: rgba(255, 255, 255, 0.9);
-                color: #333;
-                font-size: 10px;
-                font-weight: 600;
-                padding: 2px 6.5px;
-                border-radius: 4px;
-                display: inline-block;
-                line-height: 1;
-                text-transform: uppercase;
-            ">${tag}</span>
-        `).join('');
-    }
+        return tags.map(function (tag) {
+            return '<span class="balancer-tag" style="' +
+                'background: rgba(255, 255, 255, 0.9);' +
+                'color: #333;' +
+                'font-size: 10px;' +
+                'font-weight: 600;' +
+                'padding: 2px 6.5px;' +
+                'border-radius: 4px;' +
+                'display: inline-block;' +
+                'line-height: 1;' +
+                'text-transform: uppercase;' +
+                '">' + tag + '</span>';
+        }).join('');
+    };
 
-    async getImdbId(tmdbId, type) {
+    MultiPlayer.prototype.getImdbId = async function (tmdbId, type) {
         try {
-            const url = `${this.TMDB_BASE_URL}/${type}/${tmdbId}?api_key=${this.API_KEY}&append_to_response=external_ids`;
-            const response = await this.safeFetch(url);
-            const data = await response.json();
-            return data.external_ids?.imdb_id || null;
+            var url = this.TMDB_BASE_URL + '/' + type + '/' + tmdbId + '?api_key=' + this.API_KEY + '&append_to_response=external_ids';
+            var response = await this.safeFetch(url);
+            var data = await response.json();
+            return data.external_ids ? data.external_ids.imdb_id || null : null;
         } catch (error) {
             console.error('Ошибка получения IMDB ID:', error);
             return null;
         }
-    }
+    };
 
-    async getVibixUrl(imdbId) {
+    MultiPlayer.prototype.getVibixUrl = async function (imdbId) {
         try {
-            const vibixRes = await this.safeFetch(`https://vibix.org/api/v1/publisher/videos/imdb/${imdbId}`, {
+            var vibixRes = await this.safeFetch('https://vibix.org/api/v1/publisher/videos/imdb/' + imdbId, {
                 headers: {
-                    "Authorization": `Bearer ${this.VIBIX_KEY}`
+                    "Authorization": 'Bearer ' + this.VIBIX_KEY
                 }
             });
-            const vibixData = await vibixRes.json();
+            var vibixData = await vibixRes.json();
             
             if (!vibixData || !vibixData.iframe_url) {
                 throw new Error('Видео не найдено на Vibix');
             }
             
             // Добавляем тему "Монохром" (design=2)
-            const url = new URL(vibixData.iframe_url);
+            var url = new URL(vibixData.iframe_url);
             url.searchParams.set('design', '2');
             
             return url.toString();
@@ -94,16 +96,16 @@ class MultiPlayer {
             console.error('Ошибка получения Vibix URL:', error);
             throw error;
         }
-    }
+    };
 
-    async tryAllohaWithImdb(imdbId) {
+    MultiPlayer.prototype.tryAllohaWithImdb = async function (imdbId) {
         try {
-            const allohaApiUrl = `https://api.alloha.tv/?token=${this.ALLOHA_TOKEN}&imdb=${imdbId}`;
-            const response = await this.safeFetch(allohaApiUrl);
-            const data = await response.json();
+            var allohaApiUrl = 'https://api.alloha.tv/?token=' + this.ALLOHA_TOKEN + '&imdb=' + imdbId;
+            var response = await this.safeFetch(allohaApiUrl);
+            var data = await response.json();
             
             if (data.status === 'error') {
-                throw new Error(`IMDB ID ${imdbId} не найден в Alloha: ${data.error_info}`);
+                throw new Error('IMDB ID ' + imdbId + ' не найден в Alloha: ' + data.error_info);
             }
             
             if (data.data && data.data.iframe) {
@@ -114,16 +116,16 @@ class MultiPlayer {
             console.error('Ошибка при попытке воспроизведения с IMDB ID в Alloha:', error);
             throw error;
         }
-    }
+    };
 
-    async tryAllohaWithTmdb(tmdbId) {
+    MultiPlayer.prototype.tryAllohaWithTmdb = async function (tmdbId) {
         try {
-            const allohaApiUrl = `https://api.alloha.tv/?token=${this.ALLOHA_TOKEN}&tmdb=${tmdbId}`;
-            const response = await this.safeFetch(allohaApiUrl);
-            const data = await response.json();
+            var allohaApiUrl = 'https://api.alloha.tv/?token=' + this.ALLOHA_TOKEN + '&tmdb=' + tmdbId;
+            var response = await this.safeFetch(allohaApiUrl);
+            var data = await response.json();
             
             if (data.status === 'error') {
-                throw new Error(`TMDB ID ${tmdbId} не найден в Alloha: ${data.error_info}`);
+                throw new Error('TMDB ID ' + tmdbId + ' не найден в Alloha: ' + data.error_info);
             }
             
             if (data.data && data.data.iframe) {
@@ -134,18 +136,18 @@ class MultiPlayer {
             console.error('Ошибка при попытке воспроизведения с TMDB ID в Alloha:', error);
             throw error;
         }
-    }
+    };
 
-    async getAllohaUrl(tmdbId, imdbId) {
+    MultiPlayer.prototype.getAllohaUrl = async function (tmdbId, imdbId) {
         try {
             // Сначала пробуем с IMDB ID
             if (imdbId) {
-                const imdbUrl = await this.tryAllohaWithImdb(imdbId);
+                var imdbUrl = await this.tryAllohaWithImdb(imdbId);
                 if (imdbUrl) return imdbUrl;
             }
 
             // Если IMDB ID не сработал, пробуем с TMDB ID
-            const tmdbUrl = await this.tryAllohaWithTmdb(tmdbId);
+            var tmdbUrl = await this.tryAllohaWithTmdb(tmdbId);
             if (tmdbUrl) return tmdbUrl;
         } catch (error) {
             console.error('Ошибка получения Alloha URL:', error);
@@ -153,35 +155,35 @@ class MultiPlayer {
         }
 
         throw new Error('Видео не найдено на Alloha');
-    }
+    };
 
-    async getLumexUrl(imdbId) {
+    MultiPlayer.prototype.getLumexUrl = async function (imdbId) {
         try {
-            const lumexUrl = `${this.LUMEX_API_URL}?api_token=${this.LUMEX_API_TOKEN}&imdb_id=${imdbId}`;
-            const lumexResponse = await this.safeFetch(lumexUrl);
-            const lumexData = await lumexResponse.json();
+            var lumexUrl = this.LUMEX_API_URL + '?api_token=' + this.LUMEX_API_TOKEN + '&imdb_id=' + imdbId;
+            var lumexResponse = await this.safeFetch(lumexUrl);
+            var lumexData = await lumexResponse.json();
 
             if (!lumexData.result || !lumexData.data || lumexData.data.length === 0) {
                 throw new Error('Видео не найдено в базе Lumex');
             }
 
-            const videoData = lumexData.data[0];
-            const iframeSrc = videoData.iframe_src;
+            var videoData = lumexData.data[0];
+            var iframeSrc = videoData.iframe_src;
             
             if (!iframeSrc) {
                 throw new Error('Не удалось получить ссылку на плеер Lumex');
             }
 
-            return `https:${iframeSrc}`;
+            return 'https:' + iframeSrc;
         } catch (error) {
             console.error('Ошибка получения Lumex URL:', error);
             throw error;
         }
-    }
+    };
 
-    toggleDropdown() {
-        const dropdown = document.getElementById('balancer-dropdown');
-        const dropdownArrow = document.querySelector('.dropdown-arrow');
+    MultiPlayer.prototype.toggleDropdown = function () {
+        var dropdown = document.getElementById('balancer-dropdown');
+        var dropdownArrow = document.querySelector('.dropdown-arrow');
         
         if (this.isDropdownOpen) {
             dropdown.style.display = 'none';
@@ -192,9 +194,10 @@ class MultiPlayer {
             dropdownArrow.style.transform = 'rotate(180deg)';
             this.isDropdownOpen = true;
         }
-    }
+    };
 
-    selectBalancer(balancerId) {
+    MultiPlayer.prototype.selectBalancer = function (balancerId) {
+        var self = this;
         if (balancerId === this.currentPlayer) {
             this.toggleDropdown();
             return;
@@ -216,64 +219,68 @@ class MultiPlayer {
         this.showLoading();
         
         // Перезагружаем контент с новым плеером
-        this.loadCurrentContent().then(() => {
+        this.loadCurrentContent().then(function () {
             // Настраиваем обработчики для iframe только если нет ошибки
-            if (!this.hasError) {
-                this.setupIframeHandlers();
+            if (!self.hasError) {
+                self.setupIframeHandlers();
             }
-        }).catch(error => {
+        }).catch(function (error) {
             console.error('Ошибка при загрузке контента:', error);
-            this.hasError = true;
-            this.showError(error.message);
+            self.hasError = true;
+            self.showError(error.message);
         });
-    }
+    };
 
-    updatePlayerInterface() {
-        const currentBalancerBtn = document.getElementById('current-balancer-btn');
-        const dropdown = document.getElementById('balancer-dropdown');
+    MultiPlayer.prototype.updatePlayerInterface = function () {
+        var self = this;
+        var currentBalancerBtn = document.getElementById('current-balancer-btn');
+        var dropdown = document.getElementById('balancer-dropdown');
         
         if (currentBalancerBtn) {
-            const currentBalancer = this.balancers.find(b => b.id === this.currentPlayer);
+            var currentBalancer = this.balancers.find(function (b) { return b.id === self.currentPlayer; });
             // Обновляем содержимое кнопки с сохранением стрелки и добавлением тегов
-            currentBalancerBtn.innerHTML = `
-                <span class="balancer-name">${currentBalancer ? currentBalancer.name : 'Balancer'}</span>
-                ${currentBalancer ? this.createBalancerTags(currentBalancer.tags) : ''}
-                <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" style="transition: transform 0.3s ease; margin-left: 8px;">
-                    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            `;
+            currentBalancerBtn.innerHTML = [
+                '<span class="balancer-name">' + (currentBalancer ? currentBalancer.name : 'Balancer') + '</span>',
+                currentBalancer ? this.createBalancerTags(currentBalancer.tags) : '',
+                '<svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" style="transition: transform 0.3s ease; margin-left: 8px;">',
+                '    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+                '</svg>'
+            ].join('');
         }
         
         // Обновляем дропдаун
         if (dropdown) {
-            dropdown.innerHTML = this.balancers.map(balancer => `
-                <button onclick="window.multiPlayer.selectBalancer('${balancer.id}')" style="
-                    width: 100%;
-                    background: ${balancer.id === this.currentPlayer ? 'rgba(255, 255, 255, 0.1)' : 'transparent'};
-                    border: none;
-                    border-radius: 12px;
-                    padding: 8px 12px;
-                    color: white;
-                    font-size: 14px;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                    text-align: left;
-                    margin-bottom: 4px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                " onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='${balancer.id === this.currentPlayer ? 'rgba(255, 255, 255, 0.1)' : 'transparent'}'">
-                    <span class="balancer-name">${balancer.name}</span>
-                    <span class="balancer-tags">${this.createBalancerTags(balancer.tags)}</span>
-                </button>
-            `).join('');
+            dropdown.innerHTML = this.balancers.map(function (balancer) {
+                return '<button onclick="window.multiPlayer.selectBalancer(\'' + balancer.id + '\')" style="' +
+                    'width: 100%;' +
+                    'background: ' + (balancer.id === self.currentPlayer ? 'rgba(255, 255, 255, 0.1)' : 'transparent') + ';' +
+                    'border: none;' +
+                    'border-radius: 12px;' +
+                    'padding: 8px 12px;' +
+                    'color: white;' +
+                    'font-size: 14px;' +
+                    'cursor: pointer;' +
+                    'transition: all 0.3s ease;' +
+                    'text-align: left;' +
+                    'margin-bottom: 4px;' +
+                    'display: flex;' +
+                    'align-items: center;' +
+                    'justify-content: space-between;' +
+                    '" onmouseover="this.style.background=\'rgba(255,255,255,0.15)\'" onmouseout="this.style.background=\'' + (balancer.id === self.currentPlayer ? 'rgba(255, 255, 255, 0.1)' : 'transparent') + '\'">' +
+                    '<span class="balancer-name">' + balancer.name + '</span>' +
+                    '<span class="balancer-tags">' + self.createBalancerTags(balancer.tags) + '</span>' +
+                    '</button>';
+            }).join('');
         }
-    }
+    };
 
-    async loadCurrentContent() {
+    MultiPlayer.prototype.loadCurrentContent = async function () {
         if (!this.currentContent) return;
 
-        const { tmdbId, type, season, episode } = this.currentContent;
+        var tmdbId = this.currentContent.tmdbId;
+        var type = this.currentContent.type;
+        var season = this.currentContent.season;
+        var episode = this.currentContent.episode;
         
         try {
             // Очищаем предыдущий iframe
@@ -290,48 +297,48 @@ class MultiPlayer {
             }
             
         } catch (error) {
-            console.error(`Ошибка загрузки ${this.currentPlayer}:`, error);
+            console.error('Ошибка загрузки ' + this.currentPlayer + ':', error);
             this.hasError = true;
             this.showError(error.message);
         }
-    }
+    };
 
-    async loadVibixContent(tmdbId, type, season, episode) {
-        const imdbId = await this.getImdbId(tmdbId, type);
+    MultiPlayer.prototype.loadVibixContent = async function (tmdbId, type, season, episode) {
+        var imdbId = await this.getImdbId(tmdbId, type);
         if (!imdbId) {
             throw new Error('IMDB ID не найден');
         }
 
-        const vibixUrl = await this.getVibixUrl(imdbId);
+        var vibixUrl = await this.getVibixUrl(imdbId);
         this.iframe.src = vibixUrl;
         
         // Настраиваем обработчики для iframe
         this.setupIframeHandlers();
-    }
+    };
 
-    async loadAllohaContent(tmdbId, type, season, episode) {
-        const imdbId = await this.getImdbId(tmdbId, type);
-        const allohaUrl = await this.getAllohaUrl(tmdbId, imdbId);
+    MultiPlayer.prototype.loadAllohaContent = async function (tmdbId, type, season, episode) {
+        var imdbId = await this.getImdbId(tmdbId, type);
+        var allohaUrl = await this.getAllohaUrl(tmdbId, imdbId);
         this.iframe.src = allohaUrl;
         
         // Настраиваем обработчики для iframe
         this.setupIframeHandlers();
-    }
+    };
 
-    async loadLumexContent(tmdbId, type, season, episode) {
-        const imdbId = await this.getImdbId(tmdbId, type);
+    MultiPlayer.prototype.loadLumexContent = async function (tmdbId, type, season, episode) {
+        var imdbId = await this.getImdbId(tmdbId, type);
         if (!imdbId) {
             throw new Error('IMDB ID не найден');
         }
 
-        const lumexUrl = await this.getLumexUrl(imdbId);
+        var lumexUrl = await this.getLumexUrl(imdbId);
         this.iframe.src = lumexUrl;
         
         // Настраиваем обработчики для iframe
         this.setupIframeHandlers();
-    }
+    };
 
-    createPlayerContainer() {
+    MultiPlayer.prototype.createPlayerContainer = function () {
         if (this.playerContainer) {
             this.playerContainer.remove();
         }
@@ -340,249 +347,250 @@ class MultiPlayer {
 
         this.playerContainer = document.createElement('div');
         this.playerContainer.id = 'multi-player-modal';
-        this.playerContainer.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 999999;
-            background-color: #141414;
-            font-family: 'buttonbold', sans-serif;
-        `;
+        this.playerContainer.style.cssText = [
+            'position: fixed;',
+            'top: 0;',
+            'left: 0;',
+            'width: 100%;',
+            'height: 100%;',
+            'z-index: 999999;',
+            'background-color: #141414;',
+            'font-family: \'buttonbold\', sans-serif;'
+        ].join('');
+
+        var currentBalancer = this.balancers.find(function (b) { return b.id === this.currentPlayer; }, this);
         
-        const currentBalancer = this.balancers.find(b => b.id === this.currentPlayer);
-        
-        this.playerContainer.innerHTML = `
-            <div class="player-overlay" style="position: relative; width: 100%; height: 100%; z-index: 999999;">
-                <div class="player-modal" style="position: relative; width: 100%; height: 100%; z-index: 999999;">
-                    <div class="player-header" style="position: absolute; top: 20px; right: 20px; z-index: 1000000;">
-                        <div class="player-controls" style="
-                            display: flex;
-                            align-items: center;
-                            background: rgb(24 24 24 / 65%);
-                            backdrop-filter: blur(10px);
-                            border: 1px solid rgba(68, 68, 68, 0.3);
-                            border-radius: 99px;
-                            padding: 3px;
-                            gap: 12px;
-                        ">
-                            <div class="balancer-selector" style="position: relative; border-radius: 99px;">
-                                <button id="current-balancer-btn" onclick="window.multiPlayer.toggleDropdown()" style="
-                                    position: relative;
-                                    z-index: 1000001;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    gap: 8px;
-                                    background: transparent;
-                                    border: none;
-                                    border-radius: 99px;
-                                    padding: 8px 12px;
-                                    color: white;
-                                    font-size: 14px;
-                                    cursor: pointer;
-                                    transition: all 0.3s ease;
-                                    min-width: 80px;
-                                    font-family: 'buttonbold', sans-serif;
-                                " onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
-                                    <span class="balancer-name">${currentBalancer ? currentBalancer.name : 'Balancer'}</span>
-                                    ${currentBalancer ? this.createBalancerTags(currentBalancer.tags) : ''}
-                                    <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" style="transition: transform 0.3s ease; margin-left: 8px;">
-                                        <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </button>
-                                <div id="balancer-dropdown" style="
-                                    position: absolute;
-                                    top: 100%;
-                                    left: 0;
-                                    right: 0;
-                                    background: rgb(24 24 24 / 95%);
-                                    backdrop-filter: blur(20px);
-                                    border: 1px solid rgba(68, 68, 68, 0.3);
-                                    border-radius: 20px;
-                                    margin-top: 8px;
-                                    padding: 8px;
-                                    display: none;
-                                    z-index: 1000002;
-                                    min-width: 200px;
-                                    max-width: 300px;
-                                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-                                ">
-                                    ${this.balancers.map(balancer => `
-                                        <button onclick="window.multiPlayer.selectBalancer('${balancer.id}')" style="
-                                            width: 100%;
-                                            background: ${balancer.id === this.currentPlayer ? 'rgba(255, 255, 255, 0.1)' : 'transparent'};
-                                            border: none;
-                                            border-radius: 12px;
-                                            padding: 8px 12px;
-                                            color: white;
-                                            font-size: 14px;
-                                            cursor: pointer;
-                                            transition: all 0.3s ease;
-                                            text-align: left;
-                                            margin-bottom: 4px;
-                                            display: flex;
-                                            align-items: center;
-                                            justify-content: space-between;
-                                        " onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='${balancer.id === this.currentPlayer ? 'rgba(255, 255, 255, 0.1)' : 'transparent'}'">
-                                            <span class="balancer-name">${balancer.name}</span>
-                                            <span class="balancer-tags">${this.createBalancerTags(balancer.tags)}</span>
-                                        </button>
-                                    `).join('')}
-                                </div>
-                            </div>
-                            <div class="separator" style="width: 1px; height: 20px; background: rgba(68, 68, 68, 0.5);"></div>
-                            <button class="close-btn" onclick="this.closest('#multi-player-modal').remove(); document.body.classList.remove('no-scroll');" style="
-                                position: relative;
-                                z-index: 1000001;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                background: transparent;
-                                border: none;
-                                border-radius: 50%;
-                                width: 32px;
-                                height: 32px;
-                                padding: 0;
-                                cursor: pointer;
-                                transition: all 0.3s ease;
-                                top: 0px;
-                                right: 0px;
-                            " onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: white;">
-                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="player-content" style="position: relative; width: 100%; height: 100%; z-index: 999999;">
-                        <div id="player-loading-overlay" class="loading-overlay" style="
-                            position: absolute; 
-                            top: 0; 
-                            left: 0; 
-                            width: 100%; 
-                            height: 100%; 
-                            z-index: 1000000; 
-                            display: flex; 
-                            flex-direction: column;
-                            align-items: center; 
-                            justify-content: center; 
-                            background: #141414;
-                            backdrop-filter: blur(5px);
-                        ">
-                            <div class="loading-animations" style="
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                gap: 20px;
-                                margin-bottom: 20px;
-                            ">
-                                <div class="loader">
-                                    <svg viewBox="0 0 80 80" style="width: 40px; height: 40px;">
-                                        <circle r="32" cy="40" cx="40" id="circle"></circle>
-                                    </svg>
-                                </div>
-                                <div class="loader triangle">
-                                    <svg viewBox="0 0 86 80" style="width: 40px; height: 40px;">
-                                        <polygon points="43 8 79 72 7 72"></polygon>
-                                    </svg>
-                                </div>
-                                <div class="loader">
-                                    <svg viewBox="0 0 80 80" style="width: 40px; height: 40px;">
-                                        <rect height="64" width="64" y="8" x="8"></rect>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="loading-text" style="
-                                color: white; 
-                                font-size: 16px; 
-                                font-weight: 500; 
-                                text-align: center;
-                            ">
-                                Загрузка видео...
-                            </div>
-                        </div>
-                        <iframe id="multi-iframe" frameborder="0" allowfullscreen style="
-                            position: absolute; 
-                            top: 0; 
-                            left: 0; 
-                            width: 100%; 
-                            height: 100%; 
-                            border: none; 
-                            z-index: 999998; 
-                            display: none;
-                        "></iframe>
-                    </div>
-                </div>
-            </div>
-        `;
+        this.playerContainer.innerHTML = [
+            '<div class="player-overlay" style="position: relative; width: 100%; height: 100%; z-index: 999999;">',
+            '    <div class="player-modal" style="position: relative; width: 100%; height: 100%; z-index: 999999;">',
+            '        <div class="player-header" style="position: absolute; top: 20px; right: 20px; z-index: 1000000;">',
+            '            <div class="player-controls" style="' +
+            '                display: flex;' +
+            '                align-items: center;' +
+            '                background: rgb(24 24 24 / 65%);' +
+            '                backdrop-filter: blur(10px);' +
+            '                border: 1px solid rgba(68, 68, 68, 0.3);' +
+            '                border-radius: 99px;' +
+            '                padding: 3px;' +
+            '                gap: 12px;' +
+            '            ">',
+            '                <div class="balancer-selector" style="position: relative; border-radius: 99px;">',
+            '                    <button id="current-balancer-btn" onclick="window.multiPlayer.toggleDropdown()" style="' +
+            '                        position: relative;' +
+            '                        z-index: 1000001;' +
+            '                        display: flex;' +
+            '                        align-items: center;' +
+            '                        justify-content: center;' +
+            '                        gap: 8px;' +
+            '                        background: transparent;' +
+            '                        border: none;' +
+            '                        border-radius: 99px;' +
+            '                        padding: 8px 12px;' +
+            '                        color: white;' +
+            '                        font-size: 14px;' +
+            '                        cursor: pointer;' +
+            '                        transition: all 0.3s ease;' +
+            '                        min-width: 80px;' +
+            '                        font-family: \'buttonbold\', sans-serif;' +
+            '                    " onmouseover="this.style.background=\'rgba(255,255,255,0.1)\'" onmouseout="this.style.background=\'transparent\'">',
+            '                        <span class="balancer-name">' + (currentBalancer ? currentBalancer.name : 'Balancer') + '</span>',
+            currentBalancer ? this.createBalancerTags(currentBalancer.tags) : '',
+            '                        <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" style="transition: transform 0.3s ease; margin-left: 8px;">',
+            '                            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+            '                        </svg>',
+            '                    </button>',
+            '                    <div id="balancer-dropdown" style="' +
+            '                        position: absolute;' +
+            '                        top: 100%;' +
+            '                        left: 0;' +
+            '                        right: 0;' +
+            '                        background: rgb(24 24 24 / 95%);' +
+            '                        backdrop-filter: blur(20px);' +
+            '                        border: 1px solid rgba(68, 68, 68, 0.3);' +
+            '                        border-radius: 20px;' +
+            '                        margin-top: 8px;' +
+            '                        padding: 8px;' +
+            '                        display: none;' +
+            '                        z-index: 1000002;' +
+            '                        min-width: 200px;' +
+            '                        max-width: 300px;' +
+            '                        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);' +
+            '                    ">',
+            this.balancers.map(function (balancer) {
+                return '<button onclick="window.multiPlayer.selectBalancer(\'' + balancer.id + '\')" style="' +
+                    'width: 100%;' +
+                    'background: ' + (balancer.id === this.currentPlayer ? 'rgba(255, 255, 255, 0.1)' : 'transparent') + ';' +
+                    'border: none;' +
+                    'border-radius: 12px;' +
+                    'padding: 8px 12px;' +
+                    'color: white;' +
+                    'font-size: 14px;' +
+                    'cursor: pointer;' +
+                    'transition: all 0.3s ease;' +
+                    'text-align: left;' +
+                    'margin-bottom: 4px;' +
+                    'display: flex;' +
+                    'align-items: center;' +
+                    'justify-content: space-between;' +
+                    '" onmouseover="this.style.background=\'rgba(255,255,255,0.15)\'" onmouseout="this.style.background=\'' + (balancer.id === this.currentPlayer ? 'rgba(255, 255, 255, 0.1)' : 'transparent') + '\'">' +
+                    '<span class="balancer-name">' + balancer.name + '</span>' +
+                    '<span class="balancer-tags">' + this.createBalancerTags(balancer.tags) + '</span>' +
+                    '</button>';
+            }, this).join(''),
+            '                    </div>',
+            '                </div>',
+            '                <div class="separator" style="width: 1px; height: 20px; background: rgba(68, 68, 68, 0.5);"></div>',
+            '                <button class="close-btn" onclick="this.closest(\'#multi-player-modal\').remove(); document.body.classList.remove(\'no-scroll\');" style="' +
+            '                    position: relative;' +
+            '                    z-index: 1000001;' +
+            '                    display: flex;' +
+            '                    align-items: center;' +
+            '                    justify-content: center;' +
+            '                    background: transparent;' +
+            '                    border: none;' +
+            '                    border-radius: 50%;' +
+            '                    width: 32px;' +
+            '                    height: 32px;' +
+            '                    padding: 0;' +
+            '                    cursor: pointer;' +
+            '                    transition: all 0.3s ease;' +
+            '                    top: 0px;' +
+            '                    right: 0px;' +
+            '                " onmouseover="this.style.background=\'rgba(255,255,255,0.1)\'" onmouseout="this.style.background=\'transparent\'">',
+            '                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: white;">',
+            '                        <line x1="18" y1="6" x2="6" y2="18"></line>',
+            '                        <line x1="6" y1="6" x2="18" y2="18"></line>',
+            '                    </svg>',
+            '                </button>',
+            '            </div>',
+            '        </div>',
+            '        <div class="player-content" style="position: relative; width: 100%; height: 100%; z-index: 999999;">',
+            '            <div id="player-loading-overlay" class="loading-overlay" style="' +
+            '                position: absolute;' +
+            '                top: 0;' +
+            '                left: 0;' +
+            '                width: 100%;' +
+            '                height: 100%;' +
+            '                z-index: 1000000;' +
+            '                display: flex;' +
+            '                flex-direction: column;' +
+            '                align-items: center;' +
+            '                justify-content: center;' +
+            '                background: #141414;' +
+            '                backdrop-filter: blur(5px);' +
+            '            ">',
+            '                <div class="loading-animations" style="' +
+            '                    display: flex;' +
+            '                    align-items: center;' +
+            '                    justify-content: center;' +
+            '                    gap: 20px;' +
+            '                    margin-bottom: 20px;' +
+            '                ">',
+            '                    <div class="loader">',
+            '                        <svg viewBox="0 0 80 80" style="width: 40px; height: 40px;">',
+            '                            <circle r="32" cy="40" cx="40" id="circle"></circle>',
+            '                        </svg>',
+            '                    </div>',
+            '                    <div class="loader triangle">',
+            '                        <svg viewBox="0 0 86 80" style="width: 40px; height: 40px;">',
+            '                            <polygon points="43 8 79 72 7 72"></polygon>',
+            '                        </svg>',
+            '                    </div>',
+            '                    <div class="loader">',
+            '                        <svg viewBox="0 0 80 80" style="width: 40px; height: 40px;">',
+            '                            <rect height="64" width="64" y="8" x="8"></rect>',
+            '                        </svg>',
+            '                    </div>',
+            '                </div>',
+            '                <div class="loading-text" style="' +
+            '                    color: white;' +
+            '                    font-size: 16px;' +
+            '                    font-weight: 500;' +
+            '                    text-align: center;' +
+            '                ">',
+            '                    Загрузка видео...',
+            '                </div>',
+            '            </div>',
+            '            <iframe id="multi-iframe" frameborder="0" allowfullscreen style="' +
+            '                position: absolute;' +
+            '                top: 0;' +
+            '                left: 0;' +
+            '                width: 100%;' +
+            '                height: 100%;' +
+            '                border: none;' +
+            '                z-index: 999998;' +
+            '                display: none;' +
+            '            "></iframe>',
+            '        </div>',
+            '    </div>',
+            '</div>'
+        ].join('');
 
         document.body.appendChild(this.playerContainer);
         this.iframe = document.getElementById('multi-iframe');
         this.loadingOverlay = document.getElementById('player-loading-overlay');
         
         // Добавляем обработчик для закрытия дропдауна при клике вне его
-        document.addEventListener('mousedown', (e) => {
-            if (this.isDropdownOpen && !e.target.closest('.balancer-selector')) {
-                this.toggleDropdown();
+        var self = this;
+        document.addEventListener('mousedown', function (e) {
+            if (self.isDropdownOpen && !e.target.closest('.balancer-selector')) {
+                self.toggleDropdown();
             }
         });
-    }
+    };
 
-    showLoading() {
+    MultiPlayer.prototype.showLoading = function () {
         if (this.loadingOverlay) {
             this.loadingOverlay.style.display = 'flex';
             
             // Сброс содержимого оверлея к загрузке
-            this.loadingOverlay.innerHTML = `
-                <div class="loading-animations" style="
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 20px;
-                    margin-bottom: 20px;
-                ">
-                    <div class="loader">
-                        <svg viewBox="0 0 80 80">
-                            <circle r="32" cy="40" cx="40" id="circle"></circle>
-                        </svg>
-                    </div>
-                    <div class="loader triangle">
-                        <svg viewBox="0 0 86 80">
-                            <polygon points="43 8 79 72 7 72"></polygon>
-                        </svg>
-                    </div>
-                    <div class="loader">
-                        <svg viewBox="0 0 80 80">
-                            <rect height="64" width="64" y="8" x="8"></rect>
-                        </svg>
-                    </div>
-                </div>
-                <div class="loading-text" style="
-                    color: white; 
-                    font-size: 16px; 
-                    font-weight: 500; 
-                    text-align: center;
-                ">
-                    Загрузка видео...
-                </div>
-            `;
+            this.loadingOverlay.innerHTML = [
+                '<div class="loading-animations" style="' +
+                '    display: flex;' +
+                '    align-items: center;' +
+                '    justify-content: center;' +
+                '    gap: 20px;' +
+                '    margin-bottom: 20px;' +
+                '">',
+                '    <div class="loader">',
+                '        <svg viewBox="0 0 80 80">',
+                '            <circle r="32" cy="40" cx="40" id="circle"></circle>',
+                '        </svg>',
+                '    </div>',
+                '    <div class="loader triangle">',
+                '        <svg viewBox="0 0 86 80">',
+                '            <polygon points="43 8 79 72 7 72"></polygon>',
+                '        </svg>',
+                '    </div>',
+                '    <div class="loader">',
+                '        <svg viewBox="0 0 80 80">',
+                '            <rect height="64" width="64" y="8" x="8"></rect>',
+                '        </svg>',
+                '    </div>',
+                '</div>',
+                '<div class="loading-text" style="' +
+                '    color: white;' +
+                '    font-size: 16px;' +
+                '    font-weight: 500;' +
+                '    text-align: center;' +
+                '">',
+                '    Загрузка видео...',
+                '</div>'
+            ].join('');
             
             // Обновляем текст загрузки
-            const loadingText = this.loadingOverlay.querySelector('.loading-text');
+            var loadingText = this.loadingOverlay.querySelector('.loading-text');
             if (loadingText) {
-                const currentBalancer = this.balancers.find(b => b.id === this.currentPlayer);
-                loadingText.textContent = `Загрузка ${currentBalancer ? currentBalancer.name : 'плеера'}...`;
+                var currentBalancer = this.balancers.find(function (b) { return b.id === this.currentPlayer; }, this);
+                loadingText.textContent = 'Загрузка ' + (currentBalancer ? currentBalancer.name : 'плеера') + '...';
             }
         }
         if (this.iframe) {
             this.iframe.style.display = 'none';
         }
-    }
+    };
 
-    hideLoading() {
+    MultiPlayer.prototype.hideLoading = function () {
         // Не скрываем загрузку, если есть ошибка
         if (this.hasError) return;
         
@@ -592,48 +600,55 @@ class MultiPlayer {
         if (this.iframe) {
             this.iframe.style.display = 'block';
         }
-    }
+    };
 
-    showError(message) {
+    MultiPlayer.prototype.showError = function (message) {
         if (this.loadingOverlay) {
             // Выбираем случайное видео от 1 до 5
-            const randomIndex = Math.floor(Math.random() * 5) + 1;
-            const currentBalancer = this.balancers.find(b => b.id === this.currentPlayer);
-            const otherBalancers = this.balancers.filter(b => b.id !== this.currentPlayer);
+            var randomIndex = Math.floor(Math.random() * 5) + 1;
+            var currentBalancer = this.balancers.find(function (b) { return b.id === this.currentPlayer; }, this);
+            var otherBalancers = this.balancers.filter(function (b) { return b.id !== this.currentPlayer; }, this);
             
-            this.loadingOverlay.innerHTML = `
-                <div class="nf-err-center" style="display: flex; align-items: center; justify-content: center; height: 100%; background: #141414;">
-                    <div class="nf-err-wrap" style="display: flex; align-items: center; justify-content: center; flex-direction: row;">
-                        <div class="nf-err-text" style="flex: 1; text-align: left; padding-right: 32px;">
-                            <div class="nf-err-title" style="font-size: 2em; font-weight: 900; color: white; margin-bottom: 12px;">
-                                Ошибка загрузки
-                            </div>
-                            <div class="nf-err-desc" style="font-size: 1em; font-weight: 500; color: #aaa; line-height: 1.5;">
-                                ${message}<br>
-                                Плеер <strong>${currentBalancer ? currentBalancer.name : 'текущий'}</strong> не может воспроизвести этот контент.<br>
-                                Попробуйте переключиться на <strong>${otherBalancers.map(b => b.name).join(', ')}</strong> или выбрать другой контент.
-                            </div>
-                        </div>
-                        <video id="notfound-video" src="ico/404-video/${randomIndex}.mp4" autoplay loop muted playsinline style="flex: 0 0 320px; width: 320px; height: 180px; border-radius: 8px; object-fit: cover; background: #222; box-shadow: 0 2px 16px #0006; margin-left: 24px;"></video>
-                    </div>
-                </div>
-            `;
+            // Проверяем, если ошибка связана с Alloha и блокировщиком рекламы
+            var isAdBlockError = this.currentPlayer === 'alloha' && message.includes('Failed to fetch');
+            var errorMessage = isAdBlockError
+                ? '<img src="ico/ADERROR.png" alt="AdBlock Error" style="max-width:400px;width:100%;height:auto;vertical-align:middle;margin-bottom:12px;display:block;border-radius:0;box-shadow:none;">'
+                  + '<strong>Отключите блокировщик рекламы для корректной работы Alloha.</strong><br>' + message
+                : message;
+            this.loadingOverlay.innerHTML = [
+                '<div class="nf-err-center" style="display: flex; align-items: center; justify-content: center; height: 100%; background: #141414;">',
+                '    <div class="nf-err-wrap" style="display: flex; align-items: center; justify-content: center; flex-direction: row;">',
+                '        <div class="nf-err-text" style="flex: 1; text-align: left; padding-right: 32px;">',
+                '            <div class="nf-err-title" style="font-size: 2em; font-weight: 900; color: white; margin-bottom: 12px;">',
+                '                Ошибка загрузки',
+                '            </div>',
+                '            <div class="nf-err-desc" style="font-size: 1em; font-weight: 500; color: #aaa; line-height: 1.5;">',
+                errorMessage,
+                '<br>',
+                'Плеер <strong>' + (currentBalancer ? currentBalancer.name : 'текущий') + '</strong> не может воспроизвести этот контент.<br>',
+                'Попробуйте переключиться на <strong>' + otherBalancers.map(function (b) { return b.name; }).join(', ') + '</strong> или выбрать другой контент.',
+                '            </div>',
+                '        </div>',
+                '        <video id="notfound-video" src="ico/404-video/' + randomIndex + '.mp4" autoplay loop muted playsinline style="flex: 0 0 320px; width: 320px; height: 180px; border-radius: 8px; object-fit: cover; background: #222; box-shadow: 0 2px 16px #0006; margin-left: 24px;"></video>',
+                '    </div>',
+                '</div>'
+            ].join('');
             this.loadingOverlay.style.display = 'flex';
             
             // Добавим обработчик ошибки для видео
-            const nfVideo = document.getElementById('notfound-video');
+            var nfVideo = document.getElementById('notfound-video');
             if (nfVideo) {
-                nfVideo.onerror = function() {
+                nfVideo.onerror = function () {
                     nfVideo.style.display = 'none';
                 };
             }
         }
-    }
+    };
 
-    async playContent(tmdbId, type, season = null, episode = null) {
+    MultiPlayer.prototype.playContent = async function (tmdbId, type, season, episode) {
         try {
             // Сохраняем текущий контент
-            this.currentContent = { tmdbId, type, season, episode };
+            this.currentContent = { tmdbId: tmdbId, type: type, season: season, episode: episode };
             
             // Сбрасываем флаг ошибки
             this.hasError = false;
@@ -649,65 +664,66 @@ class MultiPlayer {
             this.hasError = true;
             this.showError(error.message);
         }
-    }
+    };
 
-    setupIframeHandlers() {
+    MultiPlayer.prototype.setupIframeHandlers = function () {
         if (!this.iframe || this.hasError) return;
 
         // Таймер для принудительного скрытия загрузки
-        const loadingTimeout = setTimeout(() => {
-            this.hideLoading();
+        var self = this;
+        var loadingTimeout = setTimeout(function () {
+            self.hideLoading();
         }, 8000); // 8 секунд максимум
 
         // Обработчик успешной загрузки
-        this.iframe.onload = () => {
-            if (this.hasError) return; // Не скрываем загрузку, если есть ошибка
+        this.iframe.onload = function () {
+            if (self.hasError) return; // Не скрываем загрузку, если есть ошибка
             
             clearTimeout(loadingTimeout);
             // Небольшая задержка для полной загрузки содержимого
-            setTimeout(() => {
-                this.hideLoading();
+            setTimeout(function () {
+                self.hideLoading();
             }, 1000);
         };
 
         // Обработчик ошибки загрузки
-        this.iframe.onerror = () => {
+        this.iframe.onerror = function () {
             clearTimeout(loadingTimeout);
-            this.hasError = true;
-            this.showError('Ошибка загрузки видео');
+            self.hasError = true;
+            self.showError('Ошибка загрузки видео');
         };
-    }
+    };
 
     // Методы для совместимости
-    async playMovie(tmdbId) {
+    MultiPlayer.prototype.playMovie = async function (tmdbId) {
         return this.playContent(tmdbId, 'movie');
-    }
+    };
 
-    async playTVShow(tmdbId, season, episode) {
+    MultiPlayer.prototype.playTVShow = async function (tmdbId, season, episode) {
         return this.playContent(tmdbId, 'tv', season, episode);
-    }
+    };
 
-    async openMovie(tmdbId) {
+    MultiPlayer.prototype.openMovie = async function (tmdbId) {
         return this.playContent(tmdbId, 'movie');
-    }
+    };
 
-    async openTVShow(tmdbId, season, episode) {
+    MultiPlayer.prototype.openTVShow = async function (tmdbId, season, episode) {
         return this.playContent(tmdbId, 'tv', season, episode);
-    }
+    };
 
     // Методы для совместимости с HTML файлом
-    async openPlayer(item) {
-        const tmdbId = item.id;
-        const type = item.title ? 'movie' : 'tv'; // Определяем тип по наличию title
+    MultiPlayer.prototype.openPlayer = async function (item) {
+        var tmdbId = item.id;
+        var type = item.title ? 'movie' : 'tv'; // Определяем тип по наличию title
         return this.playContent(tmdbId, type);
-    }
-}
+    };
 
-// Создаем глобальный экземпляр плеера
-window.multiPlayer = new MultiPlayer();
-window.vibixPlayer = window.multiPlayer;
+    // Создаем глобальный экземпляр плеера
+    window.multiPlayer = new MultiPlayer();
+    window.vibixPlayer = window.multiPlayer;
 
-// Функция для совместимости с HTML файлом
-window.openPlayer = async function(item) {
-    return window.multiPlayer.openPlayer(item);
-};
+    // Функция для совместимости с HTML файлом
+    window.openPlayer = function (item) {
+        return window.multiPlayer.openPlayer(item);
+    };
+})();
