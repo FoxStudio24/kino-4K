@@ -243,42 +243,239 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // Получить случайный трендовый фильм или сериал для hero
+    // Получить и отобразить 4 слайда
     async function fetchHeroContent() {
-        const movieResponse = await fetch(`${BASE_URL}/trending/movie/week?api_key=${API_KEY}&language=ru-RU`);
-        const movieData = await movieResponse.json();
-        const movies = movieData.results
-            .filter(item => item.vote_average >= 7 && item.overview && item.backdrop_path)
-            .map(item => ({ ...item, type: 'movie' }));
+        const response = await fetch(`${BASE_URL}/trending/all/week?api_key=${API_KEY}&language=ru-RU`);
+        const data = await response.json();
+        const content = data.results
+            .filter(item => item.vote_average >= 6 && item.overview && item.backdrop_path)
+            .map(item => ({ ...item, type: item.media_type }));
 
-        const seriesResponse = await fetch(`${BASE_URL}/trending/tv/week?api_key=${API_KEY}&language=ru-RU`);
-        const seriesData = await seriesResponse.json();
-        const series = seriesData.results
-            .filter(item => item.vote_average >= 7 && item.overview && item.backdrop_path)
-            .map(item => ({ ...item, type: 'tv' }));
+        const selectedContent = content.slice(0, 4);
+        if (selectedContent.length < 4) return;
 
-        const allContent = [...movies, ...series];
-        if (allContent.length === 0) return;
+        let currentSlide = 0;
+        let slideInterval;
+        let isPlaying = true;
 
-        const content = allContent[Math.floor(Math.random() * allContent.length)];
-        hero.style.backgroundImage = `url(${IMG_URL}${content.backdrop_path})`;
+        // Создаем стили для точек, фона, кнопки паузы/плея и контейнера
+        const style = document.createElement('style');
+        style.textContent = `
+            .hero-controls {
+                position: absolute;
+                bottom: -15px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                z-index: 10;
+                background: rgba(0, 0, 0, 0.31);
+                border-radius: 25px;
+                backdrop-filter: blur(10px);
+            }
+            .hero-dots {
+                display: flex;
+                gap: 10px;
+                background: rgba(0, 0, 0, 0.637);
+                border-radius: 25px;
+                padding: 10px 10px;
+            }
+            .hero-dot {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: rgb(255 255 255 / 18%);
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+            .hero-dot.active {
+                background: #ffffff;
+                transform: scale(1.2);
+            }
+            .hero-background {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-size: cover;
+                background-position: center;
+                transition: opacity 1s ease;
+                opacity: 0;
+                border-radius: 20px;
+            }
+            .hero-background.active {
+                opacity: 1;
+            }
+            .hero-content {
+                transform: translateY(10px);
+                opacity: 0;
+                transition: transform 0.8s ease, opacity 0.8s ease;
+            }
+            .hero-content.active {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            .hero-play-pause {
+                background: rgba(0, 0, 0, 0.637);
+                border-radius: 50%;
+                padding: 8px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .hero-play-pause img {
+                width: 16px;
+                height: 16px;
+            }
+            .hero-play-pause:hover {
+                background: rgba(0, 0, 0, 0.8);
+            }
+        `;
+        document.head.appendChild(style);
 
-        const logoUrl = await getLogo(content.id, content.type);
-        if (logoUrl) {
-            heroLogo.src = logoUrl;
-            heroLogo.style.display = 'block';
-            heroLogoText.style.display = 'none';
-        } else {
-            heroLogo.style.display = 'none';
-            heroLogoText.textContent = content.title || content.name;
-            heroLogoText.style.display = 'block';
+        // Удаляем существующий контейнер точек и кнопку паузы/плея
+        const existingControls = hero.querySelector('.hero-controls');
+        if (existingControls) {
+            existingControls.remove();
         }
 
-        heroDescription.textContent = content.overview || 'Описание отсутствует';
-        heroWatchBtn.dataset.id = content.id;
-        heroWatchBtn.dataset.type = content.type;
-        heroInfoBtn.dataset.id = content.id;
-        heroInfoBtn.dataset.type = content.type;
+        // Создаем контейнер для точек и кнопки паузы/плея
+        const controlsContainer = document.createElement('div');
+        controlsContainer.className = 'hero-controls';
+        hero.appendChild(controlsContainer);
+
+        // Создаем контейнер для точек
+        const dotsContainer = document.createElement('div');
+        dotsContainer.className = 'hero-dots';
+        controlsContainer.appendChild(dotsContainer);
+
+        // Создаем точки
+        selectedContent.forEach((_, index) => {
+            const dot = document.createElement('div');
+            dot.className = 'hero-dot';
+            if (index === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => {
+                clearInterval(slideInterval);
+                isPlaying = false;
+                togglePlayPauseIcon();
+                showSlide(index);
+            });
+            dotsContainer.appendChild(dot);
+        });
+
+        // Создаем кнопку паузы/плея
+        const playPauseBtn = document.createElement('div');
+        playPauseBtn.className = 'hero-play-pause';
+        const playPauseIcon = document.createElement('img');
+        playPauseIcon.src = 'ico/Пауза.png';
+        playPauseBtn.appendChild(playPauseIcon);
+        controlsContainer.appendChild(playPauseBtn);
+
+        // Функция переключения иконки паузы/плея
+        function togglePlayPauseIcon() {
+            playPauseIcon.src = isPlaying ? 'ico/Пауза.png' : 'ico/Плей.png';
+        }
+
+        // Обработчик клика по кнопке паузы/плея
+        playPauseBtn.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                startAutoSlide();
+            } else {
+                clearInterval(slideInterval);
+            }
+            togglePlayPauseIcon();
+        });
+
+        // Создаем два фоновых элемента для плавного перехода
+        const bg1 = document.createElement('div');
+        const bg2 = document.createElement('div');
+        bg1.className = 'hero-background active';
+        bg2.className = 'hero-background';
+        hero.insertBefore(bg2, hero.firstChild);
+        hero.insertBefore(bg1, hero.firstChild);
+
+        async function showSlide(index) {
+            const content = selectedContent[index];
+            const heroContent = document.querySelector('.hero-content');
+            const currentBg = bg1.classList.contains('active') ? bg1 : bg2;
+            const nextBg = bg1.classList.contains('active') ? bg2 : bg1;
+
+            // Анимация исчезновения текущего контента
+            if (heroContent) {
+                heroContent.classList.remove('active');
+            }
+
+            // Подготавливаем следующий фон
+            nextBg.style.backgroundImage = `url(${IMG_URL}${content.backdrop_path})`;
+            
+            setTimeout(async () => {
+                // Меняем фоны
+                currentBg.classList.remove('active');
+                nextBg.classList.add('active');
+
+                const logoUrl = await getLogo(content.id, content.type);
+                
+                if (logoUrl) {
+                    heroLogo.src = logoUrl;
+                    heroLogo.style.display = 'block';
+                    heroLogoText.style.display = 'none';
+                } else {
+                    heroLogo.style.display = 'none';
+                    heroLogoText.textContent = content.title || content.name;
+                    heroLogoText.style.display = 'block';
+                }
+
+                heroDescription.textContent = content.overview || 'Описание отсутствует';
+                heroWatchBtn.dataset.id = content.id;
+                heroWatchBtn.dataset.type = content.type;
+                heroInfoBtn.dataset.id = content.id;
+                heroInfoBtn.dataset.type = content.type;
+
+                // Обновляем активную точку
+                document.querySelectorAll('.hero-dot').forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+
+                // Анимация появления hero-content
+                setTimeout(() => {
+                    if (heroContent) {
+                        heroContent.classList.add('active');
+                    }
+                }, 300);
+            }, 500);
+
+            currentSlide = index;
+        }
+
+        function startAutoSlide() {
+            if (slideInterval) {
+                clearInterval(slideInterval);
+            }
+            slideInterval = setInterval(() => {
+                const nextSlide = (currentSlide + 1) % selectedContent.length;
+                showSlide(nextSlide);
+            }, 10000);
+        }
+
+        hero.addEventListener('mouseenter', () => {
+            if (isPlaying) {
+                clearInterval(slideInterval);
+            }
+        });
+        hero.addEventListener('mouseleave', () => {
+            if (isPlaying) {
+                startAutoSlide();
+            }
+        });
+
+        // Показываем первый слайд и запускаем автопереключение
+        showSlide(0);
+        startAutoSlide();
     }
 
     // Получить новые фильмы
@@ -384,16 +581,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Определение возрастного рейтинга
-    function getAgeRating(rating) {
-        const ratings = ['G', 'PG', 'PG-13', 'R', 'NC-17'];
-        const ageMap = {
-            'G': '0+',
-            'PG': '6+',
-            'PG-13': '12+',
-            'R': '16+',
-            'NC-17': '18+'
-        };
-        return ageMap[rating] || '16+';
+    async function getAgeRating(id, type) {
+        try {
+            let rating;
+            if (type === 'movie') {
+                const response = await fetch(`${BASE_URL}/movie/${id}/release_dates?api_key=${API_KEY}`);
+                const data = await response.json();
+                const usRelease = data.results.find(item => item.iso_3166_1 === 'US');
+                rating = usRelease?.release_dates?.find(date => date.certification)?.certification;
+            } else if (type === 'tv') {
+                const response = await fetch(`${BASE_URL}/tv/${id}/content_ratings?api_key=${API_KEY}`);
+                const data = await response.json();
+                rating = data.results.find(item => item.iso_3166_1 === 'US')?.rating;
+            }
+
+            // Сопоставление рейтингов с возрастными ограничениями
+            const ageMap = {
+                'G': '0+',
+                'TV-Y': '0+',
+                'TV-G': '0+',
+                'PG': '6+',
+                'TV-PG': '6+',
+                'PG-13': '12+',
+                'TV-14': '12+',
+                'R': '16+',
+                'NC-17': '18+',
+                'TV-MA': '18+'
+            };
+
+            return ageMap[rating] || '12+'; // По умолчанию 12+, если рейтинг не найден
+        } catch (error) {
+            console.error('Ошибка получения возрастного рейтинга:', error);
+            return '12+'; // По умолчанию при ошибке
+        }
     }
 
     // Получить трейлеры (до 4 штук)
@@ -454,7 +674,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
     // Открыть модальное окно с деталями фильма
     async function openModal(id, type) {
         const response = await fetch(`${BASE_URL}/${type}/${id}?api_key=${API_KEY}&append_to_response=credits&language=ru-RU`);
@@ -489,7 +708,9 @@ document.addEventListener('DOMContentLoaded', () => {
             modalSeasons.style.display = 'none';
         }
 
-        if (modalAgeRating) modalAgeRating.textContent = getAgeRating(data.adult ? 'R' : 'PG-13');
+        if (modalAgeRating) {
+            modalAgeRating.textContent = await getAgeRating(id, type);
+        }
 
         const rating = data.vote_average ? parseFloat(data.vote_average.toFixed(1)) : null;
         if (modalRating && rating) {

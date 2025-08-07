@@ -98,64 +98,100 @@
         }
     };
 
-    MultiPlayer.prototype.tryAllohaWithImdb = async function (imdbId) {
-        try {
-            var allohaApiUrl = 'https://api.alloha.tv/?token=' + this.ALLOHA_TOKEN + '&imdb=' + imdbId;
-            var response = await this.safeFetch(allohaApiUrl);
-            var data = await response.json();
-            
-            if (data.status === 'error') {
-                throw new Error('IMDB ID ' + imdbId + ' не найден в Alloha: ' + data.error_info);
-            }
-            
-            if (data.data && data.data.iframe) {
-                return data.data.iframe;
-            }
-            throw new Error('Видео не найдено на Alloha');
-        } catch (error) {
-            console.error('Ошибка при попытке воспроизведения с IMDB ID в Alloha:', error);
-            throw error;
+    MultiPlayer.prototype.tryAllohaWithImdb = async function (imdbId, type, season, episode) {
+    try {
+        var params = new URLSearchParams({
+            token: this.ALLOHA_TOKEN,
+            imdb: imdbId
+        });
+
+        // Добавляем параметры для сериалов
+        if (type === 'tv' && season && episode) {
+            params.append('season', season);
+            params.append('episode', episode);
         }
-    };
 
-    MultiPlayer.prototype.tryAllohaWithTmdb = async function (tmdbId) {
-        try {
-            var allohaApiUrl = 'https://api.alloha.tv/?token=' + this.ALLOHA_TOKEN + '&tmdb=' + tmdbId;
-            var response = await this.safeFetch(allohaApiUrl);
-            var data = await response.json();
-            
-            if (data.status === 'error') {
-                throw new Error('TMDB ID ' + tmdbId + ' не найден в Alloha: ' + data.error_info);
-            }
-            
-            if (data.data && data.data.iframe) {
-                return data.data.iframe;
-            }
-            throw new Error('Видео не найдено на Alloha');
-        } catch (error) {
-            console.error('Ошибка при попытке воспроизведения с TMDB ID в Alloha:', error);
-            throw error;
+        var allohaApiUrl = 'https://api.alloha.tv/?' + params.toString();
+        var response = await this.safeFetch(allohaApiUrl);
+        var data = await response.json();
+
+        if (data.status === 'error') {
+            throw new Error('IMDB ID ' + imdbId + ' не найден в Alloha: ' + data.error_info);
         }
-    };
 
-    MultiPlayer.prototype.getAllohaUrl = async function (tmdbId, imdbId) {
-        try {
-            // Сначала пробуем с IMDB ID
-            if (imdbId) {
-                var imdbUrl = await this.tryAllohaWithImdb(imdbId);
-                if (imdbUrl) return imdbUrl;
-            }
-
-            // Если IMDB ID не сработал, пробуем с TMDB ID
-            var tmdbUrl = await this.tryAllohaWithTmdb(tmdbId);
-            if (tmdbUrl) return tmdbUrl;
-        } catch (error) {
-            console.error('Ошибка получения Alloha URL:', error);
-            throw error;
+        if (data.data && data.data.iframe) {
+            return data.data.iframe;
         }
 
         throw new Error('Видео не найдено на Alloha');
-    };
+    } catch (error) {
+        console.error('Ошибка при попытке воспроизведения с IMDB ID в Alloha:', error);
+        throw error;
+    }
+};
+
+MultiPlayer.prototype.tryAllohaWithTmdb = async function (tmdbId, type, season, episode) {
+    try {
+        var params = new URLSearchParams({
+            token: this.ALLOHA_TOKEN,
+            tmdb: tmdbId
+        });
+
+        // Добавляем параметры для сериалов
+        if (type === 'tv' && season && episode) {
+            params.append('season', season);
+            params.append('episode', episode);
+        }
+
+        var allohaApiUrl = 'https://api.alloha.tv/?' + params.toString();
+        var response = await this.safeFetch(allohaApiUrl);
+        var data = await response.json();
+
+        if (data.status === 'error') {
+            throw new Error('TMDB ID ' + tmdbId + ' не найден в Alloha: ' + data.error_info);
+        }
+
+        if (data.data && data.data.iframe) {
+            return data.data.iframe;
+        }
+
+        throw new Error('Видео не найдено на Alloha');
+    } catch (error) {
+        console.error('Ошибка при попытке воспроизведения с TMDB ID в Alloha:', error);
+        throw error;
+    }
+};
+
+MultiPlayer.prototype.getAllohaUrl = async function (tmdbId, imdbId, type, season, episode) {
+    var lastError = null;
+
+    try {
+        // Сначала пробуем с IMDB ID
+        if (imdbId) {
+            try {
+                var imdbUrl = await this.tryAllohaWithImdb(imdbId, type, season, episode);
+                if (imdbUrl) return imdbUrl;
+            } catch (error) {
+                lastError = error;
+                console.log('IMDB запрос не удался, пробуем TMDB:', error.message);
+            }
+        }
+
+        // Если IMDB ID не сработал, пробуем с TMDB ID
+        try {
+            var tmdbUrl = await this.tryAllohaWithTmdb(tmdbId, type, season, episode);
+            if (tmdbUrl) return tmdbUrl;
+        } catch (error) {
+            lastError = error;
+        }
+
+        // Если ничего не сработало, выбрасываем последнюю ошибку
+        throw lastError || new Error('Видео не найдено на Alloha');
+    } catch (error) {
+        console.error('Ошибка получения Alloha URL:', error);
+        throw error;
+    }
+};
 
     MultiPlayer.prototype.getLumexUrl = async function (imdbId) {
         try {
@@ -317,13 +353,13 @@
     };
 
     MultiPlayer.prototype.loadAllohaContent = async function (tmdbId, type, season, episode) {
-        var imdbId = await this.getImdbId(tmdbId, type);
-        var allohaUrl = await this.getAllohaUrl(tmdbId, imdbId);
-        this.iframe.src = allohaUrl;
-        
-        // Настраиваем обработчики для iframe
-        this.setupIframeHandlers();
-    };
+    var imdbId = await this.getImdbId(tmdbId, type);
+    var allohaUrl = await this.getAllohaUrl(tmdbId, imdbId, type, season, episode);
+    
+    this.iframe.src = allohaUrl;
+    this.setupIframeHandlers();
+};
+
 
     MultiPlayer.prototype.loadLumexContent = async function (tmdbId, type, season, episode) {
         var imdbId = await this.getImdbId(tmdbId, type);
