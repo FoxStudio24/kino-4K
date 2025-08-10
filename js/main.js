@@ -202,6 +202,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const trailersGrid = document.getElementById('trailers-grid');
     const modalTrailers = document.getElementById('modal-trailers');
 
+    // Состояние слайдера в модальном окне (для очистки при закрытии)
+    let modalSliderState = null;
+
     // Загрузка YouTube IFrame API
     let youtubeScriptLoaded = false;
     function loadYouTubeAPI() {
@@ -274,6 +277,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 border-radius: 25px;
                 backdrop-filter: blur(10px);
             }
+            /* Размытая дублирующая подложка */
+            .hero { overflow: visible; }
+            .hero-ambient {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-size: cover;
+                background-position: center;
+                transform: scale(1.08);
+                filter: blur(50px);
+                opacity: 0;
+                transition: opacity 1s ease;
+                pointer-events: none;
+                z-index: 0;
+            }
+            .hero-ambient.active { opacity: 1; }
             .hero-dots {
                 display: flex;
                 gap: 10px;
@@ -304,6 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 transition: opacity 1s ease;
                 opacity: 0;
                 border-radius: 20px;
+                z-index: 1;
             }
             .hero-background.active {
                 opacity: 1;
@@ -391,11 +413,18 @@ document.addEventListener('DOMContentLoaded', () => {
             togglePlayPauseIcon();
         });
 
-        // Создаем два фоновых элемента для плавного перехода
+        // Создаем размытые подложки и фоновые элементы для плавного перехода
+        const ambient1 = document.createElement('div');
+        const ambient2 = document.createElement('div');
+        ambient1.className = 'hero-ambient active';
+        ambient2.className = 'hero-ambient';
         const bg1 = document.createElement('div');
         const bg2 = document.createElement('div');
         bg1.className = 'hero-background active';
         bg2.className = 'hero-background';
+        // Порядок вставки: сначала подложки (ниже по z-index), затем фоны
+        hero.insertBefore(ambient2, hero.firstChild);
+        hero.insertBefore(ambient1, hero.firstChild);
         hero.insertBefore(bg2, hero.firstChild);
         hero.insertBefore(bg1, hero.firstChild);
 
@@ -404,19 +433,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const heroContent = document.querySelector('.hero-content');
             const currentBg = bg1.classList.contains('active') ? bg1 : bg2;
             const nextBg = bg1.classList.contains('active') ? bg2 : bg1;
+            const currentAmbient = ambient1.classList.contains('active') ? ambient1 : ambient2;
+            const nextAmbient = ambient1.classList.contains('active') ? ambient2 : ambient1;
 
             // Анимация исчезновения текущего контента
             if (heroContent) {
                 heroContent.classList.remove('active');
             }
 
-            // Подготавливаем следующий фон
+            // Подготавливаем следующий фон и подложку
             nextBg.style.backgroundImage = `url(${IMG_URL}${content.backdrop_path})`;
+            nextAmbient.style.backgroundImage = `url(${IMG_URL}${content.backdrop_path})`;
             
             setTimeout(async () => {
-                // Меняем фоны
+                // Меняем фоны и подложки
                 currentBg.classList.remove('active');
                 nextBg.classList.add('active');
+                currentAmbient.classList.remove('active');
+                nextAmbient.classList.add('active');
 
                 const logoUrl = await getLogo(content.id, content.type);
                 
@@ -680,6 +714,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await response.json();
         const backdropUrl = data.backdrop_path ? `${IMG_URL}${data.backdrop_path}` : NO_PICTURE_URL;
 
+        // Очистка предыдущего слайдера в модалке
+        if (modalSliderState?.interval) {
+            clearInterval(modalSliderState.interval);
+            modalSliderState = null;
+        }
+
         // Очистка и восстановление начальной структуры modalBackdrop с логотипом
         const logoUrl = await getLogo(id, type);
         if (modalBackdrop) {
@@ -696,7 +736,159 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             `;
-            modalBackdrop.style.backgroundImage = `url(${backdropUrl})`;
+            // Убираем статичный фон — будем управлять через слои
+            modalBackdrop.style.backgroundImage = '';
+
+            // 1) Получаем до 4 подходящих бэкдропов без текста (backdrops с высоким соотношением сторон)
+            const imagesRes = await fetch(`${BASE_URL}/${type}/${id}/images?api_key=${API_KEY}`);
+            const imagesData = await imagesRes.json();
+            const backdrops = (imagesData.backdrops || [])
+                .filter(img => img.iso_639_1 === null || img.iso_639_1 === 'xx')
+                .slice(0, 4);
+
+            // Фолбэк: если мало бэкдропов, добавим основной
+            if (backdrops.length === 0 && data.backdrop_path) {
+                backdrops.push({ file_path: data.backdrop_path });
+            }
+
+            // 2) Создаем стили для контролов в модалке (правый-низ)
+            const modalStyle = document.createElement('style');
+            modalStyle.textContent = `
+                .modal-hero-controls {
+                    position: absolute;
+                    right: 16px;
+                    bottom: 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    z-index: 5;
+                    border-radius: 25px;
+                    padding: 2px 2px;
+                }
+                .modal-hero-dots {
+                    display: flex;
+                    gap: 8px;
+                    background: rgba(0, 0, 0, 0.637);
+                    border-radius: 25px;
+                    padding: 8px 10px;
+                }
+                .modal-hero-dot {
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 50%;
+                    background: rgb(255 255 255 / 18%);
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+                .modal-hero-dot.active { background: #ffffff; transform: scale(1.2); }
+                .modal-hero-play-pause {
+                    background: rgba(0, 0, 0, 0.637);
+                    border-radius: 50%;
+                    padding: 6px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .modal-hero-play-pause img { width: 16px; height: 16px; }
+                .modal-hero-play-pause:hover { background: rgba(0, 0, 0, 0.8); }
+
+                /* Слои бэкдропа */
+                .modal-backdrop-layer {
+                    position: absolute;
+                    inset: 0;
+                    background-size: cover;
+                    background-position: center;
+                    opacity: 0;
+                    transition: opacity 1s ease;
+                    z-index: 0;
+                }
+                .modal-backdrop-layer.active { opacity: 1; }
+
+                /* Мобилки: скрыть контролы в модалке */
+                @media (max-width: 768px) {
+                    .modal-hero-controls { display: none !important; }
+                }
+            `;
+            document.head.appendChild(modalStyle);
+
+            // 3) Создаем два слоя для плавного фейда
+            const layer1 = document.createElement('div');
+            const layer2 = document.createElement('div');
+            layer1.className = 'modal-backdrop-layer active';
+            layer2.className = 'modal-backdrop-layer';
+            modalBackdrop.appendChild(layer2);
+            modalBackdrop.appendChild(layer1);
+
+            // 4) Контролы: точки и пауза/плей (справа-снизу)
+            const controls = document.createElement('div');
+            controls.className = 'modal-hero-controls';
+            const dots = document.createElement('div');
+            dots.className = 'modal-hero-dots';
+            const playPause = document.createElement('div');
+            playPause.className = 'modal-hero-play-pause';
+            const playPauseIcon = document.createElement('img');
+            playPauseIcon.src = 'ico/Пауза.png';
+            playPause.appendChild(playPauseIcon);
+            controls.appendChild(dots);
+            controls.appendChild(playPause);
+            modalBackdrop.appendChild(controls);
+
+            // 5) Состояние и функции слайдера
+            let current = 0;
+            let isPlayingModal = true;
+            const slides = backdrops.slice(0, 4);
+
+            function setSlide(idx) {
+                const currentLayer = layer1.classList.contains('active') ? layer1 : layer2;
+                const nextLayer = layer1.classList.contains('active') ? layer2 : layer1;
+                nextLayer.style.backgroundImage = `url(${IMG_URL}${slides[idx].file_path})`;
+                currentLayer.classList.remove('active');
+                nextLayer.classList.add('active');
+                // Обновить точки
+                dots.querySelectorAll('.modal-hero-dot').forEach((dot, i) => {
+                    dot.classList.toggle('active', i === idx);
+                });
+                current = idx;
+            }
+
+            // Точки
+            slides.forEach((_, i) => {
+                const d = document.createElement('div');
+                d.className = 'modal-hero-dot';
+                if (i === 0) d.classList.add('active');
+                d.addEventListener('click', () => {
+                    if (modalSliderState?.interval) clearInterval(modalSliderState.interval);
+                    isPlayingModal = false;
+                    playPauseIcon.src = 'ico/Плей.png';
+                    setSlide(i);
+                });
+                dots.appendChild(d);
+            });
+
+            function startModalAutoSlide() {
+                if (modalSliderState?.interval) clearInterval(modalSliderState.interval);
+                modalSliderState = {
+                    interval: setInterval(() => {
+                        const next = (current + 1) % slides.length;
+                        setSlide(next);
+                    }, 10000)
+                };
+            }
+
+            // Пауза/плей
+            playPause.addEventListener('click', () => {
+                isPlayingModal = !isPlayingModal;
+                playPauseIcon.src = isPlayingModal ? 'ico/Пауза.png' : 'ico/Плей.png';
+                if (isPlayingModal) startModalAutoSlide(); else if (modalSliderState?.interval) clearInterval(modalSliderState.interval);
+            });
+
+            // Инициализация
+            if (slides.length > 0) {
+                layer1.style.backgroundImage = `url(${IMG_URL}${slides[0].file_path})`;
+                startModalAutoSlide();
+            }
         }
 
         // Заполнение информации о фильме/сериале
@@ -823,6 +1015,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 modal.style.display = 'none';
                 document.body.classList.remove('no-scroll');
             }
+            if (modalSliderState?.interval) {
+                clearInterval(modalSliderState.interval);
+                modalSliderState = null;
+            }
         });
     }
 
@@ -864,6 +1060,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === modal) {
             modal.style.display = 'none';
             document.body.classList.remove('no-scroll');
+            if (modalSliderState?.interval) {
+                clearInterval(modalSliderState.interval);
+                modalSliderState = null;
+            }
         }
         if (e.target === trailerModal) {
             trailerModal.style.display = 'none';
