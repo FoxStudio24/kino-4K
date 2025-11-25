@@ -5,20 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Кино+  Главная</title>
     <link rel="stylesheet" href="css/styles.css">
-    
+    <style>
+        /* Inserted Top 10 carousel styles (mobile-friendly) */
+        .top10-container * { box-sizing: border-box; }
+        .top10-container { background-color: rgba(0,0,0,0); color: #fff; }
+        .top10-container .container { max-width: 100%; margin: 0 auto; padding: 20px 10px; }
+        .top10-container h2 {
+            font-size: 1.5rem;
+            margin: 0 0 10px 20px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            font-family: 'textbold', sans-serif;
+        }
+        .carousel-wrapper { position: relative; margin: 0 20px; }
+        .carousel-wrapper::before, .carousel-wrapper::after { content: ''; position: absolute; top:0; bottom:0; width:100px; z-index:5; pointer-events:none; }
+        .carousel-wrapper::before { left:0; background: linear-gradient(to right, #141414 0%, transparent 100%); }
+        .carousel-wrapper::after { right:0; background: linear-gradient(to left, #141414 0%, transparent 100%); }
+        .carousel { display:flex; overflow-x:auto; overflow-y:hidden; padding:10px 0; scroll-behavior:smooth; -webkit-overflow-scrolling: touch; }
+        .carousel-track { display:flex; gap:40px; padding-left:20px; padding-right:20px; }
+        .card { min-width:140px; position:relative; cursor:pointer; flex-shrink:0; }
+        .number { position:absolute; left:-40px; top:20px; font-size:140px; font-family: 'buttonbold', sans-serif; -webkit-text-stroke:1px #dc2626; color:transparent; z-index:0; transition:all .3s ease; line-height:0.8; white-space:nowrap; }
+        .poster-container { 
+            position:relative; 
+            width:140px; height:210px; 
+            overflow:hidden; 
+            transition:transform .3s ease; 
+            z-index:2; 
+            border: #66666621 1px solid;
+        }
+        .poster { width:140px; height:210px; object-fit:cover; display:block; }
+        .card:hover .poster-container { transform:scale(1.01); }
+        .card:hover .number { background: linear-gradient(to right, #ab1d1d 0%, #000 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+        @media (min-width: 768px) {
+            .top10-container .container { padding: 50px 20px; }
+            .carousel-wrapper { margin: 0 60px; }
+            .carousel-track { gap:100px; padding-left:150px; padding-right:150px; }
+            .card { min-width:220px; }
+            .number { left:-80px; top:57px; font-size:260px; -webkit-text-stroke:2px #dc2626; }
+            .poster-container { width:200px; height:300px; }
+            .poster { width:200px; height:300px; }
+        }
+    </style>
 
 </head>
 <body>
-    <!-- Искожение типо нового эфекта ликвед -->
-    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
-    <defs>
-      <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.008 0.008" numOctaves="2" seed="92" result="noise" />
-        <feGaussianBlur in="noise" stdDeviation="2" result="blurred" />
-        <feDisplacementMap in="SourceGraphic" in2="blurred" scale="100" xChannelSelector="R" yChannelSelector="G" />
-      </filter>
-    </defs>
-  </svg>
         <!-- Loading Overlay -->
     <div id="loading-overlay" class="loading-overlay">
         <div class="loader">
@@ -48,10 +85,26 @@
         </form>
 
         <nav class="nav-tabs">
-            <a href="index.html" class="active">Главная</a>
-            <a href="movies.html">Фильмы</a>
-            <a href="series.html">Сериалы</a>
-        </nav>
+    <a href="index.html" class="active">
+        <img src="ico/nav_mob/Главная.svg" alt="Главная" style="width:20px; height:20px; margin-right:8px; object-fit:contain;">
+        Главная
+    </a>
+    <a href="movies.html">
+        <img src="ico/nav_mob/Фильмы.svg" alt="Фильмы" style="width:20px; height:20px; margin-right:8px; object-fit:contain;">
+        Фильмы
+    </a>
+    <a href="series.html">
+        <img src="ico/nav_mob/Сериалы.svg" alt="Сериалы" style="width:20px; height:20px; margin-right:8px; object-fit:contain;">
+        Сериалы
+    </a>
+</nav>
+
+<style>
+.nav-tabs a.active img {
+    filter: brightness(0) invert(0); /* делает иконку черной */
+}
+</style>
+
     </header>
 
     <main>
@@ -61,11 +114,28 @@
                 <h1 id="hero-logo-text" class="hero-logo-text"></h1>
                 <p id="hero-description"></p>
                 <div class="hero-buttons">
-                    <button id="hero-watch-btn" class="watch-btn">Смотреть</button>
+                  <button id="hero-watch-btn" class="watch-btn">
+  <img src="ico/Плей.svg" alt="watch icon" 
+       style="width:20px;height:20px;object-fit:contain;margin-right:8px;filter:brightness(0);">
+  Смотреть
+</button>
                     <button id="hero-info-btn" class="info-btn">Подробнее</button>
                 </div>
             </div>
         </section>
+
+        <!-- Top 10 carousel injected by user request -->
+        <div class="top10-container">
+            <h2>Сейчас смотрят</h2>
+            <div id="top10-loading" class="loading">Загрузка...</div>
+            <div id="top10-app" class="container" style="display: none;">
+                <div class="carousel-wrapper">
+                    <div class="carousel">
+                        <div class="carousel-track" id="carouselTrack"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <section class="category">
             <h2>Новые фильмы </h2>
@@ -82,20 +152,36 @@
             <div id="new-animations" class="movie-row"></div>
         </section>
 
-        <section class="category">
-            <h2>В тренде - Фильмы </h2>
-            <div id="trending-movies" class="movie-row"></div>
-        </section>
+        <!-- Top 10 Movies container -->
+        <div class="top10-container">
+            <h2>В тренде - Фильмы</h2>
+            <div id="top10-movies-loading" class="loading">Загрузка...</div>
+            <div id="top10-movies-app" class="container" style="display: none;">
+                <div class="carousel-wrapper">
+                    <div class="carousel">
+                        <div class="carousel-track" id="moviesCarouselTrack"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <section class="category">
             <h2>Легендарные фильмы </h2>
             <div id="legendary-movies" class="movie-row"></div>
         </section>
 
-        <section class="category">
-            <h2>В тренде - Сериалы </h2>
-            <div id="trending-series" class="movie-row"></div>
-        </section>
+        <!-- Top 10 Series container -->
+        <div class="top10-container">
+            <h2>В тренде - Сериалы</h2>
+            <div id="top10-series-loading" class="loading">Загрузка...</div>
+            <div id="top10-series-app" class="container" style="display: none;">
+                <div class="carousel-wrapper">
+                    <div class="carousel">
+                        <div class="carousel-track" id="seriesCarouselTrack"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <section class="category">
             <h2>Легендарные сериалы </h2>
@@ -253,6 +339,116 @@
         </div>
     </footer>
 
+    <script>
+        (function(){
+            const API_KEY = '06936145fe8e20be28b02e26b55d3ce6';
+            const BASE_URL = 'https://api.themoviedb.org/3';
+            const IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
+            
+            // Общая функция для создания карточек
+            function createCards(content, forcedType = null) {
+                return content.map((item, index) => {
+                    const posterSrc = item.poster_path ? IMAGE_BASE + item.poster_path : 'https://via.placeholder.com/220x330/1a1a1a/666?text=No+Image';
+                    const title = item.title || item.name || '';
+                    // Используем принудительный тип для списков фильмов/сериалов или определяем из данных
+                    const type = forcedType || item.media_type || (item.first_air_date ? 'tv' : 'movie');
+                    return `\n                        <div class="card top10-card" data-id="${item.id}" data-type="${type}" data-title="${title.replace(/"/g, '&quot;')}">\n                            <div class="number">${index + 1}</div>\n                            <div class="poster-container">\n                                <img class="poster" src="${posterSrc}" alt="${title}">\n                            </div>\n                        </div>\n                    `;
+                }).join('');
+            }
+
+            // Функция загрузки и отображения для каждой карусели
+            async function fetchAndRenderContent(url, trackId, loadingId, containerId) {
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    const content = data.results.slice(0, 10);
+                    
+                    const track = document.getElementById(trackId);
+                    if (track) {
+                        track.innerHTML = createCards(content);
+                    }
+                    
+                    document.getElementById(loadingId).style.display = 'none';
+                    document.getElementById(containerId).style.display = 'block';
+                } catch (error) {
+                    console.error(`Ошибка загрузки контента для ${trackId}:`, error);
+                    const ld = document.getElementById(loadingId);
+                    if (ld) ld.innerHTML = 'Ошибка загрузки данных';
+                }
+            }
+
+            // Загрузка трендов дня для hero
+            async function fetchTrendingDay() {
+                try {
+                    const response = await fetch(`${BASE_URL}/trending/all/day?api_key=${API_KEY}&language=ru-RU`);
+                    const data = await response.json();
+                    if (data.results && data.results.length > 0) {
+                        const hero = data.results[0];
+                        document.getElementById('hero-logo-text').textContent = hero.title || hero.name;
+                        document.getElementById('hero-description').textContent = hero.overview || '';
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки трендов дня:', error);
+                }
+            }
+
+            // Загружаем все карусели
+            fetchTrendingDay();
+            
+            // Top 10 общие тренды недели
+            fetchAndRenderContent(
+                `${BASE_URL}/trending/all/week?api_key=${API_KEY}&language=ru-RU`,
+                'carouselTrack',
+                'top10-loading',
+                'top10-app'
+            );
+
+            // Top 10 фильмов
+            async function fetchMoviesContent() {
+                try {
+                    const response = await fetch(`${BASE_URL}/movie/popular?api_key=${API_KEY}&language=ru-RU`);
+                    const data = await response.json();
+                    const content = data.results.slice(0, 10);
+                    
+                    const track = document.getElementById('moviesCarouselTrack');
+                    if (track) {
+                        track.innerHTML = createCards(content, 'movie'); // Принудительно указываем тип 'movie'
+                    }
+                    
+                    document.getElementById('top10-movies-loading').style.display = 'none';
+                    document.getElementById('top10-movies-app').style.display = 'block';
+                } catch (error) {
+                    console.error('Ошибка загрузки фильмов:', error);
+                    const ld = document.getElementById('top10-movies-loading');
+                    if (ld) ld.innerHTML = 'Ошибка загрузки данных';
+                }
+            }
+
+            // Top 10 сериалов
+            async function fetchSeriesContent() {
+                try {
+                    const response = await fetch(`${BASE_URL}/tv/popular?api_key=${API_KEY}&language=ru-RU`);
+                    const data = await response.json();
+                    const content = data.results.slice(0, 10);
+                    
+                    const track = document.getElementById('seriesCarouselTrack');
+                    if (track) {
+                        track.innerHTML = createCards(content, 'tv'); // Принудительно указываем тип 'tv'
+                    }
+                    
+                    document.getElementById('top10-series-loading').style.display = 'none';
+                    document.getElementById('top10-series-app').style.display = 'block';
+                } catch (error) {
+                    console.error('Ошибка загрузки сериалов:', error);
+                    const ld = document.getElementById('top10-series-loading');
+                    if (ld) ld.innerHTML = 'Ошибка загрузки данных';
+                }
+            }
+
+            fetchMoviesContent();
+            fetchSeriesContent();
+        })();
+    </script>
     <script src="js/player.js"></script>
     <script src="js/main.js"></script>
 </body>

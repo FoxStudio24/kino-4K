@@ -7,16 +7,6 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <!-- Искожение типо нового эфекта ликвед -->
-    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
-    <defs>
-      <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.008 0.008" numOctaves="2" seed="92" result="noise" />
-        <feGaussianBlur in="noise" stdDeviation="2" result="blurred" />
-        <feDisplacementMap in="SourceGraphic" in2="blurred" scale="100" xChannelSelector="R" yChannelSelector="G" />
-      </filter>
-    </defs>
-  </svg>
       <!-- Loading Overlay -->
     <div id="loading-overlay" class="loading-overlay">
         <div class="loader">
@@ -46,10 +36,26 @@
         </form>
 
         <nav class="nav-tabs">
-            <a href="index.html">Главная</a>
-            <a href="movies.html">Фильмы</a>
-            <a href="series.html" class="active">Сериалы</a>
-        </nav>
+    <a href="index.html">
+        <img src="ico/nav_mob/Главная.svg" alt="Главная" style="width:20px; height:20px; margin-right:8px; object-fit:contain;">
+        Главная
+    </a>
+    <a href="movies.html">
+        <img src="ico/nav_mob/Фильмы.svg" alt="Фильмы" style="width:20px; height:20px; margin-right:8px; object-fit:contain;">
+        Фильмы
+    </a>
+    <a href="series.html" class="active">
+        <img src="ico/nav_mob/Сериалы.svg" alt="Сериалы" style="width:20px; height:20px; margin-right:8px; object-fit:contain;">
+        Сериалы
+    </a>
+</nav>
+
+<style>
+.nav-tabs a.active img {
+    filter: brightness(0) invert(0); /* делает иконку черной для активного пункта */
+}
+</style>
+
     </header>
 
     <main>

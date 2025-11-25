@@ -6,6 +6,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('loading');
     }
 
+    // Делегированный обработчик кликов для Top10 карточек (открывает общий модал)
+    document.addEventListener('click', (e) => {
+        const topCard = e.target.closest && e.target.closest('.top10-card');
+        if (!topCard) return;
+        const id = topCard.dataset.id;
+        const type = topCard.dataset.type || 'movie';
+        if (id) {
+            // Открываем модал и прячем другие оверлеи
+            openModal(id, type);
+            if (searchModal) searchModal.style.display = 'none';
+            if (mobileSearchModal) mobileSearchModal.style.display = 'none';
+            document.body.classList.add('no-scroll');
+        }
+    });
+
     // Скрытие оверлея загрузки
     function hideLoading() {
         setTimeout(() => {
@@ -246,271 +261,593 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // Получить и отобразить 4 слайда
-    async function fetchHeroContent() {
-        const response = await fetch(`${BASE_URL}/trending/all/week?api_key=${API_KEY}&language=ru-RU`);
-        const data = await response.json();
-        const content = data.results
-            .filter(item => item.vote_average >= 6 && item.overview && item.backdrop_path)
-            .map(item => ({ ...item, type: item.media_type }));
+// Получить и отобразить 1 слайд с YouTube трейлером
+async function fetchHeroContent() {
+    const response = await fetch(`${BASE_URL}/trending/all/week?api_key=${API_KEY}&language=ru-RU`);
+    const data = await response.json();
+    const content = data.results
+        .filter(item => item.vote_average >= 6 && item.overview && item.backdrop_path)
+        .map(item => ({ ...item, type: item.media_type }));
 
-        const selectedContent = content.slice(0, 4);
-        if (selectedContent.length < 4) return;
+    const selectedContent = content[0];
+    if (!selectedContent) return;
 
-        let currentSlide = 0;
-        let slideInterval;
-        let isPlaying = true;
+    let player;
+    let isTrailerPlaying = false;
+    let allTrailers = [];
+    let trailerSuccessfullyPlayed = false;
+    let progressInterval;
+    let searchStartTime = null;
 
-        // Создаем стили для точек, фона, кнопки паузы/плея и контейнера
-        const style = document.createElement('style');
-        style.textContent = `
-            .hero-controls {
-                position: absolute;
-                bottom: -15px;
-                left: 50%;
-                transform: translateX(-50%);
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                z-index: 10;
-                background: rgba(0, 0, 0, 0.31);
-                border-radius: 25px;
-                backdrop-filter: blur(10px);
-            }
-            /* Размытая дублирующая подложка */
-            .hero { overflow: visible; }
-            .hero-ambient {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-size: cover;
-                background-position: center;
-                transform: scale(1.08);
-                filter: blur(50px);
-                opacity: 0;
-                transition: opacity 1s ease;
-                pointer-events: none;
-                z-index: 0;
-            }
-            .hero-ambient.active { opacity: 1; }
-            .hero-dots {
-                display: flex;
-                gap: 10px;
-                background: rgba(0, 0, 0, 0.637);
-                border-radius: 25px;
-                padding: 10px 10px;
-            }
-            .hero-dot {
-                width: 12px;
-                height: 12px;
-                border-radius: 50%;
-                background: rgb(255 255 255 / 18%);
-                cursor: pointer;
-                transition: all 0.3s ease;
-            }
-            .hero-dot.active {
-                background: #ffffff;
-                transform: scale(1.2);
-            }
-            .hero-background {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-size: cover;
-                background-position: center;
-                transition: opacity 1s ease;
-                opacity: 0;
-                border-radius: 20px;
-                z-index: 1;
-            }
-            .hero-background.active {
-                opacity: 1;
-            }
-            .hero-content {
-                transform: translateY(10px);
-                opacity: 0;
-                transition: transform 0.8s ease, opacity 0.8s ease;
-            }
-            .hero-content.active {
-                transform: translateY(0);
-                opacity: 1;
-            }
-            .hero-play-pause {
-                background: rgba(0, 0, 0, 0.637);
-                border-radius: 50%;
-                padding: 8px;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .hero-play-pause img {
-                width: 16px;
-                height: 16px;
-            }
-            .hero-play-pause:hover {
-                background: rgba(0, 0, 0, 0.8);
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Удаляем существующий контейнер точек и кнопку паузы/плея
-        const existingControls = hero.querySelector('.hero-controls');
-        if (existingControls) {
-            existingControls.remove();
+    const style = document.createElement('style');
+    style.textContent = `
+        .hero {
+            position: relative;
+            overflow: visible;
         }
-
-        // Создаем контейнер для точек и кнопки паузы/плея
-        const controlsContainer = document.createElement('div');
-        controlsContainer.className = 'hero-controls';
-        hero.appendChild(controlsContainer);
-
-        // Создаем контейнер для точек
-        const dotsContainer = document.createElement('div');
-        dotsContainer.className = 'hero-dots';
-        controlsContainer.appendChild(dotsContainer);
-
-        // Создаем точки
-        selectedContent.forEach((_, index) => {
-            const dot = document.createElement('div');
-            dot.className = 'hero-dot';
-            if (index === 0) dot.classList.add('active');
-            dot.addEventListener('click', () => {
-                clearInterval(slideInterval);
-                isPlaying = false;
-                togglePlayPauseIcon();
-                showSlide(index);
-            });
-            dotsContainer.appendChild(dot);
-        });
-
-        // Создаем кнопку паузы/плея
-        const playPauseBtn = document.createElement('div');
-        playPauseBtn.className = 'hero-play-pause';
-        const playPauseIcon = document.createElement('img');
-        playPauseIcon.src = 'ico/Пауза.png';
-        playPauseBtn.appendChild(playPauseIcon);
-        controlsContainer.appendChild(playPauseBtn);
-
-        // Функция переключения иконки паузы/плея
-        function togglePlayPauseIcon() {
-            playPauseIcon.src = isPlaying ? 'ico/Пауза.png' : 'ico/Плей.png';
+        
+        .hero-ambient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transform: scale(1.02);
+            filter: blur(50px);
+            opacity: 1;
+            pointer-events: none;
+            z-index: 0;
         }
-
-        // Обработчик клика по кнопке паузы/плея
-        playPauseBtn.addEventListener('click', () => {
-            isPlaying = !isPlaying;
-            if (isPlaying) {
-                startAutoSlide();
-            } else {
-                clearInterval(slideInterval);
+        
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            border-radius: 20px;
+            z-index: 1;
+            transition: opacity 1s ease;
+        }
+        
+        .hero-trailer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+            .hero-trailer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top right, rgba(0, 0, 0, 0.8), transparent);
+    border-radius: inherit;
+    z-index: 3;
+    pointer-events: none;
+}
+        
+        .hero-trailer.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .hero-trailer iframe {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            transform: translate(-50%, -50%);
+            border: none;
+            pointer-events: none;
+        }
+        
+        @media (min-aspect-ratio: 16/9) {
+            .hero-trailer iframe {
+                height: 56.25vw;
             }
-            togglePlayPauseIcon();
-        });
-
-        // Создаем размытые подложки и фоновые элементы для плавного перехода
-        const ambient1 = document.createElement('div');
-        const ambient2 = document.createElement('div');
-        ambient1.className = 'hero-ambient active';
-        ambient2.className = 'hero-ambient';
-        const bg1 = document.createElement('div');
-        const bg2 = document.createElement('div');
-        bg1.className = 'hero-background active';
-        bg2.className = 'hero-background';
-        // Порядок вставки: сначала подложки (ниже по z-index), затем фоны
-        hero.insertBefore(ambient2, hero.firstChild);
-        hero.insertBefore(ambient1, hero.firstChild);
-        hero.insertBefore(bg2, hero.firstChild);
-        hero.insertBefore(bg1, hero.firstChild);
-
-        async function showSlide(index) {
-            const content = selectedContent[index];
-            const heroContent = document.querySelector('.hero-content');
-            const currentBg = bg1.classList.contains('active') ? bg1 : bg2;
-            const nextBg = bg1.classList.contains('active') ? bg2 : bg1;
-            const currentAmbient = ambient1.classList.contains('active') ? ambient1 : ambient2;
-            const nextAmbient = ambient1.classList.contains('active') ? ambient2 : ambient1;
-
-            // Анимация исчезновения текущего контента
-            if (heroContent) {
-                heroContent.classList.remove('active');
+        }
+        
+        @media (max-aspect-ratio: 16/9) {
+            .hero-trailer iframe {
+                width: 177.78vh;
             }
-
-            // Подготавливаем следующий фон и подложку
-            nextBg.style.backgroundImage = `url(${IMG_URL}${content.backdrop_path})`;
-            nextAmbient.style.backgroundImage = `url(${IMG_URL}${content.backdrop_path})`;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 3;
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .hero-content.active {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .hero-logo {
+            transition: transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transform: translateY(0);
+        }
+        
+        .hero-logo.move-down {
+            transform: translateY(70px);
+        }
+        
+        .hero-logo.move-up {
+            transform: translateY(0);
+        }
+        
+        .hero-logo-text {
+            transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            opacity: 1;
+        }
+        
+        .hero-logo-text.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .hero-content p {
+            transition: opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            opacity: 1;
+        }
+        
+        .hero-content p.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        @media (min-width: 769px) {
+            .trailer-controls {
+                bottom: 30px !important;
+                right: 30px !important;
+                top: auto !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hero {
+                border-radius: 15px;
+            }
             
-            setTimeout(async () => {
-                // Меняем фоны и подложки
-                currentBg.classList.remove('active');
-                nextBg.classList.add('active');
-                currentAmbient.classList.remove('active');
-                nextAmbient.classList.add('active');
-
-                const logoUrl = await getLogo(content.id, content.type);
-                
-                if (logoUrl) {
-                    heroLogo.src = logoUrl;
-                    heroLogo.style.display = 'block';
-                    heroLogoText.style.display = 'none';
-                } else {
-                    heroLogo.style.display = 'none';
-                    heroLogoText.textContent = content.title || content.name;
-                    heroLogoText.style.display = 'block';
-                }
-
-                heroDescription.textContent = content.overview || 'Описание отсутствует';
-                heroWatchBtn.dataset.id = content.id;
-                heroWatchBtn.dataset.type = content.type;
-                heroInfoBtn.dataset.id = content.id;
-                heroInfoBtn.dataset.type = content.type;
-
-                // Обновляем активную точку
-                document.querySelectorAll('.hero-dot').forEach((dot, i) => {
-                    dot.classList.toggle('active', i === index);
-                });
-
-                // Анимация появления hero-content
-                setTimeout(() => {
-                    if (heroContent) {
-                        heroContent.classList.add('active');
-                    }
-                }, 300);
-            }, 500);
-
-            currentSlide = index;
+            .hero-background,
+            .hero-trailer {
+                border-radius: 15px;
+            }
+            
+            .hero-content {
+                padding: 20px;
+            }
+            
+            .hero-logo.move-down {
+                transform: translateY(60px);
+            }
+            
+            .trailer-controls {
+                top: 20px !important;
+                right: 20px !important;
+                bottom: auto !important;
+            }
         }
-
-        function startAutoSlide() {
-            if (slideInterval) {
-                clearInterval(slideInterval);
+        
+        @media (max-width: 480px) {
+            .hero {
+                border-radius: 10px;
             }
-            slideInterval = setInterval(() => {
-                const nextSlide = (currentSlide + 1) % selectedContent.length;
-                showSlide(nextSlide);
-            }, 10000);
+            
+            .hero-background,
+            .hero-trailer {
+                border-radius: 10px;
+            }
+            
+            .hero-logo.move-down {
+                transform: translateY(50px);
+            }
+            
+            .trailer-controls {
+                top: 15px !important;
+                right: 15px !important;
+                bottom: auto !important;
+            }
         }
+    `;
+    document.head.appendChild(style);
 
-        hero.addEventListener('mouseenter', () => {
-            if (isPlaying) {
-                clearInterval(slideInterval);
-            }
-        });
-        hero.addEventListener('mouseleave', () => {
-            if (isPlaying) {
-                startAutoSlide();
-            }
-        });
+    const ambient = document.createElement('div');
+    ambient.className = 'hero-ambient';
+    ambient.style.backgroundImage = `url(${IMG_URL}${selectedContent.backdrop_path})`;
+    hero.insertBefore(ambient, hero.firstChild);
 
-        // Показываем первый слайд и запускаем автопереключение
-        showSlide(0);
-        startAutoSlide();
+    const bg = document.createElement('div');
+    bg.className = 'hero-background';
+    bg.style.backgroundImage = `url(${IMG_URL}${selectedContent.backdrop_path})`;
+    hero.insertBefore(bg, hero.firstChild);
+
+    const trailerContainer = document.createElement('div');
+    trailerContainer.className = 'hero-trailer';
+    hero.insertBefore(trailerContainer, hero.firstChild);
+
+    const controlsContainer = document.createElement('div');
+    controlsContainer.className = 'trailer-controls';
+    controlsContainer.style.position = 'absolute';
+    controlsContainer.style.bottom = '30px';
+    controlsContainer.style.right = '30px';
+    controlsContainer.style.zIndex = '10';
+    controlsContainer.style.display = 'none';
+    controlsContainer.style.gap = '10px';
+    controlsContainer.style.pointerEvents = 'all';
+
+    controlsContainer.innerHTML = `
+        <button id="trailer-sound-btn" style="
+            background: rgba(32, 32, 32, 0.35);
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            padding: 0;
+            margin: 0;
+            flex-shrink: 0;
+            border : 1px solid #ffffff21;
+        ">
+            <img src="ico/Звук_выкл.png" style="width: 20px; height: 20px; filter: brightness(0) invert(1);">
+        </button>
+        <button id="trailer-exit-btn" style="
+            background: rgba(32, 32, 32, 0.35);
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            padding: 0;
+            margin: 0;
+            flex-shrink: 0;
+            border : 1px solid #ffffff21;
+        ">
+            <img src="ico/закрыть.svg" style="width: 20px; height: 20px; filter: brightness(0) invert(1);">
+        </button>
+    `;
+
+    controlsContainer.style.display = 'none';
+    controlsContainer.style.flexDirection = 'row';
+    controlsContainer.style.alignItems = 'center';
+    controlsContainer.style.justifyContent = 'center';
+
+    hero.appendChild(controlsContainer);
+
+    const soundBtn = document.getElementById('trailer-sound-btn');
+    const exitBtn = document.getElementById('trailer-exit-btn');
+
+    let isSoundMuted = true;
+    const soundIcon = soundBtn.querySelector('img');
+
+    soundBtn.addEventListener('click', () => {
+        if (!player) return;
+        try {
+            if (isSoundMuted) {
+                player.unMute();
+                player.setVolume(100);
+                soundIcon.src = 'ico/Звук_вкл.png';
+            } else {
+                player.mute();
+                soundIcon.src = 'ico/Звук_выкл.png';
+            }
+            isSoundMuted = !isSoundMuted;
+        } catch (error) {}
+    });
+
+    exitBtn.addEventListener('click', () => {
+        trailerSuccessfullyPlayed = true;
+        stopTrailer();
+    });
+
+    async function getAllTrailers(contentId, contentType) {
+        try {
+            const response = await fetch(
+                `${BASE_URL}/${contentType}/${contentId}/videos?api_key=${API_KEY}`
+            );
+            const data = await response.json();
+            
+            const trailers = data.results.filter(
+                video => video.type === 'Trailer' && video.site === 'YouTube'
+            );
+
+            trailers.sort((a, b) => {
+                const langPriority = { 'ru': 0, 'en': 1 };
+                const priorityA = langPriority[a.iso_639_1] ?? 2;
+                const priorityB = langPriority[b.iso_639_1] ?? 2;
+                return priorityA - priorityB;
+            });
+
+            return trailers;
+        } catch (error) {
+            return [];
+        }
     }
+
+    if (!window.YT) {
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
+
+    function testTrailerQuick(trailer) {
+        return new Promise((resolve) => {
+            const testDiv = document.createElement('div');
+            testDiv.style.display = 'none';
+            document.body.appendChild(testDiv);
+            
+            let resolved = false;
+            const timeout = setTimeout(() => {
+                if (!resolved) {
+                    resolved = true;
+                    try { testPlayer?.destroy(); } catch (e) {}
+                    if (document.body.contains(testDiv)) document.body.removeChild(testDiv);
+                    resolve(false);
+                }
+            }, 2500);
+            
+            try {
+                const testPlayer = new YT.Player(testDiv, {
+                    videoId: trailer.key,
+                    playerVars: { autoplay: 1, mute: 1, controls: 0, fs: 0 },
+                    events: {
+                        'onReady': (e) => {
+                            setTimeout(() => {
+                                try {
+                                    const time = e.target.getCurrentTime();
+                                    if (time > 0 && !resolved) {
+                                        resolved = true;
+                                        clearTimeout(timeout);
+                                        e.target.destroy();
+                                        if (document.body.contains(testDiv)) document.body.removeChild(testDiv);
+                                        resolve(true);
+                                    }
+                                } catch (err) {}
+                            }, 800);
+                        },
+                        'onError': (e) => {
+                            if (!resolved) {
+                                resolved = true;
+                                clearTimeout(timeout);
+                                testPlayer.destroy();
+                                if (document.body.contains(testDiv)) document.body.removeChild(testDiv);
+                                resolve(false);
+                            }
+                        }
+                    }
+                });
+            } catch (err) {
+                if (!resolved) {
+                    resolved = true;
+                    clearTimeout(timeout);
+                    if (document.body.contains(testDiv)) document.body.removeChild(testDiv);
+                    resolve(false);
+                }
+            }
+        });
+    }
+
+    async function findAndPlayTrailer() {
+        searchStartTime = Date.now();
+        
+        for (const trailer of allTrailers) {
+            if (trailerSuccessfullyPlayed) break;
+            
+            const isWorking = await testTrailerQuick(trailer);
+            if (isWorking) {
+                const timeToWait = 10000 - (Date.now() - searchStartTime);
+                if (timeToWait > 0) {
+                    await new Promise(resolve => setTimeout(resolve, timeToWait));
+                }
+                
+                playTrailer(trailer);
+                return;
+            }
+        }
+        
+        restoreBackground();
+    }
+
+    function playTrailer(trailer) {
+        const heroDescription = document.querySelector('.hero-content p');
+        const heroLogo = document.querySelector('.hero-logo');
+        const heroLogoText = document.querySelector('.hero-logo-text');
+
+        if (heroDescription) heroDescription.classList.add('hidden');
+        if (heroLogo) heroLogo.classList.add('move-down');
+        if (heroLogoText) heroLogoText.classList.add('hidden');
+
+        const playerDiv = document.createElement('div');
+        playerDiv.id = 'youtube-player-main';
+        trailerContainer.innerHTML = '';
+        trailerContainer.appendChild(playerDiv);
+
+        const waitForAPI = setInterval(() => {
+            if (window.YT && window.YT.Player) {
+                clearInterval(waitForAPI);
+                initPlayer(playerDiv.id, trailer.key);
+            }
+        }, 100);
+    }
+
+    function initPlayer(elementId, videoKey) {
+        try {
+            player = new YT.Player(elementId, {
+                videoId: videoKey,
+                playerVars: {
+                    autoplay: 1,
+                    mute: 1,
+                    controls: 0,
+                    disablekb: 1,
+                    fs: 0,
+                    modestbranding: 1,
+                    rel: 0,
+                    showinfo: 0,
+                    iv_load_policy: 3,
+                    playsinline: 1,
+                    enablejsapi: 1,
+                    origin: window.location.origin
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange,
+                    'onError': onPlayerError
+                }
+            });
+        } catch (error) {}
+    }
+
+    function onPlayerReady(event) {
+        try {
+            event.target.playVideo();
+            event.target.mute();
+        } catch (e) {}
+        
+        setTimeout(() => {
+            trailerContainer.classList.add('active');
+            controlsContainer.style.display = 'flex';
+            isTrailerPlaying = true;
+            trailerSuccessfullyPlayed = true;
+            startProgressMonitoring(event.target);
+        }, 300);
+    }
+
+    function startProgressMonitoring(playerInstance) {
+        if (progressInterval) clearInterval(progressInterval);
+
+        progressInterval = setInterval(() => {
+            if (playerInstance?.getDuration && playerInstance?.getCurrentTime) {
+                try {
+                    const duration = playerInstance.getDuration();
+                    const currentTime = playerInstance.getCurrentTime();
+                    const timeLeft = duration - currentTime;
+                    
+                    if (timeLeft <= 10.5 && timeLeft >= 9.5) {
+                        clearInterval(progressInterval);
+                        stopTrailer();
+                    }
+                } catch (e) {}
+            }
+        }, 100);
+    }
+
+    function onPlayerStateChange(event) {
+        if (event.data === 0) {
+            stopTrailer();
+        }
+    }
+
+    function onPlayerError(event) {
+        stopTrailer();
+    }
+
+    function stopTrailer() {
+        if (progressInterval) clearInterval(progressInterval);
+
+        trailerContainer.classList.remove('active');
+        controlsContainer.style.display = 'none';
+        isTrailerPlaying = false;
+        restoreBackground();
+
+        if (player) {
+            setTimeout(() => {
+                try { player.destroy(); } catch (error) {}
+                trailerContainer.innerHTML = '';
+                player = null;
+            }, 500);
+        }
+    }
+
+    function restoreBackground() {
+        const heroDescription = document.querySelector('.hero-content p');
+        const heroLogo = document.querySelector('.hero-logo');
+        const heroLogoText = document.querySelector('.hero-logo-text');
+
+        setTimeout(() => {
+            if (heroDescription) heroDescription.classList.remove('hidden');
+            if (heroLogo) {
+                heroLogo.classList.remove('move-down');
+                heroLogo.classList.add('move-up');
+                setTimeout(() => heroLogo.classList.remove('move-up'), 1200);
+            }
+            if (heroLogoText) heroLogoText.classList.remove('hidden');
+        }, 500);
+    }
+
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'class') {
+                const isModalOpen = document.querySelector('.modal.active') || 
+                                   document.querySelector('.player-modal.active');
+                
+                if (isModalOpen && isTrailerPlaying && player) {
+                    try { player.pauseVideo(); } catch (e) {}
+                }
+            }
+        });
+    });
+
+    observer.observe(document.body, {
+        attributes: true,
+        subtree: true,
+        attributeFilter: ['class']
+    });
+
+    const logoUrl = await getLogo(selectedContent.id, selectedContent.type);
+
+    if (logoUrl) {
+        heroLogo.src = logoUrl;
+        heroLogo.style.display = 'block';
+        heroLogoText.style.display = 'none';
+    } else {
+        heroLogo.style.display = 'none';
+        heroLogoText.textContent = selectedContent.title || selectedContent.name;
+        heroLogoText.style.display = 'block';
+    }
+
+    heroDescription.textContent = selectedContent.overview || 'Описание отсутствует';
+    heroWatchBtn.dataset.id = selectedContent.id;
+    heroWatchBtn.dataset.type = selectedContent.type;
+    heroInfoBtn.dataset.id = selectedContent.id;
+    heroInfoBtn.dataset.type = selectedContent.type;
+
+    const heroContent = document.querySelector('.hero-content');
+    if (heroContent) heroContent.classList.add('active');
+
+    const waitForYT = setInterval(async () => {
+        if (window.YT && window.YT.Player) {
+            clearInterval(waitForYT);
+            allTrailers = await getAllTrailers(selectedContent.id, selectedContent.type);
+            if (allTrailers.length > 0) {
+                findAndPlayTrailer();
+            }
+        }
+    }, 100);
+}
+
 
     // Получить новые фильмы
     async function fetchNewMovies() {
@@ -731,6 +1068,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     <div class="modal-buttons">
                         <button id="modal-watch-btn" class="modal-watch-btn" data-id="${id}" data-type="${type}">
+                           <img src="ico/Плей.svg" alt="watch icon"
+     style="width:20px;height:20px;object-fit:contain;margin-right:8px;filter:brightness(0);">
+
+
                              Смотреть
                         </button>
                     </div>

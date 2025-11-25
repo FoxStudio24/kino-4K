@@ -268,42 +268,60 @@ img {
 }
 
 .watch-btn, .info-btn {
+    position: relative;
     border: none;
     width: 150px;
     height: 40px;
     font-size: 1rem;
     cursor: pointer;
-    border-radius: 20px;
-    font-family: 'Montserrat', sans-serif;
+    border-radius: 30px;
+    font-family: 'buttonbold', 'Montserrat', sans-serif;
     font-weight: 500;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.3s ease, background-color 0.3s ease;
-    font-family: 'buttonbold', sans-serif;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-radius 0.25s ease, background-color 0.25s ease;
+    isolation: isolate;
 }
 
+/* белая кнопка */
 .watch-btn {
-    background-color: white;
-    color: black;
+    background-color: #fff;
+    color: #000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
 }
-
 .watch-btn:hover {
-    transform: scale(1.05);
+    transform: scale(1.06);
+    border-radius: 26px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+.watch-btn:active {
+    transform: scale(0.95);
+    border-radius: 30px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
 }
 
+/* полупрозрачная кнопка */
 .info-btn {
     background-color: rgba(255, 255, 255, 0.13);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 0.5px solid rgba(255, 255, 255, 0.13);
+    border: 0.5px solid rgba(255, 255, 255, 0.2);
     color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+.info-btn:hover {
+    background-color: rgba(255,255,255,0.25);
+    transform: scale(1.06);
+    border-radius: 26px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+.info-btn:active {
+    transform: scale(0.95);
+    border-radius: 30px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
 }
 
-.info-btn:hover {
-    background-color: #ffffff41;
-    transform: scale(1.05);
-}
 
 /* Category Section */
 .category {

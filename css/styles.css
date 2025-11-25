@@ -25,6 +25,8 @@
     font-weight: normal;
     font-style: normal;
 }
+@import url('https://fonts.googleapis.com/css2?family=Shrikhand&display=swap');
+
 
 /* Global Reset and Base Styles */
 * {
@@ -184,6 +186,7 @@ img {
     border-radius: 1.5em;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    border: 1px solid #ffffff27;
 }
 
 .search-bar button:hover {
@@ -227,6 +230,7 @@ img {
     -webkit-backdrop-filter: blur(10px);
     border-radius: 25px;
     padding: 5px 5px;
+    border: 1px solid #ffffff27;
 }
 
 .nav-tabs a {
@@ -271,20 +275,21 @@ img {
 .mobile-nav {
     display: none; /* скрываем по умолчанию */
     position: fixed;
-    bottom: 15px;
-    left: 15px;
-    right: 15px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
     z-index: 1000;
     border: none;
     background: none;
     padding: 0;
     margin: 0;
-    border-radius: 20px;
     isolation: isolate;
-    box-shadow: 0px 6px 24px rgba(0, 0, 0, 0.2);
     align-items: center;
     justify-content: space-around;
     overflow: hidden;
+    backdrop-filter: blur(5px);
+    background-color: #141414ea;
+    border: 1px solid #ffffff0c ;
 }
 
 @media (max-width: 768px) {
@@ -293,36 +298,13 @@ img {
     }
 }
 
-
-.mobile-nav::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    border-radius: 20px;
-    box-shadow: inset 0 0 25px -12px #ffffff69;
-    background-color: rgba(0, 0, 0, 0.14);
-}
-
-.mobile-nav::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: 20px;
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
-    filter: url(#glass-distortion);
-    -webkit-filter: url(#glass-distortion);
-}
-
 .mobile-nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    color: #888;
+    color: #ffffff;
     transition: all 0.3s ease, transform 0.2s ease;
     padding: 6px 8px;
     border-radius: 12px;
@@ -376,47 +358,41 @@ img {
     border-radius: 20px;
 }
 
-/* 1. Градиент-фон (внизу) */
+/* 1. Градиент-оверлей через псевдоэлемент: чёрный в левом нижнем углу → прозрачность вправо/вверх */
+.hero {
+    /* основной блок — фон (картинка ставится инлайново скриптом или через дочерние элементы) */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Псевдоэлемент поверх фоновых слоёв, под контентом */
 .hero::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-
-    /* Размытие */
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-
-    /* Мягкое затемнение */
-    background: linear-gradient(
-        to top,
-        rgba(0,0,0,0.25) 0%,   /* мягкий тёмный низ */
-        rgba(0,0,0,0.25) 20%,  /* держим чуть выше */
-        rgba(0,0,0,0) 60%,     /* плавно убираем затемнение */
-        rgba(0,0,0,0) 100%
-    );
-
-    /* Маска для размытия */
-    mask-image: linear-gradient(
-        to top,
-        rgba(0,0,0,1) 0%,
-        rgba(0,0,0,1) 20%,
-        rgba(0,0,0,0) 60%,
-        rgba(0,0,0,0) 100%
-    );
-    -webkit-mask-image: linear-gradient(
-        to top,
-        rgba(0,0,0,1) 0%,
-        rgba(0,0,0,1) 20%,
-        rgba(0,0,0,0) 60%,
-        rgba(0,0,0,0) 100%
-    );
-
-    z-index: 1;
+    inset: 0;
     pointer-events: none;
-    border-radius: 20px;
+    z-index: 1; /* ниже .hero-content (z-index:2), выше фоновых слоёв (z-index:0) */
+    border-radius: inherit;
+    /* черный внизу (левый-низ) -> прозрачность вверх/вправо */
+    background: linear-gradient(to top right, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 60%);
+}
+
+/* Фоновые дочерние элементы (если используются) должны оставаться под оверлеем */
+.hero-background,
+.hero-ambient,
+.hero-trailer {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    z-index: 0;
+}
+
+/* Мобильный вариант: градиент по центру снизу вверх (чёрный внизу, прозрачный сверху) */
+@media (max-width: 768px) {
+    .hero::after {
+        background: radial-gradient(circle at center bottom, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 60%);
+    }
 }
 
 
@@ -464,12 +440,11 @@ img {
 }
 
 .watch-btn, .info-btn {
-    border: none;
     width: 150px;
     height: 40px;
     font-size: 1rem;
     cursor: pointer;
-    border-radius: 10px;
+    border-radius:99px;
     font-family: 'buttonbold', sans-serif;
     font-weight: 500;
     display: flex;
@@ -490,10 +465,10 @@ img {
 }
 
 .info-btn {
-    background-color: rgba(0, 0, 0, 0.637);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 0.5px solid rgba(255, 255, 255, 0.13);
+    background-color: rgba(32, 32, 32, 0.35);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid #ffffff21;
     color: #fff;
 }
 
@@ -2386,6 +2361,16 @@ img {
     .bookmark-header h2 {
         font-size: 1.5rem;
     }
+    #trailer-exit-btn,
+#trailer-sound-btn {
+    transition: transform 0.1s ease;
+}
+
+#trailer-exit-btn:active,
+#trailer-sound-btn:active {
+    transform: scale(0.9);
+}
+
 }
 }
 

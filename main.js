@@ -242,6 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (allContent.length === 0) return;
         const content = allContent[Math.floor(Math.random() * allContent.length)];
 
+        // Устанавливаем только изображение фона — градиент теперь реализован в .hero::after
         hero.style.backgroundImage = `url(${IMG_URL}${content.backdrop_path})`;
         const logoUrl = await getLogo(content.id, content.type);
         if (logoUrl) {

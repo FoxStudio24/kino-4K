@@ -1,33 +1,30 @@
-// Обновленный плеер с защитой от блокировщиков рекламы
+// Player.js - Multi-Player System
 (function () {
     // Define MultiPlayer class
     var MultiPlayer = function () {
         this.playerContainer = null;
         this.iframe = null;
-        this.currentPlayer = 'alloha'; // 'vibix', 'alloha', 'lumex', или 'veoveo'
-        this.currentContent = null;
+        this.currentPlayer = 'alloha'; // 'vibix', 'alloha', или 'lumex'
+        this.currentContent = null; // Сохраняем текущий контент для переключения
         this.isDropdownOpen = false;
         this.loadingOverlay = null;
-        this.hasError = false;
-        this.progressData = {};
-        this.adBlockDetected = false;
+        this.hasError = false; // Флаг для отслеживания ошибок
+        this.progressData = {}; // Данные для отслеживания прогресса
+        this.adBlockDetected = false; // Флаг обнаружения блокировщика рекламы
         
         // API ключи
         this.API_KEY = '06936145fe8e20be28b02e26b55d3ce6';
-        this.VIBIX_KEY = '19804|3WXYJCzkEakcsCqO57deXAVXADdTzeqvDkGQMf5Cc67f135a';
+        this.VIBIX_KEY = '17163|vKvlHsFkUHEFs27DXZMDCxqnQF8g7lpCLgbBlQGN2e3328ae';
         this.ALLOHA_TOKEN = '04941a9a3ca3ac16e2b4327347bbc1';
         this.LUMEX_API_TOKEN = 'c9368010a6ff29b02795712d3dd8fdab';
-        this.VEOVEO_BEARER_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJ3ZWJTaXRlIjoiMTE5IiwiaXNzIjoiYXBpLXdlYm1hc3RlciIsInN1YiI6IjE4NSIsImlhdCI6MTc0NzMxNTYxOSwianRpIjoiNTEwMmVhODktZTFmYi00MjIxLTkzMzktMGViYjQ4N2UzMTJmIiwic2NvcGUiOiJETEUifQ.rZJsunksW6uj_9hDNn7qowp8mWVJOcEl7353iIR0rNQ';
         this.TMDB_BASE_URL = 'https://api.themoviedb.org/3';
         this.LUMEX_API_URL = 'https://portal.lumex.host/api/short';
-        this.VEOVEO_API_URL = 'https://webmaster-api.rstprgapipt.com';
         
         // Список балансеров с тегами
         this.balancers = [
             { id: 'alloha', name: 'Alloha.tv', tags: ['4K'] },
             { id: 'vibix', name: 'Vibix', tags: ['HD'] },
-            { id: 'lumex', name: 'Lumex', tags: ['HD'] },
-            { id: 'veoveo', name: 'VeoVeo', tags: ['HD'] }
+            { id: 'lumex', name: 'Lumex', tags: ['HD'] }
         ];
     };
 
@@ -89,6 +86,7 @@
                 throw new Error('Видео не найдено на Vibix');
             }
             
+            // Добавляем тему "Монохром" (design=2)
             var url = new URL(vibixData.iframe_url);
             url.searchParams.set('design', '2');
             
@@ -106,6 +104,7 @@
                 imdb: imdbId
             });
 
+            // Добавляем параметры для сериалов
             if (type === 'tv' && season && episode) {
                 params.append('season', season);
                 params.append('episode', episode);
@@ -137,6 +136,7 @@
                 tmdb: tmdbId
             });
 
+            // Добавляем параметры для сериалов
             if (type === 'tv' && season && episode) {
                 params.append('season', season);
                 params.append('episode', episode);
@@ -165,6 +165,7 @@
         var lastError = null;
 
         try {
+            // Сначала пробуем с IMDB ID
             if (imdbId) {
                 try {
                     var imdbUrl = await this.tryAllohaWithImdb(imdbId, type, season, episode);
@@ -175,6 +176,7 @@
                 }
             }
 
+            // Если IMDB ID не сработал, пробуем с TMDB ID
             try {
                 var tmdbUrl = await this.tryAllohaWithTmdb(tmdbId, type, season, episode);
                 if (tmdbUrl) return tmdbUrl;
@@ -182,6 +184,7 @@
                 lastError = error;
             }
 
+            // Если ничего не сработало, выбрасываем последнюю ошибку
             throw lastError || new Error('Видео не найдено на Alloha');
         } catch (error) {
             console.error('Ошибка получения Alloha URL:', error);
@@ -213,28 +216,6 @@
         }
     };
 
-    MultiPlayer.prototype.getVeoVeoUrl = async function (imdbId) {
-        try {
-            var veoveoUrl = this.VEOVEO_API_URL + '/v1/contents/by-imdb/' + imdbId;
-            var response = await this.safeFetch(veoveoUrl, {
-                headers: {
-                    'Accept': 'application/json',
-                    'Authorization': 'Bearer ' + this.VEOVEO_BEARER_TOKEN
-                }
-            });
-            var data = await response.json();
-            
-            if (!data.playerUrl) {
-                throw new Error('URL плеера не найден в ответе VeoVeo API');
-            }
-            
-            return data.playerUrl;
-        } catch (error) {
-            console.error('Ошибка получения VeoVeo URL:', error);
-            throw error;
-        }
-    };
-
     MultiPlayer.prototype.toggleDropdown = function () {
         var dropdown = document.getElementById('balancer-dropdown');
         var dropdownArrow = document.querySelector('.dropdown-arrow');
@@ -257,13 +238,24 @@
             return;
         }
         
+        // Сбрасываем флаг ошибки при смене плеера
         this.hasError = false;
+        
+        // Переключаем плеер
         this.currentPlayer = balancerId;
+        
+        // Закрываем дропдаун
         this.toggleDropdown();
+        
+        // Обновляем кнопку и дропдаун
         this.updatePlayerInterface();
+        
+        // Показываем загрузку при смене плеера
         this.showLoading();
         
+        // Перезагружаем контент с новым плеером
         this.loadCurrentContent().then(function () {
+            // Настраиваем обработчики для iframe только если нет ошибки
             if (!self.hasError) {
                 self.setupIframeHandlers();
             }
@@ -281,6 +273,7 @@
         
         if (currentBalancerBtn) {
             var currentBalancer = this.balancers.find(function (b) { return b.id === self.currentPlayer; });
+            // Обновляем содержимое кнопки с сохранением стрелки и добавлением тегов
             currentBalancerBtn.innerHTML = [
                 '<span class="balancer-name">' + (currentBalancer ? currentBalancer.name : 'Balancer') + '</span>',
                 currentBalancer ? this.createBalancerTags(currentBalancer.tags) : '',
@@ -290,6 +283,7 @@
             ].join('');
         }
         
+        // Обновляем дропдаун
         if (dropdown) {
             dropdown.innerHTML = this.balancers.map(function (balancer) {
                 return '<button onclick="window.multiPlayer.selectBalancer(\'' + balancer.id + '\')" style="' +
@@ -300,6 +294,7 @@
                     'padding: 8px 12px;' +
                     'color: white;' +
                     'font-size: 14px;' +
+                    'font-family: \'Manrope\', sans-serif;' +
                     'cursor: pointer;' +
                     'transition: all 0.3s ease;' +
                     'text-align: left;' +
@@ -324,6 +319,7 @@
         var episode = this.currentContent.episode;
         
         try {
+            // Очищаем предыдущий iframe
             if (this.iframe) {
                 this.iframe.src = '';
             }
@@ -332,8 +328,6 @@
                 await this.loadVibixContent(tmdbId, type, season, episode);
             } else if (this.currentPlayer === 'lumex') {
                 await this.loadLumexContent(tmdbId, type, season, episode);
-            } else if (this.currentPlayer === 'veoveo') {
-                await this.loadVeoVeoContent(tmdbId, type, season, episode);
             } else {
                 await this.loadAllohaContent(tmdbId, type, season, episode);
             }
@@ -353,6 +347,8 @@
 
         var vibixUrl = await this.getVibixUrl(imdbId);
         this.iframe.src = vibixUrl;
+        
+        // Настраиваем обработчики для iframe
         this.setupIframeHandlers();
     };
 
@@ -372,25 +368,16 @@
 
         var lumexUrl = await this.getLumexUrl(imdbId);
         this.iframe.src = lumexUrl;
+        
+        // Настраиваем обработчики для iframe
         this.setupIframeHandlers();
     };
 
-    MultiPlayer.prototype.loadVeoVeoContent = async function (tmdbId, type, season, episode) {
-        var imdbId = await this.getImdbId(tmdbId, type);
-        if (!imdbId) {
-            throw new Error('IMDB ID не найден');
-        }
-
-        var veoveoUrl = await this.getVeoVeoUrl(imdbId);
-        this.iframe.src = veoveoUrl;
-        this.setupIframeHandlers();
-    };
-
-    // Остальные методы остаются без изменений
     MultiPlayer.prototype.createPlayerContainer = function () {
         if (this.playerContainer) {
             this.playerContainer.remove();
         }
+        // Блокируем прокрутку
         document.body.classList.add('no-scroll');
 
         this.playerContainer = document.createElement('div');
@@ -403,7 +390,7 @@
             'height: 100%;',
             'z-index: 999999;',
             'background-color: #141414;',
-            'font-family: \'buttonbold\', sans-serif;'
+            'font-family: \'Manrope\', sans-serif;'
         ].join('');
 
         var currentBalancer = this.balancers.find(function (b) { return b.id === this.currentPlayer; }, this);
@@ -439,7 +426,7 @@
             '                        cursor: pointer;' +
             '                        transition: all 0.3s ease;' +
             '                        min-width: 80px;' +
-            '                        font-family: \'buttonbold\', sans-serif;' +
+            '                        font-family: \'Manrope\', sans-serif;' +
             '                    " onmouseover="this.style.background=\'rgba(255,255,255,0.1)\'" onmouseout="this.style.background=\'transparent\'">',
             '                        <span class="balancer-name">' + (currentBalancer ? currentBalancer.name : 'Balancer') + '</span>',
             currentBalancer ? this.createBalancerTags(currentBalancer.tags) : '',
@@ -473,6 +460,7 @@
                     'padding: 8px 12px;' +
                     'color: white;' +
                     'font-size: 14px;' +
+                    'font-family: \'Manrope\', sans-serif;' +
                     'cursor: pointer;' +
                     'transition: all 0.3s ease;' +
                     'text-align: left;' +
@@ -492,48 +480,48 @@
             '                    position: relative;' +
             '                    z-index: 1000001;' +
             '                    display: flex;' +
-            '                    align-items: center;' +
-            '                    justify-content: center;' +
-            '                    background: transparent;' +
-            '                    border: none;' +
-            '                    border-radius: 50%;' +
-            '                    width: 32px;' +
-            '                    height: 32px;' +
-            '                    padding: 0;' +
-            '                    cursor: pointer;' +
-            '                    transition: all 0.3s ease;' +
-            '                    top: 0px;' +
-            '                    right: 0px;' +
-            '                " onmouseover="this.style.background=\'rgba(255,255,255,0.1)\'" onmouseout="this.style.background=\'transparent\'">',
-            '                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: white;">',
-            '                        <line x1="18" y1="6" x2="6" y2="18"></line>',
-            '                        <line x1="6" y1="6" x2="18" y2="18"></line>',
-            '                    </svg>',
-            '                </button>',
+            '                        align-items: center;' +
+            '                        justify-content: center;' +
+            '                        background: transparent;' +
+            '                        border: none;' +
+            '                        border-radius: 50%;' +
+            '                        width: 32px;' +
+            '                        height: 32px;' +
+            '                        padding: 0;' +
+            '                        cursor: pointer;' +
+            '                        transition: all 0.3s ease;' +
+            '                        top: 0px;' +
+            '                        right: 0px;' +
+            '                    " onmouseover="this.style.background=\'rgba(255,255,255,0.1)\'" onmouseout="this.style.background=\'transparent\'">',
+            '                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: white;">',
+            '                            <line x1="18" y1="6" x2="6" y2="18"></line>',
+            '                            <line x1="6" y1="6" x2="18" y2="18"></line>',
+            '                        </svg>',
+            '                    </button>',
+            '                </div>',
             '            </div>',
-            '        </div>',
-            '        <div class="player-content" style="position: relative; width: 100%; height: 100%; z-index: 999999;">',
-            '            <div id="player-loading-overlay" class="loading-overlay" style="' +
-            '                position: absolute;' +
-            '                top: 0;' +
-            '                left: 0;' +
-            '                width: 100%;' +
-            '                height: 100%;' +
-            '                z-index: 1000000;' +
-            '                display: flex;' +
-            '                flex-direction: column;' +
-            '                align-items: center;' +
-            '                justify-content: center;' +
-            '                background: #141414;' +
-            '                backdrop-filter: blur(5px);' +
-            '            ">',
-            '                <div class="loading-animations" style="' +
+            '            <div class="player-content" style="position: relative; width: 100%; height: 100%; z-index: 999999;">',
+            '                <div id="player-loading-overlay" class="loading-overlay" style="' +
+            '                    position: absolute;' +
+            '                    top: 0;' +
+            '                    left: 0;' +
+            '                    width: 100%;' +
+            '                    height: 100%;' +
+            '                    z-index: 1000000;' +
             '                    display: flex;' +
+            '                    flex-direction: column;' +
             '                    align-items: center;' +
             '                    justify-content: center;' +
-            '                    gap: 20px;' +
-            '                    margin-bottom: 20px;' +
+            '                    background: #141414;' +
+            '                    backdrop-filter: blur(5px);' +
             '                ">',
+            '                    <div class="loading-animations" style="' +
+            '                        display: flex;' +
+            '                        align-items: center;' +
+            '                        justify-content: center;' +
+            '                        gap: 20px;' +
+            '                        margin-bottom: 20px;' +
+            '                    ">',
             '                    <div class="loader">',
             '                        <svg viewBox="0 0 80 80" style="width: 40px; height: 40px;">',
             '                            <circle r="32" cy="40" cx="40" id="circle"></circle>',
@@ -554,6 +542,7 @@
             '                    color: white;' +
             '                    font-size: 16px;' +
             '                    font-weight: 500;' +
+            '                    font-family: \'Manrope\', sans-serif;' +
             '                    text-align: center;' +
             '                ">',
             '                    Загрузка видео...',
@@ -578,6 +567,7 @@
         this.iframe = document.getElementById('multi-iframe');
         this.loadingOverlay = document.getElementById('player-loading-overlay');
         
+        // Добавляем обработчик для закрытия дропдауна при клике вне его
         var self = this;
         document.addEventListener('mousedown', function (e) {
             if (self.isDropdownOpen && !e.target.closest('.balancer-selector')) {
@@ -590,6 +580,7 @@
         if (this.loadingOverlay) {
             this.loadingOverlay.style.display = 'flex';
             
+            // Сброс содержимого оверлея к загрузке
             this.loadingOverlay.innerHTML = [
                 '<div class="loading-animations" style="' +
                 '    display: flex;' +
@@ -618,12 +609,14 @@
                 '    color: white;' +
                 '    font-size: 16px;' +
                 '    font-weight: 500;' +
+                '    font-family: \'Manrope\', sans-serif;' +
                 '    text-align: center;' +
                 '">',
                 '    Загрузка видео...',
                 '</div>'
             ].join('');
             
+            // Обновляем текст загрузки
             var loadingText = this.loadingOverlay.querySelector('.loading-text');
             if (loadingText) {
                 var currentBalancer = this.balancers.find(function (b) { return b.id === this.currentPlayer; }, this);
@@ -636,6 +629,7 @@
     };
 
     MultiPlayer.prototype.hideLoading = function () {
+        // Не скрываем загрузку, если есть ошибка
         if (this.hasError) return;
         
         if (this.loadingOverlay) {
@@ -648,10 +642,12 @@
 
     MultiPlayer.prototype.showError = function (message) {
         if (this.loadingOverlay) {
+            // Выбираем случайное видео от 1 до 5
             var randomIndex = Math.floor(Math.random() * 5) + 1;
             var currentBalancer = this.balancers.find(function (b) { return b.id === this.currentPlayer; }, this);
             var otherBalancers = this.balancers.filter(function (b) { return b.id !== this.currentPlayer; }, this);
             
+            // Проверяем, если ошибка связана с Alloha и блокировщиком рекламы
             var isAdBlockError = this.currentPlayer === 'alloha' && message.includes('Failed to fetch');
             var errorMessage = isAdBlockError
                 ? '<img src="ico/ADERROR.png" alt="AdBlock Error" style="max-width:400px;width:100%;height:auto;vertical-align:middle;margin-bottom:12px;display:block;border-radius:0;box-shadow:none;">'
@@ -661,10 +657,10 @@
                 '<div class="nf-err-center" style="display: flex; align-items: center; justify-content: center; height: 100%; background: #141414;">',
                 '    <div class="nf-err-wrap" style="display: flex; align-items: center; justify-content: center; flex-direction: row;">',
                 '        <div class="nf-err-text" style="flex: 1; text-align: left; padding-right: 32px;">',
-                '            <div class="nf-err-title" style="font-size: 2em; font-weight: 900; color: white; margin-bottom: 12px;">',
+                '            <div class="nf-err-title" style="font-size: 2em; font-weight: 900; font-family: \'Manrope\', sans-serif; color: white; margin-bottom: 12px;">',
                 '                Ошибка загрузки',
                 '            </div>',
-                '            <div class="nf-err-desc" style="font-size: 1em; font-weight: 500; color: #aaa; line-height: 1.5;">',
+                '            <div class="nf-err-desc" style="font-size: 1em; font-weight: 500; font-family: \'Manrope\', sans-serif; color: #aaa; line-height: 1.5;">',
                 errorMessage,
                 '<br>',
                 'Плеер <strong>' + (currentBalancer ? currentBalancer.name : 'текущий') + '</strong> не может воспроизвести этот контент.<br>',
@@ -677,6 +673,7 @@
             ].join('');
             this.loadingOverlay.style.display = 'flex';
             
+            // Добавим обработчик ошибки для видео
             var nfVideo = document.getElementById('notfound-video');
             if (nfVideo) {
                 nfVideo.onerror = function () {
@@ -688,12 +685,16 @@
 
     MultiPlayer.prototype.playContent = async function (tmdbId, type, season, episode) {
         try {
+            // Сохраняем текущий контент
             this.currentContent = { tmdbId: tmdbId, type: type, season: season, episode: episode };
+            
+            // Сбрасываем флаг ошибки
             this.hasError = false;
             
             this.createPlayerContainer();
             this.showLoading();
 
+            // Загружаем контент с текущим плеером
             await this.loadCurrentContent();
 
         } catch (error) {
@@ -706,20 +707,24 @@
     MultiPlayer.prototype.setupIframeHandlers = function () {
         if (!this.iframe || this.hasError) return;
 
+        // Таймер для принудительного скрытия загрузки
         var self = this;
         var loadingTimeout = setTimeout(function () {
             self.hideLoading();
-        }, 8000);
+        }, 8000); // 8 секунд максимум
 
+        // Обработчик успешной загрузки
         this.iframe.onload = function () {
-            if (self.hasError) return;
+            if (self.hasError) return; // Не скрываем загрузку, если есть ошибка
             
             clearTimeout(loadingTimeout);
+            // Небольшая задержка для полной загрузки содержимого
             setTimeout(function () {
                 self.hideLoading();
             }, 1000);
         };
 
+        // Обработчик ошибки загрузки
         this.iframe.onerror = function () {
             clearTimeout(loadingTimeout);
             self.hasError = true;
@@ -727,6 +732,7 @@
         };
     };
 
+    // Методы для совместимости
     MultiPlayer.prototype.playMovie = async function (tmdbId) {
         return this.playContent(tmdbId, 'movie');
     };
@@ -743,16 +749,20 @@
         return this.playContent(tmdbId, 'tv', season, episode);
     };
 
+    // Методы для совместимости с HTML файлом
     MultiPlayer.prototype.openPlayer = async function (item) {
         var tmdbId = item.id;
-        var type = item.title ? 'movie' : 'tv';
+        var type = item.title ? 'movie' : 'tv'; // Определяем тип по наличию title
         return this.playContent(tmdbId, type);
     };
 
+    // Создаем глобальный экземпляр плеера
     window.multiPlayer = new MultiPlayer();
     window.vibixPlayer = window.multiPlayer;
 
+    // Функция для совместимости с HTML файлом
     window.openPlayer = function (item) {
         return window.multiPlayer.openPlayer(item);
     };
 })();
+
