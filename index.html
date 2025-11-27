@@ -9,7 +9,7 @@
         /* Inserted Top 10 carousel styles (mobile-friendly) */
         .top10-container * { box-sizing: border-box; }
         .top10-container { background-color: rgba(0,0,0,0); color: #fff; }
-        .top10-container .container { max-width: 100%; margin: 0 auto; padding: 20px 10px; }
+        .top10-container .container { max-width: 100%; margin: 0 auto; padding: 20px 6px; }
         .top10-container h2 {
             font-size: 1.5rem;
             margin: 0 0 10px 20px;
@@ -23,35 +23,162 @@
             -ms-user-select: none;
             font-family: 'textbold', sans-serif;
         }
-        .carousel-wrapper { position: relative; margin: 0 20px; }
-        .carousel-wrapper::before, .carousel-wrapper::after { content: ''; position: absolute; top:0; bottom:0; width:100px; z-index:5; pointer-events:none; }
+        .carousel-wrapper { position: relative; margin: 0; }
+        .carousel-wrapper::before, .carousel-wrapper::after { content: ''; position: absolute; top:0; bottom:0; width:60px; z-index:5; pointer-events:none; }
         .carousel-wrapper::before { left:0; background: linear-gradient(to right, #141414 0%, transparent 100%); }
         .carousel-wrapper::after { right:0; background: linear-gradient(to left, #141414 0%, transparent 100%); }
-        .carousel { display:flex; overflow-x:auto; overflow-y:hidden; padding:10px 0; scroll-behavior:smooth; -webkit-overflow-scrolling: touch; }
-        .carousel-track { display:flex; gap:40px; padding-left:20px; padding-right:20px; }
-        .card { min-width:140px; position:relative; cursor:pointer; flex-shrink:0; }
-        .number { position:absolute; left:-40px; top:20px; font-size:140px; font-family: 'buttonbold', sans-serif; -webkit-text-stroke:1px #dc2626; color:transparent; z-index:0; transition:all .3s ease; line-height:0.8; white-space:nowrap; }
-        .poster-container { 
-            position:relative; 
-            width:140px; height:210px; 
-            overflow:hidden; 
-            transition:transform .3s ease; 
-            z-index:2; 
-            border: #66666621 1px solid;
+        .carousel { display:flex; overflow-x:auto; overflow-y:visible; padding:10px 0; scroll-behavior:smooth; -webkit-overflow-scrolling: touch; }
+        .carousel-track { display:flex; gap:12px; padding-left:12px; padding-right:12px; }
+        
+        .card {
+            width: 140px;
+            height: 210px;
+            position: relative;
+            transform: none; /* начальное положение без искажений */
+            transform-style: preserve-3d;
+            perspective: 900px;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            background: #000;
+            flex-shrink: 0;
         }
-        .poster { width:140px; height:210px; object-fit:cover; display:block; }
-        .card:hover .poster-container { transform:scale(1.01); }
-        .card:hover .number { background: linear-gradient(to right, #ab1d1d 0%, #000 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+        .poster-container {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            display: block;
+            pointer-events: none;
+            transform: translateZ(0);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .poster {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            display: block;
+            pointer-events: none;
+        }
+
+        /* Небольшой градиент в верхнем левом углу постера (под цифрой)(НАДО ПОТОМ КОГДА ПРИДУМАТЬ ЧТО-ТО ПОЛУЧШЕ) */
+        .poster-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(to bottom right, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 40%, transparent 100%);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .glare-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            z-index: 10;
+            pointer-events: none;
+            mix-blend-mode: overlay;
+            transform: translateZ(1px);
+        }
+
+        .glare-light {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(
+                circle, 
+                rgba(255, 255, 255, 0.8) 0%, 
+                rgba(255, 255, 255, 0.4) 30%, 
+                rgba(255, 255, 255, 0) 70%
+            );
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            filter: blur(15px);
+            transition: opacity .25s ease, left .08s linear, top .08s linear;
+            will-change: left, top, opacity;
+        }
+
+        /* hover-подъём постера отключён — постер не масштабируется при наведении */
+
+        .number {
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            font-size: 40px;
+            font-weight: 800;
+            font-family: 'buttonbold', sans-serif;
+            line-height: 1;
+            z-index: 50;
+            pointer-events: none;
+            color: #ffffff;
+            -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+            mask-image: linear-gradient(to bottom, #ffffffd9 40%, transparent 100%);
+            transform: translateZ(30px);
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0);
+            will-change: transform;
+            backface-visibility: visible;
+            -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.3);
+            text-rendering: geometricPrecision;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
         @media (min-width: 768px) {
-            .top10-container .container { padding: 50px 20px; }
-            .carousel-wrapper { margin: 0 60px; }
-            .carousel-track { gap:100px; padding-left:150px; padding-right:150px; }
-            .card { min-width:220px; }
-            .number { left:-80px; top:57px; font-size:260px; -webkit-text-stroke:2px #dc2626; }
-            .poster-container { width:200px; height:300px; }
-            .poster { width:200px; height:300px; }
+            .top10-container .container { padding: 50px 10px; }
+            .carousel-wrapper { margin: 0; }
+            .carousel-track { gap:20px; padding-left:40px; padding-right:40px; }
+            .card { width:220px; height:330px; }
+            .number { font-size: 80px; }
+            .poster-container::before { width: 220px; height: 220px; }
         }
+        
+        /* Hero badge styles (big number in top-left with gradient under it) */
+        .hero { position: relative; overflow: hidden; }
+        .hero-badge { position: absolute; top: 18px; left: 18px; z-index: 60; pointer-events: none; }
+        .hero-number {
+            font-family: 'buttonbold', sans-serif;
+            font-weight: 900;
+            font-size: 120px;
+            line-height: 0.9;
+            color: #ffffff;
+            -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+            text-shadow: 0 6px 14px rgba(0,0,0,0.5);
+            transform: translateZ(40px);
+            will-change: transform;
+        }
+        /* Gradient under hero number (bigger, looks to bottom-right) */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(to bottom right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 40%, transparent 100%);
+            border-top-left-radius: 12px; /* закругление в верхнем левом углу */
+            z-index: 50;
+            pointer-events: none;
+        }
+        @media (max-width: 767px) {
+            .hero-badge { top: 12px; left: 12px; }
+            .hero-number { font-size: 80px; transform: translateZ(30px); }
+            .hero::before { width: 160px; height: 160px; }
+        }
+        /* Hero glare overrides (reuse existing .glare-overlay/.glare-light styles but tuned for hero) */
+        .hero .glare-overlay { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: inherit; z-index: 55; pointer-events: none; mix-blend-mode: overlay; overflow: hidden; }
+        .hero .glare-light { width: 420px; height: 420px; filter: blur(24px); transition: opacity .28s ease, left .1s linear, top .1s linear; }
     </style>
 
 </head>
@@ -109,6 +236,12 @@
 
     <main>
         <section id="hero" class="hero">
+            <!-- Hero badge (number + gradient) positioned relative to .hero -->
+            <div class="hero-badge" aria-hidden="true">
+                <div class="hero-number">1</div>
+            </div>
+                <!-- hero glare element (следует за мышкой) -->
+                <div class="glare-overlay hero-glare" aria-hidden="true"><div class="glare-light"></div></div>
             <div class="hero-content">
                 <img id="hero-logo" class="hero-logo" alt="Логотип">
                 <h1 id="hero-logo-text" class="hero-logo-text"></h1>
@@ -136,6 +269,8 @@
                 </div>
             </div>
         </div>
+
+        <!-- Hero badge (big number + gradient) -->
 
         <section class="category">
             <h2>Новые фильмы </h2>
@@ -352,7 +487,17 @@
                     const title = item.title || item.name || '';
                     // Используем принудительный тип для списков фильмов/сериалов или определяем из данных
                     const type = forcedType || item.media_type || (item.first_air_date ? 'tv' : 'movie');
-                    return `\n                        <div class="card top10-card" data-id="${item.id}" data-type="${type}" data-title="${title.replace(/"/g, '&quot;')}">\n                            <div class="number">${index + 1}</div>\n                            <div class="poster-container">\n                                <img class="poster" src="${posterSrc}" alt="${title}">\n                            </div>\n                        </div>\n                    `;
+                    return `
+                        <div class="card top10-card" data-id="${item.id}" data-type="${type}" data-title="${title.replace(/"/g, '&quot;')}">
+                            <div class="number">${index + 1}</div>
+                            <div class="poster-container">
+                                <img class="poster" src="${posterSrc}" alt="${title}">
+                                <div class="glare-overlay">
+                                    <div class="glare-light"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 }).join('');
             }
 
@@ -447,6 +592,158 @@
 
             fetchMoviesContent();
             fetchSeriesContent();
+
+            // Интерактивность карточек - следование за мышкой (плавная интерполяция)
+            const maxRotation = 18;
+
+            function lerp(a, b, t) { return a + (b - a) * t; }
+
+            function ensureCardState(card) {
+                if (card._target && card._current) return;
+                card._target = { rx: 0, ry: 0, glareX: 0, glareY: 0, glareOpacity: 0 };
+                card._current = { rx: 0, ry: 0, glareX: 0, glareY: 0, glareOpacity: 0 };
+                const g = card.querySelector('.glare-light');
+                const rect = card.getBoundingClientRect();
+                if (g) {
+                    card._current.glareX = rect.width / 2;
+                    card._current.glareY = rect.height / 2;
+                    card._target.glareX = card._current.glareX;
+                    card._target.glareY = card._current.glareY;
+                }
+            }
+
+            // Hero glare state helper
+            const heroEl = document.querySelector('.hero');
+            function ensureHeroState(hero) {
+                if (!hero) return;
+                if (hero._target && hero._current) return;
+                hero._target = { glareX: 0, glareY: 0, glareOpacity: 0 };
+                hero._current = { glareX: 0, glareY: 0, glareOpacity: 0 };
+                const g = hero.querySelector('.glare-light');
+                const rect = hero.getBoundingClientRect();
+                if (g) {
+                    hero._current.glareX = rect.width / 2;
+                    hero._current.glareY = rect.height / 2;
+                    hero._target.glareX = hero._current.glareX;
+                    hero._target.glareY = hero._current.glareY;
+                }
+            }
+
+            // Анимационный цикл: на каждом кадре перебираем все карточки (динамически)
+            (function animate() {
+                const ease = 0.18; // плавность поворота
+                const glareEase = 0.22; // плавность блика
+
+                document.querySelectorAll('.card').forEach(card => {
+                    ensureCardState(card);
+                    const g = card.querySelector('.glare-light');
+                    const t = card._target;
+                    const c = card._current;
+
+                    c.rx = lerp(c.rx || 0, t.rx || 0, ease);
+                    c.ry = lerp(c.ry || 0, t.ry || 0, ease);
+                    c.glareX = lerp(c.glareX || 0, t.glareX || 0, glareEase);
+                    c.glareY = lerp(c.glareY || 0, t.glareY || 0, glareEase);
+                    c.glareOpacity = lerp(c.glareOpacity || 0, t.glareOpacity || 0, ease);
+
+                    card.style.transform = `rotateX(${c.rx}deg) rotateY(${c.ry}deg)`;
+
+                    if (g) {
+                        g.style.left = `${c.glareX}px`;
+                        g.style.top = `${c.glareY}px`;
+                        g.style.opacity = `${c.glareOpacity}`;
+                    }
+                });
+
+                // Обработка блика у hero (если есть)
+                if (heroEl) {
+                    ensureHeroState(heroEl);
+                    const gH = heroEl.querySelector('.glare-light');
+                    const tH = heroEl._target;
+                    const cH = heroEl._current;
+
+                    cH.glareX = lerp(cH.glareX || 0, tH.glareX || 0, glareEase);
+                    cH.glareY = lerp(cH.glareY || 0, tH.glareY || 0, glareEase);
+                    cH.glareOpacity = lerp(cH.glareOpacity || 0, tH.glareOpacity || 0, glareEase);
+
+                    if (gH) {
+                        gH.style.left = `${cH.glareX}px`;
+                        gH.style.top = `${cH.glareY}px`;
+                        gH.style.opacity = `${cH.glareOpacity}`;
+                    }
+                }
+
+                requestAnimationFrame(animate);
+            })();
+
+            // Обновляем целевые значения при движении мыши
+            document.addEventListener('mousemove', (e) => {
+                document.querySelectorAll('.card').forEach(card => {
+                    ensureCardState(card);
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const inside = x >= 0 && x <= rect.width && y >= 0 && y <= rect.height;
+
+                    if (inside) {
+                        const centerX = rect.width / 2;
+                        const centerY = rect.height / 2;
+                        const rotateX = ((y - centerY) / centerY) * -maxRotation;
+                        const rotateY = ((x - centerX) / centerX) * maxRotation;
+
+                        card._target.rx = rotateX;
+                        card._target.ry = rotateY;
+
+                        const glare = card.querySelector('.glare-light');
+                        if (glare) {
+                            card._target.glareX = Math.max(0, Math.min(rect.width, x));
+                            card._target.glareY = Math.max(0, Math.min(rect.height, y));
+                            card._target.glareOpacity = 1;
+                        }
+
+                        card._hover = true;
+                    } else if (card._hover) {
+                        card._hover = false;
+                        card._target.rx = 0;
+                        card._target.ry = 0;
+                        card._target.glareOpacity = 0;
+                    }
+                });
+
+                // обновление состояния для hero (блик следует за курсором внутри hero)
+                if (heroEl) {
+                    ensureHeroState(heroEl);
+                    const rectH = heroEl.getBoundingClientRect();
+                    const hx = e.clientX - rectH.left;
+                    const hy = e.clientY - rectH.top;
+                    const insideH = hx >= 0 && hx <= rectH.width && hy >= 0 && hy <= rectH.height;
+
+                    if (insideH) {
+                        heroEl._target.glareX = Math.max(0, Math.min(rectH.width, hx));
+                        heroEl._target.glareY = Math.max(0, Math.min(rectH.height, hy));
+                        heroEl._target.glareOpacity = 1;
+                    } else {
+                        heroEl._target.glareOpacity = 0;
+                    }
+                }
+            });
+
+            // Если курсор покинул окно — вернуть всё к нулю
+            window.addEventListener('mouseout', (e) => {
+                if (!e.relatedTarget && !e.toElement) {
+                    document.querySelectorAll('.card').forEach(card => {
+                        ensureCardState(card);
+                        card._target.rx = 0;
+                        card._target.ry = 0;
+                        card._target.glareOpacity = 0;
+                        card._hover = false;
+                    });
+                    if (heroEl) {
+                        ensureHeroState(heroEl);
+                        heroEl._target.glareOpacity = 0;
+                    }
+                }
+            });
         })();
     </script>
     <script src="js/player.js"></script>
