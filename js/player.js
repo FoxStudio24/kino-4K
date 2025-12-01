@@ -25,6 +25,7 @@
         // Список балансеров с тегами
         this.balancers = [
             { id: 'alloha', name: 'Alloha.tv', tags: ['4K'] },
+            { id: 'gencit', name: 'Gencit', tags: ['HD'] },
             { id: 'vibix', name: 'Vibix', tags: ['HD'] },
             { id: 'lumex', name: 'Lumex', tags: ['HD'] },
             { id: 'veoveo', name: 'VeoVeo', tags: ['HD'] }
@@ -330,6 +331,8 @@
             
             if (this.currentPlayer === 'vibix') {
                 await this.loadVibixContent(tmdbId, type, season, episode);
+            } else if (this.currentPlayer === 'gencit') {
+                await this.loadGencitContent(tmdbId, type, season, episode);
             } else if (this.currentPlayer === 'lumex') {
                 await this.loadLumexContent(tmdbId, type, season, episode);
             } else if (this.currentPlayer === 'veoveo') {
@@ -383,6 +386,28 @@
 
         var veoveoUrl = await this.getVeoVeoUrl(imdbId);
         this.iframe.src = veoveoUrl;
+        this.setupIframeHandlers();
+    };
+
+    MultiPlayer.prototype.loadGencitContent = async function (tmdbId, type, season, episode) {
+        // Сначала пробуем путь через TMDB: https://gencit.info/mds/{tmdbId}
+        var resolvedTmdb = tmdbId || (this.currentContent && this.currentContent.tmdbId);
+        if (resolvedTmdb) {
+            var gencitMdsUrl = 'https://gencit.info/mds/' + resolvedTmdb;
+            this.iframe.src = gencitMdsUrl;
+            this.setupIframeHandlers();
+            return;
+        }
+
+        // Если TMDB ID недоступен — пробуем через IMDB (без префикса 'tt')
+        var imdbId = await this.getImdbId(resolvedTmdb, type);
+        if (!imdbId) {
+            throw new Error('TMDB или IMDB ID не найден');
+        }
+
+        var cleanImdb = (imdbId || '').toString().replace(/^tt/i, '');
+        var gencitUrl = 'https://gencit.info/nba/' + cleanImdb;
+        this.iframe.src = gencitUrl;
         this.setupIframeHandlers();
     };
 

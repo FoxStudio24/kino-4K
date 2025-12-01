@@ -6,18 +6,42 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('loading');
     }
 
+    // Блокировка прокрутки — сохраняем позицию и фиксируем тело
+    function lockScroll() {
+        const scrollY = window.scrollY || window.pageYOffset || 0;
+        document.body.dataset.scrollY = String(scrollY);
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.left = '0';
+        document.body.style.width = '100%';
+        document.body.classList.add('no-scroll');
+    }
+
+    // Снятие блокировки прокрутки — восстанавливаем позицию
+    function unlockScroll() {
+        const scrollY = parseInt(document.body.dataset.scrollY || '0', 10);
+        document.body.classList.remove('no-scroll');
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
+        try { delete document.body.dataset.scrollY; } catch (e) { document.body.removeAttribute('data-scroll-y'); }
+    }
+
     // Делегированный обработчик кликов для Top10 карточек (открывает общий модал)
     document.addEventListener('click', (e) => {
         const topCard = e.target.closest && e.target.closest('.top10-card');
         if (!topCard) return;
+        e.preventDefault();
         const id = topCard.dataset.id;
         const type = topCard.dataset.type || 'movie';
         if (id) {
-            // Открываем модал и прячем другие оверлеи
+            // Сначала блокируем прокрутку, затем открываем модал и прячем другие оверлеи
+            lockScroll();
             openModal(id, type);
             if (searchModal) searchModal.style.display = 'none';
             if (mobileSearchModal) mobileSearchModal.style.display = 'none';
-            document.body.classList.add('no-scroll');
         }
     });
 
@@ -89,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mobileSearchTrigger.addEventListener('click', (e) => {
             e.preventDefault();
             mobileSearchModal.style.display = 'block';
-            document.body.classList.add('no-scroll');
+            lockScroll();
             mobileSearchTrigger.classList.add('search-active');
             setTimeout(() => {
                 mobileSearchInput.focus();
@@ -100,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Закрытие мобильного поиска
     function closeMobileSearch() {
         mobileSearchModal.style.display = 'none';
-        document.body.classList.remove('no-scroll');
+        unlockScroll();
         mobileSearchTrigger.classList.remove('search-active');
         mobileSearchInput.value = '';
         mobileSearchMovies.innerHTML = '';
@@ -940,11 +964,12 @@ async function fetchHeroContent() {
 
             movieCard.dataset.id = movie.id;
             movieCard.dataset.type = type;
-            movieCard.addEventListener('click', () => {
+            movieCard.addEventListener('click', (e) => {
+                e.preventDefault();
+                lockScroll();
                 openModal(movie.id, type);
-                if (searchModal) searchModal.style.display = 'none';
-                if (mobileSearchModal) mobileSearchModal.style.display = 'none';
-                document.body.classList.add('no-scroll');
+                    if (searchModal) searchModal.style.display = 'none';
+                    if (mobileSearchModal) mobileSearchModal.style.display = 'none';
             });
 
             container.appendChild(movieCard);
@@ -1037,7 +1062,7 @@ async function fetchHeroContent() {
                 }
                 if (trailerModal) {
                     trailerModal.style.display = 'block';
-                    document.body.classList.add('no-scroll');
+                    lockScroll();
                 }
             });
 
@@ -1047,6 +1072,11 @@ async function fetchHeroContent() {
 
     // Открыть модальное окно с деталями фильма
     async function openModal(id, type) {
+        // Защитно: если ещё не заблокирована прокрутка, сохраняем позицию
+        try {
+            if (!document.body.dataset.scrollY) lockScroll();
+        } catch (e) {}
+
         const response = await fetch(`${BASE_URL}/${type}/${id}?api_key=${API_KEY}&append_to_response=credits&language=ru-RU`);
         const data = await response.json();
         const backdropUrl = data.backdrop_path ? `${IMG_URL}${data.backdrop_path}` : NO_PICTURE_URL;
@@ -1282,7 +1312,12 @@ async function fetchHeroContent() {
         // Показать модальное окно
         if (modal) {
             modal.style.display = 'block';
-            document.body.classList.add('no-scroll');
+            // после показа модалки — ещё раз зафиксируем позицию и предотвратим скролл браузера
+            try {
+                const sy = parseInt(document.body.dataset.scrollY || '0', 10);
+                window.scrollTo(0, sy);
+            } catch (e) {}
+            // Программная фокусировка убрана по запросу — не вызываем `.focus()` чтобы не показывать outline
         }
 
         // Обновить обработчик кнопки "Смотреть" в модальном окне
@@ -1295,7 +1330,7 @@ async function fetchHeroContent() {
                     // Закрываем модальное окно
                     if (modal) {
                         modal.style.display = 'none';
-                        document.body.classList.remove('no-scroll');
+                        unlockScroll();
                     }
                     // Открываем плеер Vibix
                     if (btnType === 'movie') {
@@ -1326,7 +1361,7 @@ async function fetchHeroContent() {
 
             if (searchModal) {
                 searchModal.style.display = 'block';
-                document.body.classList.add('no-scroll');
+                lockScroll();
             }
 
             if ((!movieData.results || movieData.results.length === 0) && 
@@ -1354,7 +1389,7 @@ async function fetchHeroContent() {
         closeBtn.addEventListener('click', () => {
             if (modal) {
                 modal.style.display = 'none';
-                document.body.classList.remove('no-scroll');
+                unlockScroll();
             }
             if (modalSliderState?.interval) {
                 clearInterval(modalSliderState.interval);
@@ -1367,7 +1402,7 @@ async function fetchHeroContent() {
         trailerCloseBtn.addEventListener('click', () => {
             if (trailerModal) {
                 trailerModal.style.display = 'none';
-                document.body.classList.remove('no-scroll');
+                unlockScroll();
             }
             if (trailerVideo) trailerVideo.innerHTML = '';
         });
@@ -1377,7 +1412,7 @@ async function fetchHeroContent() {
         searchCloseBtn.addEventListener('click', () => {
             if (searchModal) {
                 searchModal.style.display = 'none';
-                document.body.classList.remove('no-scroll');
+                unlockScroll();
             }
         });
     }
@@ -1386,7 +1421,7 @@ async function fetchHeroContent() {
         playerCloseBtn.addEventListener('click', () => {
             if (playerModal) {
                 playerModal.style.display = 'none';
-                document.body.classList.remove('no-scroll');
+                unlockScroll();
             }
             // Закрытие плеера Vibix
             const vibixModal = document.getElementById('vibix-player-modal');
@@ -1400,7 +1435,7 @@ async function fetchHeroContent() {
     window.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.style.display = 'none';
-            document.body.classList.remove('no-scroll');
+            unlockScroll();
             if (modalSliderState?.interval) {
                 clearInterval(modalSliderState.interval);
                 modalSliderState = null;
@@ -1408,16 +1443,16 @@ async function fetchHeroContent() {
         }
         if (e.target === trailerModal) {
             trailerModal.style.display = 'none';
-            document.body.classList.remove('no-scroll');
+            unlockScroll();
             if (trailerVideo) trailerVideo.innerHTML = '';
         }
         if (e.target === searchModal) {
             searchModal.style.display = 'none';
-            document.body.classList.remove('no-scroll');
+            unlockScroll();
         }
         if (e.target === playerModal) {
             playerModal.style.display = 'none';
-            document.body.classList.remove('no-scroll');
+            unlockScroll();
             // Закрытие плеера Vibix
             const vibixModal = document.getElementById('vibix-player-modal');
             if (vibixModal) {
@@ -1425,6 +1460,14 @@ async function fetchHeroContent() {
             }
         }
     });
+
+    // Экспортируем глобально для других скриптов (например, плеера)
+    try {
+        window.lockScroll = lockScroll;
+        window.unlockScroll = unlockScroll;
+    } catch (e) {
+        // ignore
+    }
 
     // Обработчики для кнопок hero
     if (heroWatchBtn) {
@@ -1446,8 +1489,9 @@ async function fetchHeroContent() {
             const id = heroInfoBtn.dataset.id;
             const type = heroInfoBtn.dataset.type;
             if (id && type) {
-                openModal(id, type);
-            }
+                    lockScroll();
+                    openModal(id, type);
+                }
         });
     }
 
@@ -1460,7 +1504,7 @@ async function fetchHeroContent() {
                 // Закрываем модальное окно
                 if (modal) {
                     modal.style.display = 'none';
-                    document.body.classList.remove('no-scroll');
+                    try { unlockScroll(); } catch (e) { document.body.classList.remove('no-scroll'); }
                 }
                 
                 // Открываем плеер Vibix

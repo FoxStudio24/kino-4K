@@ -670,76 +670,86 @@ document.addEventListener('DOMContentLoaded', () => {
             window.onYouTubeIframeAPIReady = startTrailer;
         }
 
-        closeBtn.addEventListener('click', () => {
-            clearTimeout(trailerTimeout);
-            if (playerInstance) {
-                playerInstance.destroy();
-                playerInstance = null;
-            }
-        }, { once: true });
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                clearTimeout(trailerTimeout);
+                if (playerInstance) {
+                    playerInstance.destroy();
+                    playerInstance = null;
+                }
+            }, { once: true });
+        }
     }
 
-    closeBtn.addEventListener('click', () => {
-        const modalContent = modal.querySelector('.modal-content');
-        modalContent.classList.add('closing');
-        setTimeout(() => {
-            modal.style.display = 'none';
-            modalContent.classList.remove('closing');
-            document.body.classList.remove('no-scroll');
-            modalBackdrop.innerHTML = `
-                <div class="modal-logo-container">
-                    <img id="modal-logo" src="" alt="Логотип фильма" class="modal-logo">
-                    <div id="modal-logo-text" class="modal-logo-text"></div>
-                    <div class="modal-buttons">
-                        <button class="modal-watch-btn" id="modal-watch-btn">Смотреть</button>
-                        <div class="modal-controls">
-                            <button class="modal-trailer-btn" data-muted="true" style="display: none;">
-                                <img src="ico/Звуквыключен.png" alt="Звук выключен">
-                            </button>
-                            <button class="modal-fullscreen-toggle" style="display: none;">
-                                <img src="ico/Fullscreen.png" alt="Полноэкранный режим">
-                            </button>
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.classList.add('closing');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modalContent.classList.remove('closing');
+                document.body.classList.remove('no-scroll');
+                modalBackdrop.innerHTML = `
+                    <div class="modal-logo-container">
+                        <img id="modal-logo" src="" alt="Логотип фильма" class="modal-logo">
+                        <div id="modal-logo-text" class="modal-logo-text"></div>
+                        <div class="modal-buttons">
+                            <button class="modal-watch-btn" id="modal-watch-btn">Смотреть</button>
+                            <div class="modal-controls">
+                                <button class="modal-trailer-btn" data-muted="true" style="display: false;">
+                                    <img src="ico/Звуквыключен.png" alt="Звук выключен">
+                                </button>
+                                <button class="modal-fullscreen-toggle" style="display: none;">
+                                    <img src="ico/Fullscreen.png" alt="Полноэкранный режим">
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
-            modalBackdrop.style.backgroundImage = '';
-            modalBackdrop.classList.remove('animated-poster'); // Убираем анимацию
-        }, 500);
-    });
+                `;
+                modalBackdrop.style.backgroundImage = '';
+                modalBackdrop.classList.remove('animated-poster'); // Убираем анимацию
+            }, 500);
+        });
+    }
 
-    trailerCloseBtn.addEventListener('click', () => {
-        const trailerModalContent = trailerModal.querySelector('.trailer-modal-content');
-        trailerModalContent.classList.add('closing');
-        setTimeout(() => {
-            trailerModal.style.display = 'none';
-            trailerModalContent.classList.remove('closing');
-            trailerVideo.innerHTML = '';
-            document.body.classList.remove('no-scroll');
-        }, 500);
-    });
+    if (trailerCloseBtn) {
+        trailerCloseBtn.addEventListener('click', () => {
+            const trailerModalContent = trailerModal.querySelector('.trailer-modal-content');
+            trailerModalContent.classList.add('closing');
+            setTimeout(() => {
+                trailerModal.style.display = 'none';
+                trailerModalContent.classList.remove('closing');
+                trailerVideo.innerHTML = '';
+                document.body.classList.remove('no-scroll');
+            }, 500);
+        });
+    }
 
-    searchCloseBtn.addEventListener('click', () => {
-        const searchModalContent = searchModal.querySelector('.modal-content');
-        searchModalContent.classList.add('closing');
-        setTimeout(() => {
-            searchModal.style.display = 'none';
-            searchModalContent.classList.remove('closing');
-            document.body.classList.remove('no-scroll');
-        }, 500);
-    });
+    if (searchCloseBtn) {
+        searchCloseBtn.addEventListener('click', () => {
+            const searchModalContent = searchModal.querySelector('.modal-content');
+            searchModalContent.classList.add('closing');
+            setTimeout(() => {
+                searchModal.style.display = 'none';
+                searchModalContent.classList.remove('closing');
+                document.body.classList.remove('no-scroll');
+            }, 500);
+        });
+    }
 
-    playerCloseBtn.addEventListener('click', () => {
-        const playerModalContent = playerModal.querySelector('.player-modal-content');
-        playerModalContent.classList.add('closing');
-        setTimeout(() => {
-            playerModal.style.display = 'none';
-            playerModalContent.classList.remove('closing');
-            document.body.classList.remove('no-scroll');
-            const playerContainer = document.getElementById('kinobox-player');
-            playerContainer.innerHTML = '';
-        }, 500);
-    });
+    if (playerCloseBtn) {
+        playerCloseBtn.addEventListener('click', () => {
+            const playerModalContent = playerModal.querySelector('.player-modal-content');
+            playerModalContent.classList.add('closing');
+            setTimeout(() => {
+                playerModal.style.display = 'none';
+                playerModalContent.classList.remove('closing');
+                document.body.classList.remove('no-scroll');
+                const playerContainer = document.getElementById('kinobox-player');
+                if (playerContainer) playerContainer.innerHTML = '';
+            }, 500);
+        });
+    }
 
     window.launchPlayer = async function() {
         if (playerInstance && playerInstance.getPlayerState && playerInstance.getPlayerState() === YT.PlayerState.PLAYING) {
