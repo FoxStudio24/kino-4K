@@ -24,8 +24,8 @@
         
         // Список балансеров с тегами
         this.balancers = [
-            { id: 'alloha', name: 'Alloha.tv', tags: ['4K'] },
-            { id: 'gencit', name: 'Gencit', tags: ['HD'] },
+            { id: 'alloha', name: 'Alloha.tv', tags: ['4K', 'ac'] },
+            { id: 'gencit', name: 'Gencit', tags: ['HD', 'ac'] },
             { id: 'vibix', name: 'Vibix', tags: ['HD'] },
             { id: 'lumex', name: 'Lumex', tags: ['HD'] },
             { id: 'veoveo', name: 'VeoVeo', tags: ['HD'] }
@@ -46,11 +46,13 @@
         }
     };
 
-    // Создает HTML для тегов балансера
+    // Создает HTML для тегов балансера (исключает 'ac' так как оно отображается как иконка)
     MultiPlayer.prototype.createBalancerTags = function (tags) {
         if (!tags || tags.length === 0) return '';
         
-        return tags.map(function (tag) {
+        return tags.filter(function (tag) {
+            return (tag || '').toString().toLowerCase() !== 'ac';
+        }).map(function (tag) {
             return '<span class="balancer-tag" style="' +
                 'background: rgba(255, 255, 255, 0.9);' +
                 'color: #333;' +
@@ -63,6 +65,18 @@
                 'text-transform: uppercase;' +
                 '">' + tag + '</span>';
         }).join('');
+    };
+
+    // Возвращает HTML иконки для балансера, если есть тег 'ac'
+    MultiPlayer.prototype.getBalancerIconHtml = function (balancer) {
+        if (!balancer || !balancer.tags || !Array.isArray(balancer.tags)) return '';
+        var hasAc = balancer.tags.some(function (t) { return (t || '').toString().toLowerCase() === 'ac'; });
+        if (!hasAc) return '';
+        return `<span style="position:relative;display:inline-block;margin-right:2px;vertical-align:middle;">
+  <img src="ico/ac.png" alt="ac" style="width:16px;height:16px;position:relative;z-index:2;">
+  <img src="ico/ac.png" alt="ac" style="width:30px;height:30px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);filter:blur(10px);opacity:0.9;z-index:1;">
+</span>`;
+
     };
 
     MultiPlayer.prototype.getImdbId = async function (tmdbId, type) {
@@ -283,7 +297,7 @@
         if (currentBalancerBtn) {
             var currentBalancer = this.balancers.find(function (b) { return b.id === self.currentPlayer; });
             currentBalancerBtn.innerHTML = [
-                '<span class="balancer-name">' + (currentBalancer ? currentBalancer.name : 'Balancer') + '</span>',
+                '<span class="balancer-name" style="display:flex;align-items:center;">' + (currentBalancer ? this.getBalancerIconHtml(currentBalancer) + currentBalancer.name : 'Balancer') + '</span>',
                 currentBalancer ? this.createBalancerTags(currentBalancer.tags) : '',
                 '<svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" style="transition: transform 0.3s ease; margin-left: 8px;">',
                 '    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -309,7 +323,7 @@
                     'align-items: center;' +
                     'justify-content: space-between;' +
                     '" onmouseover="this.style.background=\'rgba(255,255,255,0.15)\'" onmouseout="this.style.background=\'' + (balancer.id === self.currentPlayer ? 'rgba(255, 255, 255, 0.1)' : 'transparent') + '\'">' +
-                    '<span class="balancer-name">' + balancer.name + '</span>' +
+                    '<span class="balancer-name">' + self.getBalancerIconHtml(balancer) + balancer.name + '</span>' +
                     '<span class="balancer-tags">' + self.createBalancerTags(balancer.tags) + '</span>' +
                     '</button>';
             }).join('');
@@ -466,7 +480,7 @@
             '                        min-width: 80px;' +
             '                        font-family: \'buttonbold\', sans-serif;' +
             '                    " onmouseover="this.style.background=\'rgba(255,255,255,0.1)\'" onmouseout="this.style.background=\'transparent\'">',
-            '                        <span class="balancer-name">' + (currentBalancer ? currentBalancer.name : 'Balancer') + '</span>',
+            '                        <span class="balancer-name" style="display:flex;align-items:center;">' + (currentBalancer ? this.getBalancerIconHtml(currentBalancer) + currentBalancer.name : 'Balancer') + '</span>',
             currentBalancer ? this.createBalancerTags(currentBalancer.tags) : '',
             '                        <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" style="transition: transform 0.3s ease; margin-left: 8px;">',
             '                            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -506,7 +520,7 @@
                     'align-items: center;' +
                     'justify-content: space-between;' +
                     '" onmouseover="this.style.background=\'rgba(255,255,255,0.15)\'" onmouseout="this.style.background=\'' + (balancer.id === this.currentPlayer ? 'rgba(255, 255, 255, 0.1)' : 'transparent') + '\'">' +
-                    '<span class="balancer-name">' + balancer.name + '</span>' +
+                    '<span class="balancer-name">' + this.getBalancerIconHtml(balancer) + balancer.name + '</span>' +
                     '<span class="balancer-tags">' + this.createBalancerTags(balancer.tags) + '</span>' +
                     '</button>';
             }, this).join(''),
