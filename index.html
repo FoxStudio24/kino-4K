@@ -22,6 +22,8 @@
             -moz-user-select: none;
             -ms-user-select: none;
             font-family: 'textbold', sans-serif;
+            z-index: 1;
+            position: relative;
         }
         .carousel-wrapper { position: relative; margin: 0; }
         .carousel-wrapper::before, .carousel-wrapper::after { content: ''; position: absolute; top:0; bottom:0; width:60px; z-index:5; pointer-events:none; }
@@ -334,6 +336,12 @@
                 <div class="modal-logo-container">
                     <img id="modal-logo" class="modal-logo" alt="Логотип">
                     <h2 id="modal-logo-text" class="modal-logo-text"></h2>
+                    <div class="info-row">
+                        <span id="modal-year"></span>
+                        <span id="modal-seasons"></span>
+                        <span id="modal-age-rating" class="age-rating"></span>
+                        <span id="modal-rating" class="rating"></span>
+                    </div>
                     <div class="modal-buttons">
                         <button id="modal-watch-btn" class="modal-watch-btn">Смотреть</button>
                         <div class="modal-controls">
@@ -343,12 +351,6 @@
             </div>
             <div class="modal-details">
                 <div class="details-left">
-                    <div class="info-row">
-                        <span id="modal-year"></span>
-                        <span id="modal-seasons"></span>
-                        <span id="modal-age-rating" class="age-rating"></span>
-                        <span id="modal-rating" class="rating"></span>
-                    </div>
                     <div class="overview">
                         <h3>Обзор</h3>
                         <p id="modal-overview"></p>

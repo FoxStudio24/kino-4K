@@ -73,8 +73,8 @@
         var hasAc = balancer.tags.some(function (t) { return (t || '').toString().toLowerCase() === 'ac'; });
         if (!hasAc) return '';
         return `<span style="position:relative;display:inline-block;margin-right:2px;vertical-align:middle;">
-  <img src="ico/ac.png" alt="ac" style="width:16px;height:16px;position:relative;z-index:2;">
-  <img src="ico/ac.png" alt="ac" style="width:30px;height:30px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);filter:blur(10px);opacity:0.9;z-index:1;">
+  <img src="ico/ac.png" alt="ac" style="width:18px;height:18px;position:relative;z-index:2;">
+  <img src="ico/ac.png" alt="ac" style="width:20px;height:20px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);filter:blur(px);opacity:0.9;z-index:1;">
 </span>`;
 
     };

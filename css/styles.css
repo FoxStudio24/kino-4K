@@ -186,8 +186,31 @@ img {
     border-radius: 1.5em;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid #ffffff27;
+    border: none;
+    z-index: 0;
 }
+
+.search-bar button::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.35),
+        rgba(200, 200, 200, 0.15),
+        rgba(255, 255, 255, 0.25),
+        rgba(120, 120, 120, 0.1)
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: add, add;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: -1;
+}
+
 
 .search-bar button:hover {
     transform: scale(1.05);
@@ -230,7 +253,29 @@ img {
     -webkit-backdrop-filter: blur(10px);
     border-radius: 25px;
     padding: 5px 5px;
-    border: 1px solid #ffffff27;
+    border: none;
+    z-index: 0;
+}
+
+.nav-tabs::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px; /* толщина обводки */
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.35),
+        rgba(200, 200, 200, 0.15),
+        rgba(255, 255, 255, 0.25),
+        rgba(120, 120, 120, 0.1)
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: add, add;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: -1;
 }
 
 .nav-tabs a {
@@ -280,6 +325,7 @@ img {
     right: 0px;
     z-index: 1000;
     border: none;
+    border-top: 1px solid #ffffff0c;
     background: none;
     padding: 0;
     margin: 0;
@@ -287,9 +333,8 @@ img {
     align-items: center;
     justify-content: space-around;
     overflow: hidden;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(15px);
     background-color: #141414ea;
-    border: 1px solid #ffffff0c ;
 }
 
 @media (max-width: 768px) {
@@ -454,7 +499,7 @@ img {
 }
 
 .watch-btn {
-    background-color: white;
+    background: linear-gradient(to top, #d9d9d9 12%, #ffffff 100%);
     color: black;
 }
 
@@ -465,12 +510,36 @@ img {
 }
 
 .info-btn {
+    position: relative;
     background-color: rgba(32, 32, 32, 0.35);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
-    border: 1px solid #ffffff21;
+    border: none;
     color: #fff;
+    z-index: 0;
 }
+
+.info-btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.35),
+        rgba(200, 200, 200, 0.15),
+        rgba(255, 255, 255, 0.25),
+        rgba(120, 120, 120, 0.1)
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: add, add;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: -1;
+}
+
 
 .info-btn:active {
     transform: scale(0.97);
@@ -609,7 +678,7 @@ img {
     position: absolute;
     top: 10px;
     right: 10px;
-    padding: 5px 15px;
+    padding: 3px 15px;
     border-radius: 15px;
     font-size: 0.9rem;
     color: white;
@@ -619,6 +688,28 @@ img {
     z-index: 3;
     font-family: 'textbold', sans-serif;
 }
+
+.movie-card-rating::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.35),
+        rgba(200, 200, 200, 0.15),
+        rgba(255, 255, 255, 0.25),
+        rgba(120, 120, 120, 0.1)
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: add, add;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: -1;
+}
+
 
 @media (hover: hover) {
     .movie-card:hover .movie-card-rating {
@@ -739,6 +830,28 @@ img {
     height: 40px;
 }
 
+.close-btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.35),
+        rgba(200, 200, 200, 0.15),
+        rgba(255, 255, 255, 0.25),
+        rgba(120, 120, 120, 0.1)
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: add, add;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: -1;
+}
+
+
 .close-btn:active {
     transform: scale(0.94);
 }
@@ -799,12 +912,12 @@ img {
     z-index: 2;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
     width: calc(100% - 48px);
     max-width: 100%;
     padding: 0;
     margin: 0;
-    align-items: stretch;
+    align-items: flex-start;
 }
 
 .modal-buttons {
@@ -833,7 +946,7 @@ img {
     color: white !important;
     font-family: 'textbold', sans-serif;
     margin: 0!important;
-    text-shadow: 2px 2px 4px rgb(0, 0, 0)!important;
+    text-shadow: 2px 2px 15px rgb(0, 0, 0)!important;
     display: block !important;
     line-height: 1.2!important;
     max-width: 100%!important;
@@ -849,6 +962,7 @@ img {
 }
 
 .modal-watch-btn {
+    position: relative;
     background-color: rgb(255, 255, 255);
     color: black;
     border: none;
@@ -856,14 +970,37 @@ img {
     height: 40px;
     font-size: 1rem;
     cursor: pointer;
-    border-radius: 10px;
+    border-radius: 25px;
     font-family: 'buttonbold', sans-serif;
     font-weight: 500;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: transform 0.2s ease;
+    z-index: 0;
 }
+
+.modal-watch-btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.35),
+        rgba(200, 200, 200, 0.15),
+        rgba(255, 255, 255, 0.25),
+        rgba(120, 120, 120, 0.1)
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: add, add;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: -1;
+}
+
 .modal-watch-btn:active {
     transform: scale(0.94);
 }
@@ -932,6 +1069,124 @@ img {
 
 .details-right {
     flex: 1;
+}
+
+.modal-logo-container .info-row {
+    display: flex;
+    gap: 10px;
+    margin: 0;
+    font-size: 0.80rem;
+    font-weight: 600;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    font-family: 'buttonbold', sans-serif;
+    flex-wrap: wrap;
+}
+
+.modal-logo-container .info-row span {
+    position: relative;
+    padding: 3px 15px;
+    border-radius: 24px;
+    background: rgba(0, 0, 0, 0.12);
+    color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    border: none;
+    z-index: 0;
+}
+
+.modal-logo-container .info-row span::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px; /* толщина обводки */
+    background: linear-gradient(
+        135deg,
+        rgba(200, 200, 200, 0.164),   /* слева серый */
+        rgba(255, 255, 255, 0.411)    /* справа полупрозрачный белый */
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: add, add;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: -1;
+}
+
+
+.modal-logo-container #modal-rating {
+    padding: 3px 15px;
+    border-radius: 24px;
+    color: white;
+    font-size: 0.80rem;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    font-weight: 700;
+    background: rgba(40, 167, 69, 0.85) !important;
+}
+
+.modal-logo-container #modal-rating.high {
+    background-color: rgba(40, 167, 69, 0.85) !important;
+}
+
+.modal-logo-container #modal-rating.low {
+    background-color: rgba(255, 140, 0, 0.85) !important;
+}
+
+.modal-logo-container #modal-rating.very-low {
+    background-color: rgba(128, 128, 128, 0.85) !important;
+}
+
+.modal-logo-container #modal-rating.dark-red {
+    background-color: rgba(139, 0, 0, 0.85) !important;
+}
+
+/* Старые стили для info-row в modal-details (если они есть там) */
+.modal-details .info-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 1rem;
+    color: #b3b3b3;
+    font-weight: 400;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    font-family: 'textbold', sans-serif;
+}
+
+.modal-details .age-rating {
+    border: 1px solid #b3b3b3;
+    padding: 2.4px 6px;
+    border-radius: 3.6px;
+}
+
+.modal-details .rating {
+    padding: 2.4px 6px;
+    border-radius: 3.6px;
+    color: white;
+    font-size: 1rem;
+}
+
+.modal-details .rating.high {
+    background-color: #28a745;
+}
+
+.modal-details .rating.low {
+    background-color: #ff8c00;
+}
+
+.modal-details .rating.very-low {
+    background-color: #808080;
+}
+
+.modal-details .rating.dark-red {
+    background-color: #8b0000;
 }
 
 .info-row {
@@ -1564,6 +1819,10 @@ img {
         padding-bottom: 100px;
     }
 
+    body.modal-open .mobile-nav {
+        display: none !important;
+    }
+
     .header {
         display: none;
     }
@@ -1643,9 +1902,13 @@ img {
     }
 
     .modal-content {
-        width: 95%;
-        margin: 2% auto;
-        max-height: 95vh;
+        width: 100%;
+        height: 100vh;
+        margin: 0 !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
     }
 
     .modal-backdrop {
@@ -1703,7 +1966,11 @@ img {
 
 @media (max-width: 480px) {
     .modal-content {
-        margin: 1% auto!important;
+        width: 100%;
+        height: 100vh;
+        margin: 0 !important;
+        max-height: 100vh !important;
+        border-radius: 0;
     }
 
     .hero {
@@ -2368,6 +2635,9 @@ img {
 #trailer-sound-btn:active {
     transform: scale(0.9);
 }
+
+
+
 
 }
 }

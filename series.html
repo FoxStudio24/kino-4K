@@ -78,6 +78,9 @@
     <!-- Модальные окна (аналогично index.html) -->
     <div id="movie-modal" class="modal">
         <div class="modal-content">
+            <button class="close-btn" aria-label="Закрыть" title="Закрыть">
+                <img src="ico/закрыть.svg" alt="Закрыть" style="width: 24px; height: 24px;">
+            </button>
             <div id="modal-backdrop" class="modal-backdrop">
                 <div class="modal-logo-container">
                     <img id="modal-logo" class="modal-logo" alt="Логотип">
@@ -94,12 +97,6 @@
             </div>
             <div class="modal-details">
                 <div class="details-left">
-                    <div class="info-row">
-                        <span id="modal-year"></span>
-                        <span id="modal-seasons"></span>
-                        <span id="modal-age-rating" class="age-rating"></span>
-                        <span id="modal-rating" class="rating"></span>
-                    </div>
                     <div class="overview">
                         <h3>Обзор</h3>
                         <p id="modal-overview"></p>
@@ -129,7 +126,9 @@
 
     <div id="trailer-modal" class="modal">
         <div class="trailer-modal-content">
-            <span class="trailer-close-btn"><img src="ico/закрыть.svg" alt="Закрыть" style="width: 24px; height: 24px;"></span>
+            <button class="trailer-close-btn close-btn" aria-label="Закрыть" title="Закрыть">
+                <img src="ico/закрыть.svg" alt="Закрыть" style="width: 24px; height: 24px;">
+            </button>
             <div id="trailer-video" class="trailer-video"></div>
         </div>
     </div>
@@ -152,7 +151,9 @@
 
     <div id="player-modal" class="modal">
         <div class="player-modal-content">
-            <span class="player-close-btn"><img src="ico/закрыть.svg" alt="Закрыть" style="width: 24px; height: 24px;"></span>
+            <button class="player-close-btn close-btn" aria-label="Закрыть" title="Закрыть">
+                <img src="ico/закрыть.svg" alt="Закрыть" style="width: 24px; height: 24px;">
+            </button>
             <div class="player-wrapper">
                 <div id="kinobox-player" class="kinobox-player"></div>
             </div>

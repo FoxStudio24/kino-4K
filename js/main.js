@@ -195,6 +195,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape' && mobileSearchModal && mobileSearchModal.style.display === 'block') {
             closeMobileSearch();
         }
+        // Закрытие модального окна при нажатии Escape
+        if (e.key === 'Escape' && modal && modal.style.display === 'block') {
+            modal.style.display = 'none';
+            // Показать мобильную навигацию (только на мобильных)
+            if (window.innerWidth <= 768) {
+                const mobileNav = document.querySelector('.mobile-nav');
+                if (mobileNav) {
+                    mobileNav.style.display = 'flex';
+                }
+            }
+            unlockScroll();
+        }
     });
 
     const API_KEY = '06936145fe8e20be28b02e26b55d3ce6';
@@ -1094,8 +1106,14 @@ async function fetchHeroContent() {
                 <div class="modal-logo-container">
                     ${logoUrl ? 
                         `<img id="modal-logo" class="modal-logo" src="${logoUrl}" alt="Logo">` : 
-                        `<h1 id="modal-logo-text" class="modal-logo-text">${data.title || data.name}</h1>`
+                        `<h2 id="modal-logo-text" class="modal-logo-text">${data.title || data.name}</h2>`
                     }
+                    <div class="info-row">
+                        <span id="modal-year"></span>
+                        <span id="modal-seasons"></span>
+                        <span id="modal-age-rating" class="age-rating"></span>
+                        <span id="modal-rating" class="rating"></span>
+                    </div>
                     <div class="modal-buttons">
                         <button id="modal-watch-btn" class="modal-watch-btn" data-id="${id}" data-type="${type}">
                            <img src="ico/Плей.svg" alt="watch icon"
@@ -1137,12 +1155,36 @@ async function fetchHeroContent() {
                     padding: 2px 2px;
                 }
                 .modal-hero-dots {
-                    display: flex;
-                    gap: 8px;
-                    background: rgba(0, 0, 0, 0.637);
-                    border-radius: 25px;
-                    padding: 8px 10px;
-                }
+    position: relative;
+    display: flex;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.637);
+    border-radius: 25px;
+    padding: 8px 10px;
+    z-index: 0;
+}
+
+.modal-hero-dots::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.35),
+        rgba(200, 200, 200, 0.15),
+        rgba(255, 255, 255, 0.25),
+        rgba(120, 120, 120, 0.1)
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: add, add;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: -1;
+}
+
                 .modal-hero-dot {
                     width: 10px;
                     height: 10px;
@@ -1153,15 +1195,39 @@ async function fetchHeroContent() {
                 }
                 .modal-hero-dot.active { background: #ffffff; transform: scale(1.2); }
                 .modal-hero-play-pause {
-                    background: rgba(0, 0, 0, 0.637);
-                    border-radius: 50%;
-                    padding: 6px;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
+    position: relative;
+    background: rgba(0, 0, 0, 0.637);
+    border-radius: 50%;
+    padding: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 0;
+}
+
+.modal-hero-play-pause::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.35),
+        rgba(200, 200, 200, 0.15),
+        rgba(255, 255, 255, 0.25),
+        rgba(120, 120, 120, 0.1)
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: add, add;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: -1;
+}
+
                 .modal-hero-play-pause img { width: 16px; height: 16px; }
                 .modal-hero-play-pause:hover { background: rgba(0, 0, 0, 0.8); }
 
@@ -1208,7 +1274,7 @@ async function fetchHeroContent() {
 
             // 5) Состояние и функции слайдера
             let current = 0;
-            let isPlayingModal = true;
+            let isPlayingModal = false;
             const slides = backdrops.slice(0, 4);
 
             function setSlide(idx) {
@@ -1258,38 +1324,45 @@ async function fetchHeroContent() {
             // Инициализация
             if (slides.length > 0) {
                 layer1.style.backgroundImage = `url(${IMG_URL}${slides[0].file_path})`;
-                startModalAutoSlide();
+                playPauseIcon.src = 'ico/Плей.png';
             }
         }
 
+        // Переполучение элементов после создания новой структуры
+        const updatedModalYear = document.getElementById('modal-year');
+        const updatedModalSeasons = document.getElementById('modal-seasons');
+        const updatedModalAgeRating = document.getElementById('modal-age-rating');
+        const updatedModalRating = document.getElementById('modal-rating');
+        const updatedModalLogoText = document.getElementById('modal-logo-text');
+
         // Заполнение информации о фильме/сериале
-        if (modalYear) modalYear.textContent = new Date(data.release_date || data.first_air_date).getFullYear() || 'Неизвестно';
-        if (modalSeasons && type === 'tv') {
-            modalSeasons.textContent = data.number_of_seasons ? `${data.number_of_seasons} сезон(ов)` : '';
-            modalSeasons.style.display = 'block';
-        } else if (modalSeasons) {
-            modalSeasons.style.display = 'none';
+        if (updatedModalYear) updatedModalYear.textContent = new Date(data.release_date || data.first_air_date).getFullYear() || 'Неизвестно';
+        if (updatedModalSeasons && type === 'tv') {
+            updatedModalSeasons.textContent = data.number_of_seasons ? `${data.number_of_seasons} сезон(ов)` : '';
+            updatedModalSeasons.style.display = 'inline-block';
+        } else if (updatedModalSeasons) {
+            updatedModalSeasons.style.display = 'none';
         }
 
-        if (modalAgeRating) {
-            modalAgeRating.textContent = await getAgeRating(id, type);
+        if (updatedModalAgeRating) {
+            updatedModalAgeRating.textContent = await getAgeRating(id, type);
         }
 
         const rating = data.vote_average ? parseFloat(data.vote_average.toFixed(1)) : null;
-        if (modalRating && rating) {
-            modalRating.textContent = rating;
-            modalRating.className = 'rating';
+        if (updatedModalRating && rating) {
+            updatedModalRating.textContent = rating;
+            updatedModalRating.className = 'rating';
             if (rating >= 6.5) {
-                modalRating.classList.add('high');
+                updatedModalRating.classList.add('high');
             } else if (rating < 6.5 && rating >= 5) {
-                modalRating.classList.add('low');
+                updatedModalRating.classList.add('low');
             } else if (rating < 5 && rating >= 4) {
-                modalRating.classList.add('very-low');
+                updatedModalRating.classList.add('very-low');
             } else {
-                modalRating.classList.add('dark-red');
+                updatedModalRating.classList.add('dark-red');
             }
-        } else if (modalRating) {
-            modalRating.textContent = '';
+        } else if (updatedModalRating) {
+            updatedModalRating.textContent = '';
         }
 
         if (modalOverview) modalOverview.textContent = data.overview || 'Описание отсутствует';
@@ -1312,6 +1385,13 @@ async function fetchHeroContent() {
         // Показать модальное окно
         if (modal) {
             modal.style.display = 'block';
+            // Скрыть мобильную навигацию (только на мобильных)
+            if (window.innerWidth <= 768) {
+                const mobileNav = document.querySelector('.mobile-nav');
+                if (mobileNav) {
+                    mobileNav.style.display = 'none';
+                }
+            }
             // после показа модалки — ещё раз зафиксируем позицию и предотвратим скролл браузера
             try {
                 const sy = parseInt(document.body.dataset.scrollY || '0', 10);
@@ -1330,6 +1410,13 @@ async function fetchHeroContent() {
                     // Закрываем модальное окно
                     if (modal) {
                         modal.style.display = 'none';
+                        // Показать мобильную навигацию (только на мобильных)
+                        if (window.innerWidth <= 768) {
+                            const mobileNav = document.querySelector('.mobile-nav');
+                            if (mobileNav) {
+                                mobileNav.style.display = 'flex';
+                            }
+                        }
                         unlockScroll();
                     }
                     // Открываем плеер Vibix
@@ -1389,6 +1476,13 @@ async function fetchHeroContent() {
         closeBtn.addEventListener('click', () => {
             if (modal) {
                 modal.style.display = 'none';
+                // Показать мобильную навигацию (только на мобильных)
+                if (window.innerWidth <= 768) {
+                    const mobileNav = document.querySelector('.mobile-nav');
+                    if (mobileNav) {
+                        mobileNav.style.display = 'flex';
+                    }
+                }
                 unlockScroll();
             }
             if (modalSliderState?.interval) {
@@ -1435,6 +1529,13 @@ async function fetchHeroContent() {
     window.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.style.display = 'none';
+            // Показать мобильную навигацию (только на мобильных)
+            if (window.innerWidth <= 768) {
+                const mobileNav = document.querySelector('.mobile-nav');
+                if (mobileNav) {
+                    mobileNav.style.display = 'flex';
+                }
+            }
             unlockScroll();
             if (modalSliderState?.interval) {
                 clearInterval(modalSliderState.interval);
