@@ -262,7 +262,17 @@
         <!-- Top 10 carousel injected by user request -->
         <div class="top10-container">
             <h2>Сейчас смотрят</h2>
-            <div id="top10-loading" class="loading">Загрузка...</div>
+            <div id="top10-loading" class="loading" style="display: flex; justify-content: center; align-items: center; min-height: 200px;">
+                <div class="loader-wrapper">
+                    <div class="packman"></div>
+                    <div class="dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+            </div>
             <div id="top10-app" class="container" style="display: none;">
                 <div class="carousel-wrapper">
                     <div class="carousel">
@@ -292,7 +302,17 @@
         <!-- Top 10 Movies container -->
         <div class="top10-container">
             <h2>В тренде - Фильмы</h2>
-            <div id="top10-movies-loading" class="loading">Загрузка...</div>
+            <div id="top10-movies-loading" class="loading" style="display: flex; justify-content: center; align-items: center; min-height: 200px;">
+                <div class="loader-wrapper">
+                    <div class="packman"></div>
+                    <div class="dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+            </div>
             <div id="top10-movies-app" class="container" style="display: none;">
                 <div class="carousel-wrapper">
                     <div class="carousel">
@@ -310,7 +330,17 @@
         <!-- Top 10 Series container -->
         <div class="top10-container">
             <h2>В тренде - Сериалы</h2>
-            <div id="top10-series-loading" class="loading">Загрузка...</div>
+            <div id="top10-series-loading" class="loading" style="display: flex; justify-content: center; align-items: center; min-height: 200px;">
+                <div class="loader-wrapper">
+                    <div class="packman"></div>
+                    <div class="dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+            </div>
             <div id="top10-series-app" class="container" style="display: none;">
                 <div class="carousel-wrapper">
                     <div class="carousel">
@@ -327,66 +357,6 @@
     </main>
 
     <!-- Модальные окна -->
-    <div id="movie-modal" class="modal">
-        <div class="modal-content">
-            <button class="close-btn" aria-label="Закрыть" title="Закрыть">
-                <img src="ico/закрыть.svg" alt="Закрыть" style="width: 24px; height: 24px;">
-            </button>
-            <div id="modal-backdrop" class="modal-backdrop">
-                <div class="modal-logo-container">
-                    <img id="modal-logo" class="modal-logo" alt="Логотип">
-                    <h2 id="modal-logo-text" class="modal-logo-text"></h2>
-                    <div class="info-row">
-                        <span id="modal-year"></span>
-                        <span id="modal-seasons"></span>
-                        <span id="modal-age-rating" class="age-rating"></span>
-                        <span id="modal-rating" class="rating"></span>
-                    </div>
-                    <div class="modal-buttons">
-                        <button id="modal-watch-btn" class="modal-watch-btn">Смотреть</button>
-                        <div class="modal-controls">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-details">
-                <div class="details-left">
-                    <div class="overview">
-                        <h3>Обзор</h3>
-                        <p id="modal-overview"></p>
-                    </div>
-                </div>
-                <div class="details-right">
-                    <div class="cast">
-                        <h3>В ролях</h3>
-                        <p id="modal-cast"></p>
-                    </div>
-                    <div class="genres">
-                        <h3>Жанры</h3>
-                        <p id="modal-genres"></p>
-                    </div>
-                    <div class="original-title">
-                        <h3>Оригинальное название</h3>
-                        <p id="modal-original-title"></p>
-                    </div>
-                </div>
-            </div>
-            <div id="modal-trailers" class="modal-trailers">
-                <h3>Трейлеры и другое</h3>
-                <div id="trailers-grid" class="trailers-row"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="trailer-modal" class="modal">
-        <div class="trailer-modal-content">
-            <button class="trailer-close-btn close-btn" aria-label="Закрыть" title="Закрыть">
-                <img src="ico/закрыть.svg" alt="Закрыть" style="width: 24px; height: 24px;">
-            </button>
-            <div id="trailer-video" class="trailer-video"></div>
-        </div>
-    </div>
-
     <div id="search-modal" class="modal">
         <div class="modal-content">
             <button class="close-btn" aria-label="Закрыть" title="Закрыть">
@@ -401,17 +371,6 @@
                     <h2>Сериалы</h2>
                     <div id="search-series" class="movie-row"></div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="player-modal" class="modal">
-        <div class="new-player-container">
-            <button class="player-close-btn close-btn" aria-label="Закрыть" title="Закрыть">
-                <img src="ico/закрыть.svg" alt="Закрыть" style="width: 24px; height: 24px;">
-            </button>
-            <div class="player-wrapper">
-                <div id="new-player-container" class="new-player-container"></div>
             </div>
         </div>
     </div>

@@ -73,8 +73,8 @@
         var hasAc = balancer.tags.some(function (t) { return (t || '').toString().toLowerCase() === 'ac'; });
         if (!hasAc) return '';
         return `<span style="position:relative;display:inline-block;margin-right:2px;vertical-align:middle;">
-  <img src="ico/ac.png" alt="ac" style="width:18px;height:18px;position:relative;z-index:2;">
-  <img src="ico/ac.png" alt="ac" style="width:20px;height:20px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);filter:blur(px);opacity:0.9;z-index:1;">
+  <img src="../ico/ac.png" alt="ac" style="width:18px;height:18px;position:relative;z-index:2;">
+  <img src="../ico/ac.png" alt="ac" style="width:20px;height:20px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);filter:blur(px);opacity:0.9;z-index:1;">
 </span>`;
 
     };
@@ -629,45 +629,26 @@
         if (this.loadingOverlay) {
             this.loadingOverlay.style.display = 'flex';
             
+            // Pac-Man загрузка
+            var currentBalancer = this.balancers.find(function (b) { return b.id === this.currentPlayer; }, this);
+            var balancerName = currentBalancer ? currentBalancer.name : 'плеера';
+            
             this.loadingOverlay.innerHTML = [
-                '<div class="loading-animations" style="' +
-                '    display: flex;' +
-                '    align-items: center;' +
-                '    justify-content: center;' +
-                '    gap: 20px;' +
-                '    margin-bottom: 20px;' +
-                '">',
-                '    <div class="loader">',
-                '        <svg viewBox="0 0 80 80">',
-                '            <circle r="32" cy="40" cx="40" id="circle"></circle>',
-                '        </svg>',
+                '<div style="display: flex; flex-direction: column; align-items: center; gap: 20px;">',
+                '    <div class="loader-wrapper">',
+                '        <div class="packman"></div>',
+                '        <div class="dots">',
+                '            <div class="dot"></div>',
+                '            <div class="dot"></div>',
+                '            <div class="dot"></div>',
+                '            <div class="dot"></div>',
+                '        </div>',
                 '    </div>',
-                '    <div class="loader triangle">',
-                '        <svg viewBox="0 0 86 80">',
-                '            <polygon points="43 8 79 72 7 72"></polygon>',
-                '        </svg>',
+                '    <div style="color: white; font-size: 16px; font-weight: 500; text-align: center;">',
+                '        Загрузка ' + balancerName + '...',
                 '    </div>',
-                '    <div class="loader">',
-                '        <svg viewBox="0 0 80 80">',
-                '            <rect height="64" width="64" y="8" x="8"></rect>',
-                '        </svg>',
-                '    </div>',
-                '</div>',
-                '<div class="loading-text" style="' +
-                '    color: white;' +
-                '    font-size: 16px;' +
-                '    font-weight: 500;' +
-                '    text-align: center;' +
-                '">',
-                '    Загрузка видео...',
                 '</div>'
             ].join('');
-            
-            var loadingText = this.loadingOverlay.querySelector('.loading-text');
-            if (loadingText) {
-                var currentBalancer = this.balancers.find(function (b) { return b.id === this.currentPlayer; }, this);
-                loadingText.textContent = 'Загрузка ' + (currentBalancer ? currentBalancer.name : 'плеера') + '...';
-            }
         }
         if (this.iframe) {
             this.iframe.style.display = 'none';
@@ -693,7 +674,7 @@
             
             var isAdBlockError = this.currentPlayer === 'alloha' && message.includes('Failed to fetch');
             var errorMessage = isAdBlockError
-                ? '<img src="ico/ADERROR.png" alt="AdBlock Error" style="max-width:400px;width:100%;height:auto;vertical-align:middle;margin-bottom:12px;display:block;border-radius:0;box-shadow:none;">'
+                ? '<img src="../ico/ADERROR.png" alt="AdBlock Error" style="max-width:400px;width:100%;height:auto;vertical-align:middle;margin-bottom:12px;display:block;border-radius:0;box-shadow:none;">'
                   + '<strong>Отключите блокировщик рекламы для корректной работы Alloha.</strong><br>' + message
                 : message;
             this.loadingOverlay.innerHTML = [
@@ -710,7 +691,7 @@
                 'Попробуйте переключиться на <strong>' + otherBalancers.map(function (b) { return b.name; }).join(', ') + '</strong> или выбрать другой контент.',
                 '            </div>',
                 '        </div>',
-                '        <video id="notfound-video" src="ico/404-video/' + randomIndex + '.mp4" autoplay loop muted playsinline style="flex: 0 0 320px; width: 320px; height: 180px; border-radius: 8px; object-fit: cover; background: #222; box-shadow: 0 2px 16px #0006; margin-left: 24px;"></video>',
+                '        <video id="notfound-video" src="../ico/404-video/' + randomIndex + '.mp4" autoplay loop muted playsinline style="flex: 0 0 320px; width: 320px; height: 180px; border-radius: 8px; object-fit: cover; background: #222; box-shadow: 0 2px 16px #0006; margin-left: 24px;"></video>',
                 '    </div>',
                 '</div>'
             ].join('');

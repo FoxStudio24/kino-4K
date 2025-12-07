@@ -227,34 +227,131 @@ document.addEventListener('DOMContentLoaded', () => {
     const legendaryMoviesRow = document.getElementById('legendary-movies');
     const trendingSeriesRow = document.getElementById('trending-series');
     const legendarySeriesRow = document.getElementById('legendary-series');
-    const modal = document.getElementById('movie-modal');
-    const modalBackdrop = document.getElementById('modal-backdrop');
-    const modalLogo = document.getElementById('modal-logo');
-    const modalLogoText = document.getElementById('modal-logo-text');
-    const modalYear = document.getElementById('modal-year');
-    const modalSeasons = document.getElementById('modal-seasons');
-    const modalAgeRating = document.getElementById('modal-age-rating');
-    const modalRating = document.getElementById('modal-rating');
-    const modalOverview = document.getElementById('modal-overview');
-    const modalCast = document.getElementById('modal-cast');
-    const modalGenres = document.getElementById('modal-genres');
-    const modalOriginalTitle = document.getElementById('modal-original-title');
-    const closeBtn = document.querySelector('.close-btn');
-    const trailerModal = document.getElementById('trailer-modal');
-    const trailerVideo = document.getElementById('trailer-video');
-    const trailerCloseBtn = document.querySelector('.trailer-close-btn');
+    // Обработчики кнопок hero (глобальные)
+    if (heroWatchBtn) {
+        heroWatchBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = heroWatchBtn.dataset.id;
+            const type = heroWatchBtn.dataset.type;
+            if (id && type) {
+                const tvUrl = `watch/watch.html?TV_ID=${id}&autoplay=1`;
+                const movieUrl = `watch/watch.html?M_ID=${id}&autoplay=1`;
+                const url = type === 'tv' ? tvUrl : movieUrl;
+                window.location.href = url;
+            }
+        });
+    }
+
+    if (heroInfoBtn) {
+        heroInfoBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = heroInfoBtn.dataset.id;
+            const type = heroInfoBtn.dataset.type;
+            if (id && type) {
+                const tvUrl = `watch/watch.html?TV_ID=${id}`;
+                const movieUrl = `watch/watch.html?M_ID=${id}`;
+                const url = type === 'tv' ? tvUrl : movieUrl;
+                window.location.href = url;
+            }
+        });
+    }
+
+    // Элементы поиска
     const searchModal = document.getElementById('search-modal');
     const searchMoviesRow = document.getElementById('search-movies');
     const searchSeriesRow = document.getElementById('search-series');
     const searchCloseBtn = document.querySelector('#search-modal .close-btn');
-    const modalWatchBtn = document.getElementById('modal-watch-btn');
-    const playerModal = document.getElementById('player-modal');
-    const playerCloseBtn = document.querySelector('.player-close-btn');
-    const trailersGrid = document.getElementById('trailers-grid');
-    const modalTrailers = document.getElementById('modal-trailers');
 
-    // Состояние слайдера в модальном окне (для очистки при закрытии)
-    let modalSliderState = null;
+    // ===== ФУНКЦИИ TOOLTIP =====
+    // Функция создания tooltip с треугольником
+    function createTooltip(text, position = 'top') {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        tooltip.textContent = text;
+        tooltip.style.cssText = `
+            position: absolute;
+            background: rgba(255, 255, 255, 0.98);
+            color: #000;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            z-index: 100000;
+            pointer-events: none;
+            bottom: ${position === 'top' ? '100%' : 'auto'};
+            top: ${position === 'bottom' ? '100%' : 'auto'};
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            letter-spacing: 0.3px;
+            margin-bottom: ${position === 'top' ? '8px' : '0'};
+            margin-top: ${position === 'bottom' ? '8px' : '0'};
+        `;
+        
+        // Добавляем треугольник
+        const triangle = document.createElement('div');
+        triangle.style.cssText = `
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 6px solid rgba(255, 255, 255, 0.98);
+            bottom: ${position === 'top' ? '-6px' : 'auto'};
+            top: ${position === 'bottom' ? '-6px' : 'auto'};
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none;
+        `;
+        
+        tooltip.appendChild(triangle);
+        return tooltip;
+    }
+
+    // Функция для добавления tooltip к кнопке
+    function addTooltip(button, text, position = 'top') {
+        if (!button) return;
+        
+        // Делаем позицию relative для корректного позиционирования tooltip
+        if (getComputedStyle(button).position === 'static') {
+            button.style.position = 'relative';
+        }
+        
+        button.addEventListener('mouseenter', function(e) {
+            // Проверяем нет ли уже tooltip на этой кнопке
+            let tooltip = button.querySelector('.tooltip');
+            if (tooltip) {
+                tooltip.remove();
+            }
+            
+            tooltip = createTooltip(text, position);
+            button.appendChild(tooltip);
+            
+            // Принудительно запускаем reflow для применения стилей
+            void tooltip.offsetHeight;
+            tooltip.style.opacity = '1';
+            tooltip.style.transform = 'translateX(-50%) scale(1)';
+        });
+        
+        button.addEventListener('mouseleave', function(e) {
+            const tooltip = button.querySelector('.tooltip');
+            if (tooltip) {
+                tooltip.style.opacity = '0';
+                tooltip.style.transform = 'translateX(-50%) scale(0.95)';
+                setTimeout(() => {
+                    if (tooltip && tooltip.parentNode) {
+                        tooltip.remove();
+                    }
+                }, 300);
+            }
+        });
+    }
+    // ===== КОНЕЦ ФУНКЦИЙ TOOLTIP =====
 
     // Загрузка YouTube IFrame API
     let youtubeScriptLoaded = false;
@@ -574,6 +671,12 @@ async function fetchHeroContent() {
 
     const soundBtn = document.getElementById('trailer-sound-btn');
     const exitBtn = document.getElementById('trailer-exit-btn');
+
+    // Инициализируем tooltips для кнопок трейлера
+    if (soundBtn && exitBtn && typeof addTooltip === 'function') {
+        addTooltip(soundBtn, 'вкл/выкл звука', 'top');
+        addTooltip(exitBtn, 'выкл трейлера', 'top');
+    }
 
     let isSoundMuted = true;
     const soundIcon = soundBtn.querySelector('img');
@@ -1082,354 +1185,6 @@ async function fetchHeroContent() {
         });
     }
 
-    // Открыть модальное окно с деталями фильма
-    async function openModal(id, type) {
-        // Защитно: если ещё не заблокирована прокрутка, сохраняем позицию
-        try {
-            if (!document.body.dataset.scrollY) lockScroll();
-        } catch (e) {}
-
-        const response = await fetch(`${BASE_URL}/${type}/${id}?api_key=${API_KEY}&append_to_response=credits&language=ru-RU`);
-        const data = await response.json();
-        const backdropUrl = data.backdrop_path ? `${IMG_URL}${data.backdrop_path}` : NO_PICTURE_URL;
-
-        // Очистка предыдущего слайдера в модалке
-        if (modalSliderState?.interval) {
-            clearInterval(modalSliderState.interval);
-            modalSliderState = null;
-        }
-
-        // Очистка и восстановление начальной структуры modalBackdrop с логотипом
-        const logoUrl = await getLogo(id, type);
-        if (modalBackdrop) {
-            modalBackdrop.innerHTML = `
-                <div class="modal-logo-container">
-                    ${logoUrl ? 
-                        `<img id="modal-logo" class="modal-logo" src="${logoUrl}" alt="Logo">` : 
-                        `<h2 id="modal-logo-text" class="modal-logo-text">${data.title || data.name}</h2>`
-                    }
-                    <div class="info-row">
-                        <span id="modal-year"></span>
-                        <span id="modal-seasons"></span>
-                        <span id="modal-age-rating" class="age-rating"></span>
-                        <span id="modal-rating" class="rating"></span>
-                    </div>
-                    <div class="modal-buttons">
-                        <button id="modal-watch-btn" class="modal-watch-btn" data-id="${id}" data-type="${type}">
-                           <img src="ico/Плей.svg" alt="watch icon"
-     style="width:20px;height:20px;object-fit:contain;margin-right:8px;filter:brightness(0);">
-
-
-                             Смотреть
-                        </button>
-                    </div>
-                </div>
-            `;
-            // Убираем статичный фон — будем управлять через слои
-            modalBackdrop.style.backgroundImage = '';
-
-            // 1) Получаем до 4 подходящих бэкдропов без текста (backdrops с высоким соотношением сторон)
-            const imagesRes = await fetch(`${BASE_URL}/${type}/${id}/images?api_key=${API_KEY}`);
-            const imagesData = await imagesRes.json();
-            const backdrops = (imagesData.backdrops || [])
-                .filter(img => img.iso_639_1 === null || img.iso_639_1 === 'xx')
-                .slice(0, 4);
-
-            // Фолбэк: если мало бэкдропов, добавим основной
-            if (backdrops.length === 0 && data.backdrop_path) {
-                backdrops.push({ file_path: data.backdrop_path });
-            }
-
-            // 2) Создаем стили для контролов в модалке (правый-низ)
-            const modalStyle = document.createElement('style');
-            modalStyle.textContent = `
-                .modal-hero-controls {
-                    position: absolute;
-                    right: 16px;
-                    bottom: 16px;
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    z-index: 5;
-                    border-radius: 25px;
-                    padding: 2px 2px;
-                }
-                .modal-hero-dots {
-    position: relative;
-    display: flex;
-    gap: 8px;
-    background: rgba(0, 0, 0, 0.637);
-    border-radius: 25px;
-    padding: 8px 10px;
-    z-index: 0;
-}
-
-.modal-hero-dots::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(
-        135deg,
-        rgba(255, 255, 255, 0.35),
-        rgba(200, 200, 200, 0.15),
-        rgba(255, 255, 255, 0.25),
-        rgba(120, 120, 120, 0.1)
-    );
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: add, add;
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-    z-index: -1;
-}
-
-                .modal-hero-dot {
-                    width: 10px;
-                    height: 10px;
-                    border-radius: 50%;
-                    background: rgb(255 255 255 / 18%);
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                }
-                .modal-hero-dot.active { background: #ffffff; transform: scale(1.2); }
-                .modal-hero-play-pause {
-    position: relative;
-    background: rgba(0, 0, 0, 0.637);
-    border-radius: 50%;
-    padding: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 0;
-}
-
-.modal-hero-play-pause::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(
-        135deg,
-        rgba(255, 255, 255, 0.35),
-        rgba(200, 200, 200, 0.15),
-        rgba(255, 255, 255, 0.25),
-        rgba(120, 120, 120, 0.1)
-    );
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: add, add;
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-    z-index: -1;
-}
-
-                .modal-hero-play-pause img { width: 16px; height: 16px; }
-                .modal-hero-play-pause:hover { background: rgba(0, 0, 0, 0.8); }
-
-                /* Слои бэкдропа */
-                .modal-backdrop-layer {
-                    position: absolute;
-                    inset: 0;
-                    background-size: cover;
-                    background-position: center;
-                    opacity: 0;
-                    transition: opacity 1s ease;
-                    z-index: 0;
-                }
-                .modal-backdrop-layer.active { opacity: 1; }
-
-                /* Мобилки: скрыть контролы в модалке */
-                @media (max-width: 768px) {
-                    .modal-hero-controls { display: none !important; }
-                }
-            `;
-            document.head.appendChild(modalStyle);
-
-            // 3) Создаем два слоя для плавного фейда
-            const layer1 = document.createElement('div');
-            const layer2 = document.createElement('div');
-            layer1.className = 'modal-backdrop-layer active';
-            layer2.className = 'modal-backdrop-layer';
-            modalBackdrop.appendChild(layer2);
-            modalBackdrop.appendChild(layer1);
-
-            // 4) Контролы: точки и пауза/плей (справа-снизу)
-            const controls = document.createElement('div');
-            controls.className = 'modal-hero-controls';
-            const dots = document.createElement('div');
-            dots.className = 'modal-hero-dots';
-            const playPause = document.createElement('div');
-            playPause.className = 'modal-hero-play-pause';
-            const playPauseIcon = document.createElement('img');
-            playPauseIcon.src = 'ico/Пауза.png';
-            playPause.appendChild(playPauseIcon);
-            controls.appendChild(dots);
-            controls.appendChild(playPause);
-            modalBackdrop.appendChild(controls);
-
-            // 5) Состояние и функции слайдера
-            let current = 0;
-            let isPlayingModal = false;
-            const slides = backdrops.slice(0, 4);
-
-            function setSlide(idx) {
-                const currentLayer = layer1.classList.contains('active') ? layer1 : layer2;
-                const nextLayer = layer1.classList.contains('active') ? layer2 : layer1;
-                nextLayer.style.backgroundImage = `url(${IMG_URL}${slides[idx].file_path})`;
-                currentLayer.classList.remove('active');
-                nextLayer.classList.add('active');
-                // Обновить точки
-                dots.querySelectorAll('.modal-hero-dot').forEach((dot, i) => {
-                    dot.classList.toggle('active', i === idx);
-                });
-                current = idx;
-            }
-
-            // Точки
-            slides.forEach((_, i) => {
-                const d = document.createElement('div');
-                d.className = 'modal-hero-dot';
-                if (i === 0) d.classList.add('active');
-                d.addEventListener('click', () => {
-                    if (modalSliderState?.interval) clearInterval(modalSliderState.interval);
-                    isPlayingModal = false;
-                    playPauseIcon.src = 'ico/Плей.png';
-                    setSlide(i);
-                });
-                dots.appendChild(d);
-            });
-
-            function startModalAutoSlide() {
-                if (modalSliderState?.interval) clearInterval(modalSliderState.interval);
-                modalSliderState = {
-                    interval: setInterval(() => {
-                        const next = (current + 1) % slides.length;
-                        setSlide(next);
-                    }, 10000)
-                };
-            }
-
-            // Пауза/плей
-            playPause.addEventListener('click', () => {
-                isPlayingModal = !isPlayingModal;
-                playPauseIcon.src = isPlayingModal ? 'ico/Пауза.png' : 'ico/Плей.png';
-                if (isPlayingModal) startModalAutoSlide(); else if (modalSliderState?.interval) clearInterval(modalSliderState.interval);
-            });
-
-            // Инициализация
-            if (slides.length > 0) {
-                layer1.style.backgroundImage = `url(${IMG_URL}${slides[0].file_path})`;
-                playPauseIcon.src = 'ico/Плей.png';
-            }
-        }
-
-        // Переполучение элементов после создания новой структуры
-        const updatedModalYear = document.getElementById('modal-year');
-        const updatedModalSeasons = document.getElementById('modal-seasons');
-        const updatedModalAgeRating = document.getElementById('modal-age-rating');
-        const updatedModalRating = document.getElementById('modal-rating');
-        const updatedModalLogoText = document.getElementById('modal-logo-text');
-
-        // Заполнение информации о фильме/сериале
-        if (updatedModalYear) updatedModalYear.textContent = new Date(data.release_date || data.first_air_date).getFullYear() || 'Неизвестно';
-        if (updatedModalSeasons && type === 'tv') {
-            updatedModalSeasons.textContent = data.number_of_seasons ? `${data.number_of_seasons} сезон(ов)` : '';
-            updatedModalSeasons.style.display = 'inline-block';
-        } else if (updatedModalSeasons) {
-            updatedModalSeasons.style.display = 'none';
-        }
-
-        if (updatedModalAgeRating) {
-            updatedModalAgeRating.textContent = await getAgeRating(id, type);
-        }
-
-        const rating = data.vote_average ? parseFloat(data.vote_average.toFixed(1)) : null;
-        if (updatedModalRating && rating) {
-            updatedModalRating.textContent = rating;
-            updatedModalRating.className = 'rating';
-            if (rating >= 6.5) {
-                updatedModalRating.classList.add('high');
-            } else if (rating < 6.5 && rating >= 5) {
-                updatedModalRating.classList.add('low');
-            } else if (rating < 5 && rating >= 4) {
-                updatedModalRating.classList.add('very-low');
-            } else {
-                updatedModalRating.classList.add('dark-red');
-            }
-        } else if (updatedModalRating) {
-            updatedModalRating.textContent = '';
-        }
-
-        if (modalOverview) modalOverview.textContent = data.overview || 'Описание отсутствует';
-
-        // Актерский состав
-        const cast = data.credits?.cast?.slice(0, 5).map(actor => actor.name).join(', ') || 'Информация недоступна';
-        if (modalCast) modalCast.textContent = cast;
-
-        // Жанры
-        const genres = data.genres?.map(genre => genre.name).join(', ') || 'Информация недоступна';
-        if (modalGenres) modalGenres.textContent = genres;
-
-        // Оригинальное название
-        if (modalOriginalTitle) modalOriginalTitle.textContent = data.original_title || data.original_name || 'Информация недоступна';
-
-        // Получение и отображение трейлеров
-        const trailers = await getTrailers(id, type);
-        displayTrailers(trailers, id, type);
-
-        // Показать модальное окно
-        if (modal) {
-            modal.style.display = 'block';
-            // Скрыть мобильную навигацию (только на мобильных)
-            if (window.innerWidth <= 768) {
-                const mobileNav = document.querySelector('.mobile-nav');
-                if (mobileNav) {
-                    mobileNav.style.display = 'none';
-                }
-            }
-            // после показа модалки — ещё раз зафиксируем позицию и предотвратим скролл браузера
-            try {
-                const sy = parseInt(document.body.dataset.scrollY || '0', 10);
-                window.scrollTo(0, sy);
-            } catch (e) {}
-            // Программная фокусировка убрана по запросу — не вызываем `.focus()` чтобы не показывать outline
-        }
-
-        // Обновить обработчик кнопки "Смотреть" в модальном окне
-        const newModalWatchBtn = document.getElementById('modal-watch-btn');
-        if (newModalWatchBtn) {
-            newModalWatchBtn.addEventListener('click', () => {
-                const btnId = parseInt(newModalWatchBtn.dataset.id);
-                const btnType = newModalWatchBtn.dataset.type;
-                if (btnId && btnType) {
-                    // Закрываем модальное окно
-                    if (modal) {
-                        modal.style.display = 'none';
-                        // Показать мобильную навигацию (только на мобильных)
-                        if (window.innerWidth <= 768) {
-                            const mobileNav = document.querySelector('.mobile-nav');
-                            if (mobileNav) {
-                                mobileNav.style.display = 'flex';
-                            }
-                        }
-                        unlockScroll();
-                    }
-                    // Открываем плеер Vibix
-                    if (btnType === 'movie') {
-                        window.vibixPlayer.playMovie(btnId);
-                    } else {
-                        window.vibixPlayer.playTVShow(btnId, 1, 1);
-                    }
-                }
-            });
-        }
-    }
-
     // Функция поиска
     async function performSearch(query) {
         try {
@@ -1446,6 +1201,7 @@ async function fetchHeroContent() {
             displayMovies(movieData.results || [], searchMoviesRow, 'movie');
             displayMovies(seriesData.results || [], searchSeriesRow, 'tv');
 
+            // Показываем модал с результатами
             if (searchModal) {
                 searchModal.style.display = 'block';
                 lockScroll();
@@ -1453,170 +1209,43 @@ async function fetchHeroContent() {
 
             if ((!movieData.results || movieData.results.length === 0) && 
                 (!seriesData.results || seriesData.results.length === 0)) {
-                if (searchMoviesRow) {
-                    searchMoviesRow.innerHTML = '<p>Результаты не найдены</p>';
-                }
-                if (searchSeriesRow) {
-                    searchSeriesRow.innerHTML = '';
-                }
+                searchMoviesRow.innerHTML = '<p>Результаты не найдены</p>';
+                searchSeriesRow.innerHTML = '';
             }
         } catch (error) {
             console.error('Ошибка поиска:', error);
-            if (searchMoviesRow) {
-                searchMoviesRow.innerHTML = '<p>Ошибка при выполнении поиска</p>';
-            }
-            if (searchSeriesRow) {
-                searchSeriesRow.innerHTML = '';
-            }
+            searchMoviesRow.innerHTML = '<p>Ошибка при выполнении поиска</p>';
+            searchSeriesRow.innerHTML = '';
         }
     }
 
-    // Обработчики событий для закрытия модальных окон
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            if (modal) {
-                modal.style.display = 'none';
-                // Показать мобильную навигацию (только на мобильных)
-                if (window.innerWidth <= 768) {
-                    const mobileNav = document.querySelector('.mobile-nav');
-                    if (mobileNav) {
-                        mobileNav.style.display = 'flex';
-                    }
-                }
-                unlockScroll();
-            }
-            if (modalSliderState?.interval) {
-                clearInterval(modalSliderState.interval);
-                modalSliderState = null;
-            }
-        });
+    // Открыть модальное окно с деталями фильма
+    async function openModal(id, type) {
+        // Перенаправляем на watch/watch.html с параметрами вместо открытия встроенного модаладала
+        const tvUrl = `watch/watch.html?TV_ID=${id}`;
+        const movieUrl = `watch/watch.html?M_ID=${id}`;
+        
+        const url = type === 'tv' ? tvUrl : movieUrl;
+        console.log('openModal called with URL:', url);
+        window.location.href = url;
     }
 
-    if (trailerCloseBtn) {
-        trailerCloseBtn.addEventListener('click', () => {
-            if (trailerModal) {
-                trailerModal.style.display = 'none';
-                unlockScroll();
-            }
-            if (trailerVideo) trailerVideo.innerHTML = '';
-        });
-    }
-
+    // Закрытие поиска при клике вне модала
     if (searchCloseBtn) {
         searchCloseBtn.addEventListener('click', () => {
-            if (searchModal) {
+            if (searchModal) searchModal.style.display = 'none';
+            unlockScroll();
+        });
+    }
+
+    if (searchModal) {
+        searchModal.addEventListener('click', (e) => {
+            if (e.target === searchModal) {
                 searchModal.style.display = 'none';
                 unlockScroll();
             }
         });
     }
-
-    if (playerCloseBtn) {
-        playerCloseBtn.addEventListener('click', () => {
-            if (playerModal) {
-                playerModal.style.display = 'none';
-                unlockScroll();
-            }
-            // Закрытие плеера Vibix
-            const vibixModal = document.getElementById('vibix-player-modal');
-            if (vibixModal) {
-                vibixModal.remove();
-            }
-        });
-    }
-
-    // Закрытие модальных окон при клике вне них
-    window.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-            // Показать мобильную навигацию (только на мобильных)
-            if (window.innerWidth <= 768) {
-                const mobileNav = document.querySelector('.mobile-nav');
-                if (mobileNav) {
-                    mobileNav.style.display = 'flex';
-                }
-            }
-            unlockScroll();
-            if (modalSliderState?.interval) {
-                clearInterval(modalSliderState.interval);
-                modalSliderState = null;
-            }
-        }
-        if (e.target === trailerModal) {
-            trailerModal.style.display = 'none';
-            unlockScroll();
-            if (trailerVideo) trailerVideo.innerHTML = '';
-        }
-        if (e.target === searchModal) {
-            searchModal.style.display = 'none';
-            unlockScroll();
-        }
-        if (e.target === playerModal) {
-            playerModal.style.display = 'none';
-            unlockScroll();
-            // Закрытие плеера Vibix
-            const vibixModal = document.getElementById('vibix-player-modal');
-            if (vibixModal) {
-                vibixModal.remove();
-            }
-        }
-    });
-
-    // Экспортируем глобально для других скриптов (например, плеера)
-    try {
-        window.lockScroll = lockScroll;
-        window.unlockScroll = unlockScroll;
-    } catch (e) {
-        // ignore
-    }
-
-    // Обработчики для кнопок hero
-    if (heroWatchBtn) {
-        heroWatchBtn.addEventListener('click', () => {
-            const id = parseInt(heroWatchBtn.dataset.id);
-            const type = heroWatchBtn.dataset.type;
-            if (id && type) {
-                if (type === 'movie') {
-                    window.vibixPlayer.playMovie(id);
-                } else {
-                    window.vibixPlayer.playTVShow(id, 1, 1);
-                }
-            }
-        });
-    }
-
-    if (heroInfoBtn) {
-        heroInfoBtn.addEventListener('click', () => {
-            const id = heroInfoBtn.dataset.id;
-            const type = heroInfoBtn.dataset.type;
-            if (id && type) {
-                    lockScroll();
-                    openModal(id, type);
-                }
-        });
-    }
-
-    // Обработчик для modal-watch-btn (делегирование событий)
-    document.addEventListener('click', (e) => {
-        if (e.target && e.target.id === 'modal-watch-btn') {
-            const id = parseInt(e.target.dataset.id);
-            const type = e.target.dataset.type;
-            if (id && type) {
-                // Закрываем модальное окно
-                if (modal) {
-                    modal.style.display = 'none';
-                    try { unlockScroll(); } catch (e) { document.body.classList.remove('no-scroll'); }
-                }
-                
-                // Открываем плеер Vibix
-                if (type === 'movie') {
-                    window.vibixPlayer.playMovie(id);
-                } else {
-                    window.vibixPlayer.playTVShow(id, 1, 1);
-                }
-            }
-        }
-    });
 
     // Инициализация контента
     if (hero) fetchHeroContent();
@@ -1627,4 +1256,16 @@ async function fetchHeroContent() {
     if (legendaryMoviesRow) fetchLegendaryMovies();
     if (trendingSeriesRow) fetchTrendingSeries();
     if (legendarySeriesRow) fetchLegendarySeries();
+
+    // Добавляем tooltips для кнопок управления плеером
+    // Они будут добавлены динамически когда плеер инициализируется в player.js
+    window.addTooltip = addTooltip;
+
+    // Инициализируем tooltips для поиска
+    setTimeout(() => {
+        const searchCloseBtn = document.querySelector('#search-modal .close-btn');
+        if (searchCloseBtn && typeof addTooltip === 'function') {
+            addTooltip(searchCloseBtn, 'Закрыть поиск', 'top');
+        }
+    }, 100);
 });
