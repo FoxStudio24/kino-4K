@@ -26,9 +26,6 @@
             position: relative;
         }
         .carousel-wrapper { position: relative; margin: 0; }
-        .carousel-wrapper::before, .carousel-wrapper::after { content: ''; position: absolute; top:0; bottom:0; width:60px; z-index:5; pointer-events:none; }
-        .carousel-wrapper::before { left:0; background: linear-gradient(to right, #141414 0%, transparent 100%); }
-        .carousel-wrapper::after { right:0; background: linear-gradient(to left, #141414 0%, transparent 100%); }
         .carousel { display:flex; overflow-x:auto; overflow-y:visible; padding:10px 0; scroll-behavior:smooth; -webkit-overflow-scrolling: touch; }
         .carousel-track { display:flex; gap:12px; padding-left:12px; padding-right:12px; }
         
@@ -42,7 +39,7 @@
             border-radius: 12px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
             cursor: pointer;
-            background: #000;
+            background: #ffffff00;
             flex-shrink: 0;
         }
 
@@ -206,12 +203,9 @@
         </div>
     </div>
     <header class="header">
-        <form class="search-bar" id="search-bar">
-            <input type="text" placeholder="Поиск фильмов и сериалов...">
-            <button type="submit">
-                    <img src="ico/nav_mob/Поиск.svg" alt="Поиск" style="width: 24px; height: 24px;">
-            </button>
-        </form>
+        <button class="search-trigger" id="search-trigger">
+            <img src="ico/nav_mob/Поиск.svg" alt="Поиск" style="width: 24px; height: 24px;">
+        </button>
 
         <nav class="nav-tabs">
     <a href="index.html" class="active">
@@ -259,21 +253,11 @@
             </div>
         </section>
 
-        <!-- Top 10 carousel injected by user request -->
-        <div class="top10-container">
-            <h2>Сейчас смотрят</h2>
-            <div id="top10-loading" class="loading" style="display: flex; justify-content: center; align-items: center; min-height: 200px;">
-                <div class="loader-wrapper">
-                    <div class="packman"></div>
-                    <div class="dots">
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                    </div>
-                </div>
-            </div>
-            <div id="top10-app" class="container" style="display: none;">
+        <!-- Top 10 Carousels -->
+        <!-- Top 10 Trends -->
+        <div class="top10-container" id="top10-app" style="display: none;">
+            <div class="container">
+                <h2>Топ недели</h2>
                 <div class="carousel-wrapper">
                     <div class="carousel">
                         <div class="carousel-track" id="carouselTrack"></div>
@@ -281,39 +265,17 @@
                 </div>
             </div>
         </div>
-
-        <!-- Hero badge (big number + gradient) -->
+        <div id="top10-loading" style="display: block; text-align: center; padding: 40px 20px; color: #999;">Загрузка...</div>
 
         <section class="category">
             <h2>Новые фильмы </h2>
             <div id="new-movies" class="movie-row"></div>
         </section>
 
-        <section class="category">
-            <h2>Новые сериалы </h2>
-            <div id="new-series" class="movie-row"></div>
-        </section>
-
-        <section class="category">
-            <h2>Новые мультфильмы </h2>
-            <div id="new-animations" class="movie-row"></div>
-        </section>
-
-        <!-- Top 10 Movies container -->
-        <div class="top10-container">
-            <h2>В тренде - Фильмы</h2>
-            <div id="top10-movies-loading" class="loading" style="display: flex; justify-content: center; align-items: center; min-height: 200px;">
-                <div class="loader-wrapper">
-                    <div class="packman"></div>
-                    <div class="dots">
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                    </div>
-                </div>
-            </div>
-            <div id="top10-movies-app" class="container" style="display: none;">
+        <!-- Top 10 Movies -->
+        <div class="top10-container" id="top10-movies-app" style="display: none;">
+            <div class="container">
+                <h2>Топ фильмов</h2>
                 <div class="carousel-wrapper">
                     <div class="carousel">
                         <div class="carousel-track" id="moviesCarouselTrack"></div>
@@ -321,27 +283,17 @@
                 </div>
             </div>
         </div>
+        <div id="top10-movies-loading" style="display: block; text-align: center; padding: 40px 20px; color: #999;">Загрузка...</div>
 
         <section class="category">
-            <h2>Легендарные фильмы </h2>
-            <div id="legendary-movies" class="movie-row"></div>
+            <h2>Новые сериалы </h2>
+            <div id="new-series" class="movie-row"></div>
         </section>
 
-        <!-- Top 10 Series container -->
-        <div class="top10-container">
-            <h2>В тренде - Сериалы</h2>
-            <div id="top10-series-loading" class="loading" style="display: flex; justify-content: center; align-items: center; min-height: 200px;">
-                <div class="loader-wrapper">
-                    <div class="packman"></div>
-                    <div class="dots">
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                    </div>
-                </div>
-            </div>
-            <div id="top10-series-app" class="container" style="display: none;">
+        <!-- Top 10 Series -->
+        <div class="top10-container" id="top10-series-app" style="display: none;">
+            <div class="container">
+                <h2>Топ сериалов</h2>
                 <div class="carousel-wrapper">
                     <div class="carousel">
                         <div class="carousel-track" id="seriesCarouselTrack"></div>
@@ -349,6 +301,17 @@
                 </div>
             </div>
         </div>
+        <div id="top10-series-loading" style="display: block; text-align: center; padding: 40px 20px; color: #999;">Загрузка...</div>
+
+        <section class="category">
+            <h2>Новые мультфильмы </h2>
+            <div id="new-animations" class="movie-row"></div>
+        </section>
+
+        <section class="category">
+            <h2>Легендарные фильмы </h2>
+            <div id="legendary-movies" class="movie-row"></div>
+        </section>
 
         <section class="category">
             <h2>Легендарные сериалы </h2>
@@ -357,12 +320,29 @@
     </main>
 
     <!-- Модальные окна -->
-    <div id="search-modal" class="modal">
-        <div class="modal-content">
-            <button class="close-btn" aria-label="Закрыть" title="Закрыть">
+    <div id="search-modal" class="modal mobile-search-modal">
+        <div class="modal-content mobile-search-content">
+            <button class="mobile-search-close" id="search-close">
                 <img src="ico/закрыть.svg" alt="Закрыть" style="width: 24px; height: 24px;">
             </button>
-            <div class="search-results">
+            <div id="search-loader" class="search-loader" style="display:none;">
+                <img src="ico/Загрузка.svg" alt="Загрузка" style="width:64px;height:64px;">
+            </div>
+            <div class="mobile-search-header">
+                <h3>Поиск</h3>
+            </div>
+            <div id="search-empty" class="search-empty" style="display:none;">
+                <img src="ico/Поискмд.png" alt="Поиск" style="width:96px;height:96px;margin-bottom:16px;">
+                <p class="search-empty-text">Введите имя фильма, сериала или актера</p>
+            </div>
+            <form class="mobile-search-form" id="search-form">
+                <input type="text" class="mobile-search-input" id="search-input" placeholder="Поиск фильмов, сериалов и актера...">
+                <button type="submit" class="mobile-search-btn">
+                    <img src="ico/nav_mob/Поиск.svg" alt="Поиск" style="width: 24px; height: 24px;">
+                </button>
+            </form>
+            <div id="search-recent" class="search-recent" aria-hidden="true"></div>
+            <div class="mobile-search-results">
                 <div class="search-category">
                     <h2>Фильмы</h2>
                     <div id="search-movies" class="movie-row"></div>
@@ -370,6 +350,10 @@
                 <div class="search-category">
                     <h2>Сериалы</h2>
                     <div id="search-series" class="movie-row"></div>
+                </div>
+                <div class="search-category">
+                    <h2>Актеры</h2>
+                    <div id="search-actors" class="movie-row"></div>
                 </div>
             </div>
         </div>
@@ -402,34 +386,6 @@
             <span class="mobile-nav-text">Поиск</span>
         </a>
     </nav>
-
-    <!-- Mobile Search Modal -->
-    <div id="mobile-search-modal" class="mobile-search-modal">
-        <div class="mobile-search-content">
-            <div class="mobile-search-header">
-                <h3>Поиск</h3>
-                <button class="mobile-search-close">
-                    <img src="ico/закрыть.svg" alt="Закрыть" style="width: 24px; height: 24px;">
-                </button>
-            </div>
-            <form class="mobile-search-form">
-                <input type="text" class="mobile-search-input" placeholder="Поиск фильмов и сериалов...">
-                <button type="submit" class="mobile-search-btn">
-                    <img src="ico/nav_mob/Поиск.svg" alt="Поиск" style="width: 24px; height: 24px;">
-                </button>
-            </form>
-            <div class="mobile-search-results">
-                <div class="search-category">
-                    <h2>Фильмы</h2>
-                    <div class="movie-row" id="mobile-search-movies"></div>
-                </div>
-                <div class="search-category">
-                    <h2>Сериалы</h2>
-                    <div class="movie-row" id="mobile-search-series"></div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Подвал -->
     <footer class="footer">

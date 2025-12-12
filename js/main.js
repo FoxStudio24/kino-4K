@@ -41,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
             lockScroll();
             openModal(id, type);
             if (searchModal) searchModal.style.display = 'none';
-            if (mobileSearchModal) mobileSearchModal.style.display = 'none';
         }
     });
 
@@ -57,155 +56,214 @@ document.addEventListener('DOMContentLoaded', () => {
     showLoading();
     window.addEventListener('load', hideLoading);
 
-    // Логика для search-bar
-    const searchBar = document.querySelector('.search-bar');
-    const searchInput = searchBar.querySelector('input');
+    // Логика для кнопки поиска
+    const searchTrigger = document.getElementById('search-trigger');
+    const searchModal = document.getElementById('search-modal');
+    const searchForm = document.getElementById('search-form');
+    const searchInput = document.getElementById('search-input');
+    const searchClose = document.getElementById('search-close');
 
-    // Обработчик отправки формы
-    searchBar.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const query = searchInput.value.trim();
-        if (query) {
-            performSearch(query);
-            searchInput.value = '';
-            searchBar.classList.remove('expanded');
-        } else {
-            searchInput.placeholder = 'Введите запрос для поиска';
-            searchInput.classList.add('error');
-            setTimeout(() => {
-                searchInput.placeholder = 'Поиск фильмов и сериалов...';
-                searchInput.classList.remove('error');
-            }, 2000);
-        }
-    });
-
-    // Разворачивание при наведении на сам search-bar
-    searchBar.addEventListener('mouseover', () => {
-        searchBar.classList.add('expanded');
-        searchInput.focus();
-    });
-
-    // Сворачивание при уходе мыши и пустом вводе
-    searchBar.addEventListener('mouseout', () => {
-        if (!searchInput.value.trim()) {
-            searchBar.classList.remove('expanded');
-        }
-    });
-
-    // Сворачивание при клике вне формы
-    document.addEventListener('click', (e) => {
-        if (!searchBar.contains(e.target) && !searchInput.value.trim()) {
-            searchBar.classList.remove('expanded');
-        }
-    });
-
-    // Мобильный поиск
-    const mobileSearchModal = document.getElementById('mobile-search-modal');
-    const mobileSearchTrigger = document.querySelector('.mobile-search-trigger');
-    const mobileSearchClose = document.querySelector('.mobile-search-close');
-    const mobileSearchForm = document.querySelector('.mobile-search-form');
-    const mobileSearchInput = document.querySelector('.mobile-search-input');
-    const mobileSearchMovies = document.getElementById('mobile-search-movies');
-    const mobileSearchSeries = document.getElementById('mobile-search-series');
-
-    // Открытие мобильного поиска
-    if (mobileSearchTrigger) {
-        mobileSearchTrigger.addEventListener('click', (e) => {
+    if (searchTrigger) {
+        searchTrigger.addEventListener('click', (e) => {
             e.preventDefault();
-            mobileSearchModal.style.display = 'block';
+            searchModal.style.display = 'block';
             lockScroll();
-            mobileSearchTrigger.classList.add('search-active');
+            try {
+                const modalContent = document.querySelector('.mobile-search-content');
+                if (modalContent) {
+                    modalContent.classList.add('modal-opening');
+                    // remove the class after animations complete
+                    setTimeout(() => {
+                        modalContent.classList.remove('modal-opening');
+                    }, 700);
+                }
+            } catch (e) {}
             setTimeout(() => {
-                mobileSearchInput.focus();
+                searchInput.focus();
+                // if empty input — show empty state (desktop behavior)
+                updateSearchEmptyState();
             }, 300);
         });
     }
 
-    // Закрытие мобильного поиска
-    function closeMobileSearch() {
-        mobileSearchModal.style.display = 'none';
-        unlockScroll();
-        mobileSearchTrigger.classList.remove('search-active');
-        mobileSearchInput.value = '';
-        mobileSearchMovies.innerHTML = '';
-        mobileSearchSeries.innerHTML = '';
-    }
-
-    if (mobileSearchClose) {
-        mobileSearchClose.addEventListener('click', closeMobileSearch);
-    }
-
-    // Закрытие по клику вне модального окна
-    if (mobileSearchModal) {
-        mobileSearchModal.addEventListener('click', (e) => {
-            if (e.target === mobileSearchModal) {
-                closeMobileSearch();
-            }
-        });
-    }
-
-    // Обработка формы мобильного поиска
-    if (mobileSearchForm) {
-        mobileSearchForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const query = mobileSearchInput.value.trim();
-            if (query) {
-                performMobileSearch(query);
-            } else {
-                mobileSearchInput.placeholder = 'Введите запрос для поиска';
-                mobileSearchInput.style.borderColor = '#ff4d4d';
+    // Привязать кнопки мобильной навигации к единому модальному окну поиска
+    const mobileSearchTriggers = document.querySelectorAll('.mobile-search-trigger');
+    if (mobileSearchTriggers && mobileSearchTriggers.length > 0) {
+        mobileSearchTriggers.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (searchModal) searchModal.style.display = 'block';
+                lockScroll();
+                try {
+                    const modalContent = document.querySelector('.mobile-search-content');
+                    if (modalContent) {
+                        modalContent.classList.add('modal-opening');
+                        setTimeout(() => {
+                            modalContent.classList.remove('modal-opening');
+                        }, 700);
+                    }
+                } catch (e) {}
+                // Скрываем мобильную навигацию пока открыт поиск
+                try {
+                    const mobileNav = document.querySelector('.mobile-nav');
+                    if (mobileNav) mobileNav.style.display = 'none';
+                } catch (err) {}
                 setTimeout(() => {
-                    mobileSearchInput.placeholder = 'Поиск фильмов и сериалов...';
-                    mobileSearchInput.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                }, 2000);
+                    if (searchInput) searchInput.focus();
+                    updateSearchEmptyState();
+                }, 300);
+            });
+        });
+    }
+
+    // Empty state toggle helpers
+    function updateSearchEmptyState() {
+        try {
+            const empty = document.getElementById('search-empty');
+            const results = document.querySelectorAll('.mobile-search-results, .mobile-search-results .search-category');
+            const q = searchInput ? searchInput.value.trim() : '';
+            // Only use empty-state layout on desktop widths
+            if (window.innerWidth >= 769) {
+                if (empty) empty.style.display = (q === '') ? 'flex' : 'none';
+                // hide results container when empty
+                const resultsContainer = document.querySelector('.mobile-search-results');
+                if (resultsContainer) resultsContainer.style.display = (q === '') ? 'none' : 'block';
+                // render recent searches when empty
+                if (q === '') renderRecentSearches();
+            } else {
+                // mobile: keep default behavior
+                if (empty) empty.style.display = 'none';
+                const resultsContainer = document.querySelector('.mobile-search-results');
+                if (resultsContainer) resultsContainer.style.display = 'block';
+                // on mobile also render recent if empty
+                if (q === '') renderRecentSearches();
+            }
+        } catch (e) {}
+    }
+
+    // Toggle empty state on input
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            updateSearchEmptyState();
+        });
+    }
+
+    // Recent searches storage and rendering
+    const RECENT_KEY = 'nn_recent_searches';
+
+    function loadRecentSearches() {
+        try {
+            const raw = localStorage.getItem(RECENT_KEY);
+            if (!raw) return [];
+            const arr = JSON.parse(raw);
+            if (Array.isArray(arr)) return arr;
+        } catch (e) {}
+        return [];
+    }
+
+    function saveRecentSearch(query) {
+        if (!query) return;
+        try {
+            let arr = loadRecentSearches();
+            // remove duplicates
+            arr = arr.filter(item => item.toLowerCase() !== query.toLowerCase());
+            arr.unshift(query);
+            if (arr.length > 5) arr = arr.slice(0,5);
+            localStorage.setItem(RECENT_KEY, JSON.stringify(arr));
+        } catch (e) {}
+    }
+
+    function renderRecentSearches() {
+        try {
+            const container = document.getElementById('search-recent');
+            if (!container) return;
+            const list = loadRecentSearches();
+            container.innerHTML = '';
+            if (!list || list.length === 0) {
+                container.setAttribute('aria-hidden','true');
+                return;
+            }
+            container.setAttribute('aria-hidden','false');
+            list.forEach(q => {
+                const btn = document.createElement('div');
+                btn.className = 'pill';
+                btn.textContent = q;
+                btn.addEventListener('click', (e) => {
+                    if (searchInput) searchInput.value = q;
+                    // perform search immediately
+                    performSearch(q);
+                });
+                container.appendChild(btn);
+            });
+        } catch (e) {}
+    }
+
+    function closeSearch() {
+        if (searchModal) searchModal.style.display = 'none';
+        unlockScroll();
+        // remove results-open class so form returns to center
+        try {
+            const modalContent = document.querySelector('.mobile-search-content');
+            if (modalContent) modalContent.classList.remove('results-open');
+            const empty = document.getElementById('search-empty');
+            const resultsContainer = document.querySelector('.mobile-search-results');
+            if (window.innerWidth >= 769) {
+                if (empty) empty.style.display = 'flex';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+            }
+        } catch (e) {}
+        // Вернуть мобильную навигацию, если она была скрыта
+        try {
+            const mobileNav = document.querySelector('.mobile-nav');
+            if (mobileNav && window.innerWidth <= 768) {
+                mobileNav.style.display = 'flex';
+            }
+        } catch (e) {}
+
+        searchInput.value = '';
+        document.getElementById('search-movies').innerHTML = '';
+        document.getElementById('search-series').innerHTML = '';
+        document.getElementById('search-actors').innerHTML = '';
+    }
+
+    if (searchClose) {
+        searchClose.addEventListener('click', closeSearch);
+    }
+
+    if (searchModal) {
+        searchModal.addEventListener('click', (e) => {
+            if (e.target === searchModal) {
+                closeSearch();
             }
         });
     }
 
-    // Функция мобильного поиска
-    async function performMobileSearch(query) {
-        try {
-            const movieResponse = await fetch(
-                `${BASE_URL}/search/movie?api_key=${API_KEY}&language=ru-RU&query=${encodeURIComponent(query)}`
-            );
-            const movieData = await movieResponse.json();
-
-            const seriesResponse = await fetch(
-                `${BASE_URL}/search/tv?api_key=${API_KEY}&language=ru-RU&query=${encodeURIComponent(query)}`
-            );
-            const seriesData = await seriesResponse.json();
-
-            displayMovies(movieData.results || [], mobileSearchMovies, 'movie');
-            displayMovies(seriesData.results || [], mobileSearchSeries, 'tv');
-
-            if ((!movieData.results || movieData.results.length === 0) && 
-                (!seriesData.results || seriesData.results.length === 0)) {
-                mobileSearchMovies.innerHTML = '<p>Результаты не найдены</p>';
-                mobileSearchSeries.innerHTML = '';
-            }
-        } catch (error) {
-            console.error('Ошибка поиска:', error);
-            mobileSearchMovies.innerHTML = '<p>Ошибка при выполнении поиска</p>';
-            mobileSearchSeries.innerHTML = '';
-        }
-    }
-
-    // Закрытие мобильного поиска при нажатии Escape
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && mobileSearchModal && mobileSearchModal.style.display === 'block') {
-            closeMobileSearch();
-        }
-        // Закрытие модального окна при нажатии Escape
-        if (e.key === 'Escape' && modal && modal.style.display === 'block') {
-            modal.style.display = 'none';
-            // Показать мобильную навигацию (только на мобильных)
-            if (window.innerWidth <= 768) {
-                const mobileNav = document.querySelector('.mobile-nav');
-                if (mobileNav) {
-                    mobileNav.style.display = 'flex';
+    if (searchForm) {
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            if (query) {
+                performSearch(query);
+            } else {
+                // If empty and on desktop, show empty state instead of error styling
+                if (window.innerWidth >= 769) {
+                    updateSearchEmptyState();
+                } else {
+                    searchInput.placeholder = 'Введите запрос для поиска';
+                    searchInput.style.borderColor = '#ff4d4d';
+                    setTimeout(() => {
+                        searchInput.placeholder = 'Поиск фильмов, сериалов и актеров...';
+                        searchInput.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                    }, 2000);
                 }
             }
-            unlockScroll();
+        });
+    }
+
+    // Закрытие поиска при нажатии Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && searchModal && searchModal.style.display === 'block') {
+            closeSearch();
         }
     });
 
@@ -259,99 +317,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Элементы поиска
-    const searchModal = document.getElementById('search-modal');
     const searchMoviesRow = document.getElementById('search-movies');
     const searchSeriesRow = document.getElementById('search-series');
-    const searchCloseBtn = document.querySelector('#search-modal .close-btn');
-
-    // ===== ФУНКЦИИ TOOLTIP =====
-    // Функция создания tooltip с треугольником
-    function createTooltip(text, position = 'top') {
-        const tooltip = document.createElement('div');
-        tooltip.className = 'tooltip';
-        tooltip.textContent = text;
-        tooltip.style.cssText = `
-            position: absolute;
-            background: rgba(255, 255, 255, 0.98);
-            color: #000;
-            padding: 10px 14px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            white-space: nowrap;
-            z-index: 100000;
-            pointer-events: none;
-            bottom: ${position === 'top' ? '100%' : 'auto'};
-            top: ${position === 'bottom' ? '100%' : 'auto'};
-            left: 50%;
-            transform: translateX(-50%);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-            opacity: 0;
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            letter-spacing: 0.3px;
-            margin-bottom: ${position === 'top' ? '8px' : '0'};
-            margin-top: ${position === 'bottom' ? '8px' : '0'};
-        `;
-        
-        // Добавляем треугольник
-        const triangle = document.createElement('div');
-        triangle.style.cssText = `
-            position: absolute;
-            width: 0;
-            height: 0;
-            border-left: 6px solid transparent;
-            border-right: 6px solid transparent;
-            border-top: 6px solid rgba(255, 255, 255, 0.98);
-            bottom: ${position === 'top' ? '-6px' : 'auto'};
-            top: ${position === 'bottom' ? '-6px' : 'auto'};
-            left: 50%;
-            transform: translateX(-50%);
-            pointer-events: none;
-        `;
-        
-        tooltip.appendChild(triangle);
-        return tooltip;
-    }
-
-    // Функция для добавления tooltip к кнопке
-    function addTooltip(button, text, position = 'top') {
-        if (!button) return;
-        
-        // Делаем позицию relative для корректного позиционирования tooltip
-        if (getComputedStyle(button).position === 'static') {
-            button.style.position = 'relative';
-        }
-        
-        button.addEventListener('mouseenter', function(e) {
-            // Проверяем нет ли уже tooltip на этой кнопке
-            let tooltip = button.querySelector('.tooltip');
-            if (tooltip) {
-                tooltip.remove();
-            }
-            
-            tooltip = createTooltip(text, position);
-            button.appendChild(tooltip);
-            
-            // Принудительно запускаем reflow для применения стилей
-            void tooltip.offsetHeight;
-            tooltip.style.opacity = '1';
-            tooltip.style.transform = 'translateX(-50%) scale(1)';
-        });
-        
-        button.addEventListener('mouseleave', function(e) {
-            const tooltip = button.querySelector('.tooltip');
-            if (tooltip) {
-                tooltip.style.opacity = '0';
-                tooltip.style.transform = 'translateX(-50%) scale(0.95)';
-                setTimeout(() => {
-                    if (tooltip && tooltip.parentNode) {
-                        tooltip.remove();
-                    }
-                }, 300);
-            }
-        });
-    }
-    // ===== КОНЕЦ ФУНКЦИЙ TOOLTIP =====
+    const searchActorsRow = document.getElementById('search-actors');
 
     // Загрузка YouTube IFrame API
     let youtubeScriptLoaded = false;
@@ -671,12 +639,6 @@ async function fetchHeroContent() {
 
     const soundBtn = document.getElementById('trailer-sound-btn');
     const exitBtn = document.getElementById('trailer-exit-btn');
-
-    // Инициализируем tooltips для кнопок трейлера
-    if (soundBtn && exitBtn && typeof addTooltip === 'function') {
-        addTooltip(soundBtn, 'вкл/выкл звука', 'top');
-        addTooltip(exitBtn, 'выкл трейлера', 'top');
-    }
 
     let isSoundMuted = true;
     const soundIcon = soundBtn.querySelector('img');
@@ -1048,6 +1010,31 @@ async function fetchHeroContent() {
     }
 
     // Отобразить фильмы/сериалы в рядах
+    function displayActors(actors, container) {
+        if (!container) return;
+        container.innerHTML = '';
+        actors.slice(0, 10).forEach(actor => {
+            const actorCard = document.createElement('div');
+            actorCard.classList.add('movie-card');
+            const profileUrl = actor.profile_path ? `${IMG_URL}${actor.profile_path}` : NO_PICTURE_URL;
+            
+            actorCard.innerHTML = `
+                <img src="${profileUrl}" alt="${actor.name}">
+                <div class="gradient-overlay"></div>
+                <p>${actor.name}</p>
+            `;
+
+            actorCard.dataset.id = actor.id;
+            actorCard.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = `watch/actor.html?ID=${actor.id}`;
+                if (searchModal) searchModal.style.display = 'none';
+            });
+
+            container.appendChild(actorCard);
+        });
+    }
+
     function displayMovies(movies, container, type) {
         if (!container) return;
         container.innerHTML = '';
@@ -1084,7 +1071,6 @@ async function fetchHeroContent() {
                 lockScroll();
                 openModal(movie.id, type);
                     if (searchModal) searchModal.style.display = 'none';
-                    if (mobileSearchModal) mobileSearchModal.style.display = 'none';
             });
 
             container.appendChild(movieCard);
@@ -1187,6 +1173,15 @@ async function fetchHeroContent() {
 
     // Функция поиска
     async function performSearch(query) {
+        // save to recent searches
+        try { saveRecentSearch(query); } catch (e) {}
+        
+        // Show search loader
+        const searchLoader = document.getElementById('search-loader');
+        if (searchLoader) {
+            searchLoader.style.display = 'flex';
+        }
+        
         try {
             const movieResponse = await fetch(
                 `${BASE_URL}/search/movie?api_key=${API_KEY}&language=ru-RU&query=${encodeURIComponent(query)}`
@@ -1198,24 +1193,110 @@ async function fetchHeroContent() {
             );
             const seriesData = await seriesResponse.json();
 
-            displayMovies(movieData.results || [], searchMoviesRow, 'movie');
-            displayMovies(seriesData.results || [], searchSeriesRow, 'tv');
+            const actorsResponse = await fetch(
+                `${BASE_URL}/search/person?api_key=${API_KEY}&language=ru-RU&query=${encodeURIComponent(query)}`
+            );
+            const actorsData = await actorsResponse.json();
 
+            // Hide search loader
+            if (searchLoader) {
+                searchLoader.style.display = 'none';
+            }
+
+            // Restore the category structure before displaying results
+            const resultsContainer = document.querySelector('.mobile-search-results');
+            if (resultsContainer) {
+                resultsContainer.innerHTML = `
+                    <div class="search-category">
+                        <h2>Фильмы</h2>
+                        <div id="search-movies" class="movie-row"></div>
+                    </div>
+                    <div class="search-category">
+                        <h2>Сериалы</h2>
+                        <div id="search-series" class="movie-row"></div>
+                    </div>
+                    <div class="search-category">
+                        <h2>Актеры</h2>
+                        <div id="search-actors" class="movie-row"></div>
+                    </div>
+                `;
+            }
+
+            // Reselect the elements after DOM reconstruction
+            const updatedSearchMoviesRow = document.getElementById('search-movies');
+            const updatedSearchSeriesRow = document.getElementById('search-series');
+            const updatedSearchActorsRow = document.getElementById('search-actors');
+
+            displayMovies(movieData.results || [], updatedSearchMoviesRow, 'movie');
+            displayMovies(seriesData.results || [], updatedSearchSeriesRow, 'tv');
+            displayActors(actorsData.results || [], updatedSearchActorsRow);
             // Показываем модал с результатами
             if (searchModal) {
                 searchModal.style.display = 'block';
                 lockScroll();
             }
 
-            if ((!movieData.results || movieData.results.length === 0) && 
-                (!seriesData.results || seriesData.results.length === 0)) {
-                searchMoviesRow.innerHTML = '<p>Результаты не найдены</p>';
-                searchSeriesRow.innerHTML = '';
+            // Desktop: animate form up and show results; mobile: default behavior
+            try {
+                const modalContent = document.querySelector('.mobile-search-content');
+                const empty = document.getElementById('search-empty');
+                const resultsContainer = document.querySelector('.mobile-search-results');
+
+                if (window.innerWidth >= 769 && modalContent) {
+                    // hide empty, show results container and add class to trigger CSS animation
+                    if (empty) empty.style.display = 'none';
+                    if (resultsContainer) resultsContainer.style.display = 'block';
+                    modalContent.classList.add('results-open');
+
+                    // Reorder categories: categories with results first; set 'Ничего не найдено' for empties
+                    const categories = Array.from(resultsContainer.querySelectorAll('.search-category'));
+                    let anyResults = false;
+                    const withResults = [];
+                    const withoutResults = [];
+
+                    categories.forEach(cat => {
+                        const row = cat.querySelector('.movie-row');
+                        const hasItems = row && row.children && row.children.length > 0 && !(row.children.length === 1 && row.children[0].tagName === 'P' && row.children[0].textContent.trim() === '');
+                        if (hasItems) {
+                            withResults.push(cat);
+                            anyResults = true;
+                        } else {
+                            // show 'Ничего не найдено' in this category
+                            if (row) row.innerHTML = '<p>Ничего не найдено</p>';
+                            withoutResults.push(cat);
+                        }
+                    });
+
+                    if (!anyResults) {
+                        // none found in all categories
+                        resultsContainer.innerHTML = '<p class="no-results-all">Результаты не найдены</p>';
+                    } else {
+                        // append categories with results first, then empty ones
+                        withResults.concat(withoutResults).forEach(c => resultsContainer.appendChild(c));
+                    }
+                } else {
+                    // mobile: if all empty — show single message in movies row (existing behavior)
+                    if ((!movieData.results || movieData.results.length === 0) && 
+                        (!seriesData.results || seriesData.results.length === 0) &&
+                        (!actorsData.results || actorsData.results.length === 0)) {
+                        searchMoviesRow.innerHTML = '<p>Результаты не найдены</p>';
+                        searchSeriesRow.innerHTML = '';
+                        searchActorsRow.innerHTML = '';
+                    }
+                }
+            } catch (err) {
+                console.error('Search UI update error', err);
             }
         } catch (error) {
             console.error('Ошибка поиска:', error);
+            // Hide search loader on error
+            const searchLoader = document.getElementById('search-loader');
+            if (searchLoader) {
+                searchLoader.style.display = 'none';
+            }
             searchMoviesRow.innerHTML = '<p>Ошибка при выполнении поиска</p>';
             searchSeriesRow.innerHTML = '';
+            searchActorsRow.innerHTML = '';
         }
     }
 
@@ -1230,23 +1311,6 @@ async function fetchHeroContent() {
         window.location.href = url;
     }
 
-    // Закрытие поиска при клике вне модала
-    if (searchCloseBtn) {
-        searchCloseBtn.addEventListener('click', () => {
-            if (searchModal) searchModal.style.display = 'none';
-            unlockScroll();
-        });
-    }
-
-    if (searchModal) {
-        searchModal.addEventListener('click', (e) => {
-            if (e.target === searchModal) {
-                searchModal.style.display = 'none';
-                unlockScroll();
-            }
-        });
-    }
-
     // Инициализация контента
     if (hero) fetchHeroContent();
     if (newMoviesRow) fetchNewMovies();
@@ -1259,13 +1323,9 @@ async function fetchHeroContent() {
 
     // Добавляем tooltips для кнопок управления плеером
     // Они будут добавлены динамически когда плеер инициализируется в player.js
-    window.addTooltip = addTooltip;
 
     // Инициализируем tooltips для поиска
     setTimeout(() => {
-        const searchCloseBtn = document.querySelector('#search-modal .close-btn');
-        if (searchCloseBtn && typeof addTooltip === 'function') {
-            addTooltip(searchCloseBtn, 'Закрыть поиск', 'top');
-        }
+        // tooltip'ы удалены
     }, 100);
 });

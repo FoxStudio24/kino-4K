@@ -29,12 +29,9 @@
             </div>
             </div>
     <header class="header">
-        <form class="search-bar" id="search-bar">
-            <input type="text" placeholder="Поиск фильмов...">
-            <button type="submit">
-                    <img src="ico/nav_mob/Поиск.svg" alt="Поиск" style="width: 24px; height: 24px;">
-            </button>
-        </form>
+        <button class="search-trigger" id="search-trigger">
+            <img src="ico/nav_mob/Поиск.svg" alt="Поиск" style="width: 24px; height: 24px;">
+        </button>
 
         <nav class="nav-tabs">
     <a href="index.html">
@@ -77,10 +74,29 @@
     </main>
 
     <!-- Модальные окна (аналогично index.html) -->
-    <div id="search-modal" class="modal">
-        <div class="modal-content">
-            
-            <div class="search-results">
+    <div id="search-modal" class="modal mobile-search-modal">
+        <div class="modal-content mobile-search-content">
+            <button class="mobile-search-close" id="search-close">
+                <img src="ico/закрыть.svg" alt="Закрыть" style="width: 24px; height: 24px;">
+            </button>
+            <div id="search-loader" class="search-loader" style="display:none;">
+                <img src="ico/Загрузка.svg" alt="Загрузка" style="width:64px;height:64px;">
+            </div>
+            <div class="mobile-search-header">
+                <h3>Поиск</h3>
+            </div>
+            <div id="search-empty" class="search-empty" style="display:none;">
+                <img src="ico/Поискмд.png" alt="Поиск" style="width:96px;height:96px;margin-bottom:16px;">
+                <p class="search-empty-text">Введите имя фильма, сериала или актера</p>
+            </div>
+            <form class="mobile-search-form" id="search-form">
+                <input type="text" class="mobile-search-input" id="search-input" placeholder="Поиск фильмов, сериалов и актера...">
+                <button type="submit" class="mobile-search-btn">
+                    <img src="ico/nav_mob/Поиск.svg" alt="Поиск" style="width: 24px; height: 24px;">
+                </button>
+            </form>
+            <div id="search-recent" class="search-recent" aria-hidden="true"></div>
+            <div class="mobile-search-results">
                 <div class="search-category">
                     <h2>Фильмы</h2>
                     <div id="search-movies" class="movie-row"></div>
@@ -88,6 +104,10 @@
                 <div class="search-category">
                     <h2>Сериалы</h2>
                     <div id="search-series" class="movie-row"></div>
+                </div>
+                <div class="search-category">
+                    <h2>Актеры</h2>
+                    <div id="search-actors" class="movie-row"></div>
                 </div>
             </div>
         </div>
@@ -120,34 +140,6 @@
             <span class="mobile-nav-text">Поиск</span>
         </a>
     </nav>
-
-    <!-- Mobile Search Modal -->
-    <div id="mobile-search-modal" class="mobile-search-modal">
-        <div class="mobile-search-content">
-            <div class="mobile-search-header">
-                <h3>Поиск</h3>
-                <button class="mobile-search-close">
-                    <img src="ico/закрыть.svg" alt="Закрыть" style="width: 24px; height: 24px;">
-                </button>
-            </div>
-            <form class="mobile-search-form">
-                <input type="text" class="mobile-search-input" placeholder="Поиск фильмов и сериалов...">
-                <button type="submit" class="mobile-search-btn">
-                    <img src="ico/nav_mob/Поиск.svg" alt="Поиск" style="width: 24px; height: 24px;">
-                </button>
-            </form>
-            <div class="mobile-search-results">
-                <div class="search-category">
-                    <h2>Фильмы</h2>
-                    <div class="movie-row" id="mobile-search-movies"></div>
-                </div>
-                <div class="search-category">
-                    <h2>Сериалы</h2>
-                    <div class="movie-row" id="mobile-search-series"></div>
-                </div>
-            </div>
-        </div>
-    </div>
      <!-- Подвал -->
     <footer class="footer">
         <div class="container">

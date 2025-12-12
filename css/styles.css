@@ -89,7 +89,7 @@ body {
     margin: 0;
     font-family: 'text', sans-serif;
     font-weight: 400;
-    background-color: #141414;
+    background-color: #060606;
     color: white;
     user-select: none;
     padding-bottom: 80px;
@@ -148,6 +148,37 @@ img {
     -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
 }
 
+
+
+/* Search Trigger Button */
+.search-trigger {
+    position: relative;
+    padding: 8px 8px;
+    background: rgba(0, 0, 0, 0.637);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    z-index: 101;
+}
+
+.search-trigger:hover {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.search-trigger img {
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(1);
+}
 
 
 /* Search Bar Styles */
@@ -1687,6 +1718,52 @@ img {
     max-width: 800px;
 }
 
+/* Base Modal Styles */
+.modal {
+    display: none;
+}
+
+/* Ensure search modal content is full-screen and has no scaling animation (prevent jump) */
+.modal.mobile-search-modal .modal-content {
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    background-color: #141414;
+    border-radius: 0 !important;
+    max-height: 100% !important;
+    height: 100% !important;
+    overflow: auto !important;
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+}
+
+/* Staggered top-down intro animation for search modal content */
+@keyframes modalSlideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Apply when we add .modal-opening to content (set via JS) */
+.mobile-search-content.modal-opening .mobile-search-header,
+.mobile-search-content.modal-opening #search-empty,
+.mobile-search-content.modal-opening #search-form,
+.mobile-search-content.modal-opening #search-recent,
+.mobile-search-content.modal-opening .mobile-search-results {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
+/* Elements slide down from top in order; header slides first, results slide last */
+.mobile-search-content.modal-opening .mobile-search-header { animation: modalSlideDown .32s ease forwards; animation-delay: .05s; }
+.mobile-search-content.modal-opening #search-empty { animation: modalSlideDown .32s ease forwards; animation-delay: .12s; }
+.mobile-search-content.modal-opening #search-form { animation: modalSlideDown .32s ease forwards; animation-delay: .19s; }
+.mobile-search-content.modal-opening #search-recent { animation: modalSlideDown .32s ease forwards; animation-delay: .26s; }
+.mobile-search-content.modal-opening .mobile-search-results { animation: modalSlideDown .32s ease forwards; animation-delay: .33s; }
+
+/* Ensure close button is never animated */
+.mobile-search-content.modal-opening .mobile-search-close { opacity: 1; transform: none; animation: none !important; }
+
 /* Мобильное модальное окно поиска */
 .mobile-search-modal {
     display: none;
@@ -1709,6 +1786,9 @@ img {
     background-color: #141414;
     padding: 20px;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; /* ensure children take full width on mobile */
 }
 
 .mobile-search-header {
@@ -1717,6 +1797,11 @@ img {
     align-items: center;
     margin-bottom: 20px;
     padding-top: 20px;
+}
+
+.mobile-search-header {
+    position: relative; /* allow absolute positioning of close button */
+    z-index: 2020; /* above results */
 }
 
 .mobile-search-header h3 {
@@ -1756,11 +1841,61 @@ img {
     filter: brightness(0) invert(1);
 }
 
+/* Place close button absolutely at top-right inside header to avoid overlap */
+.mobile-search-close {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    z-index: 2030;
+}
+
+/* Force close button to top-right of modal (override other rules) */
+.modal.mobile-search-modal .mobile-search-close {
+    position: absolute !important;
+    top: 12px !important;
+    right: 12px !important;
+    z-index: 2050 !important;
+}
+
+/* Search loader styles */
+.search-loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 20px;
+    order: 2;
+}
+
+.search-loader img {
+    animation: spinLoader 2s linear infinite;
+}
+
+@keyframes spinLoader {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Make header title centered while close stays in corner */
+.mobile-search-header h3 {
+    margin: 0 auto;
+    text-align: center;
+}
+
 .mobile-search-form {
     display: flex;
     gap: 10px;
     margin-bottom: 30px;
 }
+
+/* Guarantee DOM order on flex containers: empty -> form -> results */
+.search-empty { order: 1; }
+.mobile-search-form { order: 2; }
+.search-recent { order: 3; }
+.mobile-search-results { order: 4; }
 
 .mobile-search-input {
     flex: 1;
@@ -1813,8 +1948,161 @@ img {
     padding-bottom: 100px;
 }
 
+@media (max-width: 768px) {
+    /* On mobile ensure header and form span full width and results sit below form */
+    .mobile-search-header,
+    .mobile-search-form {
+        width: 100%;
+        max-width: none;
+        position: relative;
+        top: auto;
+        left: auto;
+        transform: none;
+        margin: 0 0 12px 0;
+    }
+
+    .mobile-search-results {
+        margin-top: 0;
+        padding-top: 6px;
+        z-index: 0;
+    }
+
+    .mobile-search-form {
+        order: 2;
+    }
+}
+
 .mobile-search-results .search-category {
     margin-bottom: 30px;
+}
+
+/* Empty state shown in modal when no query entered (desktop only layout tweaks) */
+.search-empty {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    text-align: center;
+    padding: 20px;
+}
+.search-empty img {
+    filter: brightness(0) invert(1);
+}
+.search-empty-text {
+    font-family: 'textregular', sans-serif;
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* Recent searches pills */
+.search-recent {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    max-width: 900px;
+}
+
+.search-recent .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.02);
+    color: #fff;
+    font-family: 'textregular', sans-serif;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.18s ease, transform 0.12s ease;
+}
+
+.search-recent .pill:hover {
+    background: rgba(255,255,255,0.04);
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .search-recent { max-width: 100%; padding: 0 6px; }
+}
+
+/* Desktop: make modal content centered and keep search input at top, full-screen overlay */
+@media (min-width: 769px) {
+    .mobile-search-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 60px;
+        height: 100%;
+        box-sizing: border-box;
+    }
+
+    /* On desktop we don't need the mobile header title — hide it, but keep the container for the close button
+       (we remove extra spacing to avoid top gap). */
+    .mobile-search-header {
+        width: 100%;
+        max-width: 900px;
+        position: relative;
+        padding: 0;
+        margin: 0;
+        height: 0;
+        overflow: visible;
+    }
+
+    .mobile-search-header h3 { display: none; }
+
+    .mobile-search-form {
+        width: 100%;
+        max-width: 900px;
+        position: relative;
+        margin-top: 12px;
+        transition: transform 0.4s ease, top 0.4s ease;
+    }
+
+    /* When results open, align content to top and keep natural flow (no absolute positioning)
+       This prevents results from overlapping header and keeps results below the form. */
+    .mobile-search-content {
+        justify-content: center; /* default: center empty state */
+    }
+
+    .mobile-search-content.results-open {
+        justify-content: flex-start;
+        padding-top: 22px; /* reserve space for header + small gap */
+    }
+
+    .mobile-search-form {
+        width: 100%;
+        max-width: 900px;
+        position: relative;
+        margin-top: 12px;
+        transition: margin 0.35s ease, transform 0.35s ease;
+    }
+
+    .mobile-search-results {
+        width: 100%;
+        max-width: 1100px;
+        margin-top: 28px; /* always below form, increase to avoid visual overlap */
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 0.35s ease, transform 0.35s ease;
+        z-index: 100; /* below header (2020) */
+    }
+
+    /* Show empty state by default (JS will toggle visibility) */
+    .search-empty {
+        display: flex;
+    }
+
+    /* On desktop place the close button at modal corner */
+    .modal.mobile-search-modal .mobile-search-close {
+        position: absolute !important;
+        top: 16px !important;
+        right: 16px !important;
+        z-index: 2050 !important;
+        display: block !important;
+    }
 }
 
 .mobile-search-results .search-category h2 {

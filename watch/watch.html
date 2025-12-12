@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TMDB — Чёрная тема</title>
+  <title>Смотреть</title>
   <meta name="color-scheme" content="dark" />
 
   <style>
@@ -167,12 +167,12 @@ body {
     /* ---------- HERO ---------- */
     .fade-in{
       opacity:0; 
-      transform:translateX(30px); 
+      transform:translateY(30px); 
       transition:all .8s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .fade-in.visible{
       opacity:1; 
-      transform:translateX(0);
+      transform:translateY(0);
     }
 
     .hero{
@@ -185,6 +185,18 @@ body {
       background:#000;
       overflow:hidden;
     }
+    @media (max-width: 480px) {
+  .hero {
+    min-height: 80vh;
+    padding: 15px 12px;
+  }
+}
+@media (max-width: 768px) {
+  #backgroundContainer::before, .hero-trailer::after {
+  background: linear-gradient(to top, #000 0%, rgba(0,0,0,0) 30%) !important;
+
+  }
+}
 
     #backgroundContainer{
       position:absolute;
@@ -258,8 +270,8 @@ body {
 
     .trailer-controls{
       position:absolute;
-      bottom:30px;
-      right:30px;
+      top:30px;
+      left:30px;
       z-index:10;
       display:none;
       gap:10px;
@@ -267,6 +279,11 @@ body {
       align-items:center;
       justify-content:center;
       pointer-events:all;
+      opacity:0;
+      transition:opacity 0.3s ease;
+    }
+    .trailer-controls[style*="display: flex"]{
+      opacity:1;
     }
     .trailer-controls button{
       background:rgba(32,32,32,0.35);
@@ -510,30 +527,54 @@ body {
       border-radius:999px;
     }
     .season-pill{
-      padding:6px 14px;
-      border-radius:999px;
+      width:50px;
+      height:50px;
+      border-radius:50%;
       font-size:14px;
-      background:transparent;
+      background:rgba(94, 94, 94, .18);
+      border:none;
       cursor:pointer;
       position:relative;
       color:var(--muted);
-      transition:.25s;
+      transition:outline 0.3s ease, transform 0.2s ease;
       white-space:nowrap;
       font-family:'textregular', sans-serif;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:0;
+      overflow:hidden;
+      flex-shrink:0;
+    }
+    .season-pill::after{
+      content:"";
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background:radial-gradient(101.06% 100% at 50% 100%, rgb(94 94 94 / 23%) 0%, rgba(94, 94, 94, 0) 73.85%), radial-gradient(100% 100% at 50% 100%, hsla(0, 0%, 100%, 0.07) 0%, hsla(0, 0%, 100%, 0) 55.59%);
+      opacity:0;
+      transition:opacity 0.3s ease;
+      border-radius:50%;
+    }
+    .season-pill:hover{
+      outline:0px solid #666;
+      outline-offset:10px;
+    }
+    .season-pill:hover::after{
+      opacity:1;
+    }
+    .season-pill:active{
+      transform:scale(0.95);
     }
     .season-pill.active{
       color:#fff;
       font-family:'buttonbold', sans-serif;
+      background:linear-gradient(135deg, rgba(34, 197, 94, 0.9) 0%, rgba(34, 197, 94, 0.5) 100%);
     }
     .season-pill.active::after{
-      content:"";
-      position:absolute;
-      left:10px;
-      right:10px;
-      bottom:-6px;
-      height:2px;
-      border-radius:999px;
-      background:var(--accent);
+      display:none;
     }
 
     /* СЕРИИ (с градиентами по бокам) */
@@ -556,6 +597,12 @@ body {
     .episodes-wrapper::before{
       left:20px;
       background:linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 30%, transparent 100%);
+      opacity:0;
+      transition:opacity 0.3s ease;
+      pointer-events:none;
+    }
+    .episodes-wrapper.scrolled::before{
+      opacity:1;
     }
     .episodes-wrapper::after{
       right:20px;
@@ -726,9 +773,18 @@ body {
     }
     .info-tabs-nav{
       display:flex;
-      flex-wrap:wrap;
+      flex-wrap:nowrap;
       gap:10px;
       margin-bottom:14px;
+      overflow-x:auto;
+      padding-bottom:10px;
+    }
+    .info-tabs-nav::-webkit-scrollbar{
+      height:6px;
+    }
+    .info-tabs-nav::-webkit-scrollbar-thumb{
+      background:rgba(255,255,255,0.2);
+      border-radius:999px;
     }
     .info-tab-btn{
       background:transparent;
@@ -741,6 +797,7 @@ body {
       transition:.25s;
       font-size:14px;
       position:relative;
+      flex-shrink:0;
     }
     .info-tab-btn.active{
       color:#fff;
@@ -758,26 +815,50 @@ body {
     .info-tabs-content{
       position:relative;
       overflow:hidden;
-      min-height:200px;
+      max-height:2000px;
+      transition:max-height 0.3s ease;
     }
     .info-tab-panel{
-      position:absolute;
-      top:0;
-      left:0;
+      position:static;
       width:100%;
       font-size:14px;
       color:var(--text);
       font-family:'text', sans-serif;
       opacity:0;
-      transform:translateX(20px);
       pointer-events:none;
-      transition:opacity 0.3s ease, transform 0.3s ease;
+      max-height:0;
+      transition:opacity 0.3s ease, max-height 0.3s ease;
+      overflow:hidden;
     }
     .info-tab-panel.active{
-      position:relative;
       opacity:1;
-      transform:translateX(0);
       pointer-events:all;
+      max-height:2000px;
+      transition:opacity 0.3s ease, max-height 0.3s ease;
+    }
+    .info-tab-panel.active > * {
+      animation:slideUpStagger 0.5s ease forwards;
+    }
+    .info-tab-panel.active > *:nth-child(1) { animation-delay:0.05s; }
+    .info-tab-panel.active > *:nth-child(2) { animation-delay:0.1s; }
+    .info-tab-panel.active > *:nth-child(3) { animation-delay:0.15s; }
+    .info-tab-panel.active > *:nth-child(4) { animation-delay:0.2s; }
+    .info-tab-panel.active > *:nth-child(5) { animation-delay:0.25s; }
+    .info-tab-panel.active > *:nth-child(6) { animation-delay:0.3s; }
+    .info-tab-panel.active > *:nth-child(7) { animation-delay:0.35s; }
+    .info-tab-panel.active > *:nth-child(8) { animation-delay:0.4s; }
+    .info-tab-panel.active > *:nth-child(9) { animation-delay:0.45s; }
+    .info-tab-panel.active > *:nth-child(n+10) { animation-delay:0.5s; }
+    
+    @keyframes slideUpStagger {
+      from {
+        opacity:0;
+        transform:translateY(20px);
+      }
+      to {
+        opacity:1;
+        transform:translateY(0);
+      }
     }
     .info-warning{
       margin-top:14px;
@@ -786,16 +867,39 @@ body {
       font-family:'text', sans-serif;
     }
     .info-meta-list{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px 20px;
       margin-top:8px;
       font-size:14px;
     }
-    .info-meta-label{
+    @media(min-width:769px){
+      .info-meta-list{
+        grid-template-columns:1fr 1fr;
+      }
+      .trailer-controls{
+        position:absolute !important;
+        bottom:30px !important;
+        right:30px !important;
+        top:auto !important;
+        left:auto !important;
+        margin-top:0 !important;
+        transform:none !important;
+      }
+    }
+    .info-meta-row{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .info-meta-row-label{
+      font-size:12px;
       color:var(--muted);
-      font-size:13px;
       font-family:'buttonbold', sans-serif;
+      text-transform:uppercase;
+    }
+    .info-meta-label{
+      display:none !important;
     }
     .info-meta-value{
       font-family:'textregular', sans-serif;
@@ -894,29 +998,121 @@ body {
     .crew-section{
       display:flex;
       flex-direction:column;
-      gap:14px;
+      gap:20px;
     }
     .crew-role{
       display:flex;
       flex-direction:column;
-      gap:6px;
+      gap:12px;
     }
     .crew-label{
-      font-size:13px;
+      font-size:12px;
       color:var(--muted);
       font-family:'buttonbold', sans-serif;
+      text-transform:uppercase;
+      letter-spacing:0.5px;
     }
     .crew-names{
       font-size:14px;
       font-family:'textregular', sans-serif;
+      display:flex;
+      flex-wrap:nowrap;
+      gap:16px;
+      overflow-x:auto;
+      padding-bottom:10px;
     }
-    .crew-names a{
-      color:var(--accent);
+    .crew-names::-webkit-scrollbar{
+      height:6px;
+    }
+    .crew-names::-webkit-scrollbar-thumb{
+      background:rgba(255,255,255,0.2);
+      border-radius:999px;
+    }
+    .crew-member{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:8px;
+      text-align:center;
+      color:inherit;
+      cursor:pointer;
+      flex-shrink:0;
+    }
+    .crew-avatar{
+      width:90px;
+      height:90px;
+      border-radius:50%;
+      overflow:hidden;
+      background:rgba(255,255,255,0.1);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-shrink:0;
+      position:relative;
+      z-index:0;
+    }
+    .crew-avatar::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      padding:1px;
+      background:linear-gradient(
+        135deg,
+        rgba(255,255,255,0.35),
+        rgba(200,200,200,0.15),
+        rgba(255,255,255,0.25),
+        rgba(120,120,120,0.1)
+      );
+      -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite:xor;
+      mask-composite:exclude;
+      pointer-events:none;
+      z-index:-1;
+    }
+    .crew-avatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+    .crew-member-info{
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .crew-member-name{
+      font-size:13px;
+      color:#fff;
       text-decoration:none;
-      transition:.25s;
+      transition:color 0.3s ease;
     }
-    .crew-names a:hover{
-      text-decoration:underline;
+    .crew-member-name:hover{
+      color:var(--accent);
+    }
+    .crew-member-role{
+      font-size:11px;
+      color:var(--muted);
+      margin-top:0px;
+    }
+    .crew-link-icon{
+      width:20px;
+      height:20px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      flex-shrink:0;
+      transition:transform 0.3s ease;
+    }
+    .crew-link-icon img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      filter:brightness(0) invert(1);
+    }
+    .crew-member:hover .crew-link-icon{
+      transform:rotate(-45deg) translateY(-2px);
     }
 
     /* ---------- МОДАЛ СЕРИИ ---------- */
@@ -1023,6 +1219,12 @@ body {
         padding-left:0;
         justify-content:center;
       }
+      .trailer-controls{
+        top:30px !important;
+        left:30px !important;
+        bottom:auto !important;
+        right:auto !important;
+      }
       #backgroundContainer{
         width:177.78vw;
         height:0;
@@ -1084,6 +1286,15 @@ body {
       }
       .episodes-grid{
         padding:10px 0 10px;
+      }
+      .seasons-wrap{
+        flex-direction:column;
+        align-items:center;
+        text-align:center;
+      }
+      .seasons-bar{
+        width:100%;
+        padding:0 0 10px 0;
       }
       .description-with-poster{
         flex-direction:column;
@@ -1360,7 +1571,7 @@ body {
     
     // Используем параметры из URL, если они есть, иначе значения по умолчанию
     const API_KEY='06936145fe8e20be28b02e26b55d3ce6';
-    const TV_ID = urlTV_ID || '66732';
+    const TV_ID = urlTV_ID || '';
     const M_ID = urlM_ID || '';
     const API='https://api.themoviedb.org/3';
     const IMG=(p,s='original')=>p?`https://image.tmdb.org/t/p/${s}${p}`:'';
@@ -1573,6 +1784,9 @@ body {
       backgroundContainer.classList.add('hide');
       trailerContainer.classList.add('active');
       trailerControls.style.display='flex';
+      setTimeout(() => {
+        trailerControls.style.opacity='1';
+      }, 10);
       startProgressMonitoring(e.target);
     }
 
@@ -1603,14 +1817,17 @@ body {
 
     function stopTrailer(){
       if(progressInterval) clearInterval(progressInterval);
-      if(player){
-        player.destroy();
-        player=null;
-      }
-      trailerContainer.classList.remove('active');
-      trailerControls.style.display='none';
-      backgroundContainer.classList.remove('hide');
-      trailerContainer.innerHTML='';
+      trailerControls.style.opacity='0';
+      setTimeout(() => {
+        if(player){
+          player.destroy();
+          player=null;
+        }
+        trailerContainer.classList.remove('active');
+        trailerControls.style.display='none';
+        backgroundContainer.classList.remove('hide');
+        trailerContainer.innerHTML='';
+      }, 300);
     }
 
     $('#trailer-sound-btn').addEventListener('click',()=>{
@@ -1865,12 +2082,7 @@ body {
         $('#mainOverview').textContent = d.overview || 'Описание отсутствует';
 
         const aboutList = $('#aboutList');
-        const typeTitle = isTV ? 'О сериале' : 'О фильме';
         aboutList.innerHTML = '';
-        const titleRow = document.createElement('div');
-        titleRow.className='info-meta-label';
-        titleRow.textContent=typeTitle;
-        aboutList.appendChild(titleRow);
 
         const genres = (d.genres||[]).map(g=>g.name).join(', ');
         const originCountries = (d.origin_country||[]).join(', ') || (d.production_countries||[]).map(c=>c.name).join(', ');
@@ -1879,22 +2091,26 @@ body {
 
         if(genres){
           const row=document.createElement('div');
-          row.innerHTML=`<div class="info-meta-label">Жанры</div><div class="info-meta-value">${genres}</div>`;
+          row.className='info-meta-row';
+          row.innerHTML=`<div class="info-meta-row-label">Жанры</div><div class="info-meta-value">${genres}</div>`;
           aboutList.appendChild(row);
         }
         if(originCountries){
           const row=document.createElement('div');
-          row.innerHTML=`<div class="info-meta-label">Страны</div><div class="info-meta-value">${originCountries}</div>`;
+          row.className='info-meta-row';
+          row.innerHTML=`<div class="info-meta-row-label">Страны</div><div class="info-meta-value">${originCountries}</div>`;
           aboutList.appendChild(row);
         }
         if(originalTitle){
           const row=document.createElement('div');
-          row.innerHTML=`<div class="info-meta-label">Оригинальное название</div><div class="info-meta-value">${originalTitle}</div>`;
+          row.className='info-meta-row';
+          row.innerHTML=`<div class="info-meta-row-label">Оригинальное название</div><div class="info-meta-value">${originalTitle}</div>`;
           aboutList.appendChild(row);
         }
         if(worldDate){
           const row=document.createElement('div');
-          row.innerHTML=`<div class="info-meta-label">Премьера в мире</div><div class="info-meta-value">${new Date(worldDate).toLocaleDateString('ru-RU')}</div>`;
+          row.className='info-meta-row';
+          row.innerHTML=`<div class="info-meta-row-label">Премьера в мире</div><div class="info-meta-value">${new Date(worldDate).toLocaleDateString('ru-RU')}</div>`;
           aboutList.appendChild(row);
         }
 
@@ -1908,16 +2124,37 @@ body {
         if(directors.length>0){
           const div=document.createElement('div');
           div.className='crew-role';
-          const names = directors.map(p=>`<a href="/search?query=${encodeURIComponent(p.name)}">${p.name}</a>`).join(', ');
-          div.innerHTML=`<div class="crew-label">Режиссер</div><div class="crew-names">${names}</div>`;
+          const namesHTML = directors.map(p=>`
+            <a href="./actor.html?ID=${p.id}" class="crew-member" style="text-decoration:none;">
+              <div class="crew-avatar">
+                ${p.profile_path ? `<img src="${IMG(p.profile_path, 'w185')}" alt="${p.name}">` : '<div style="font-size:10px;color:var(--muted);">Нет фото</div>'}
+              </div>
+              <div class="crew-member-info">
+                <span class="crew-member-name">${p.name}</span>
+                <span class="crew-link-icon"><img src="../ico/Перейти.svg" alt="Перейти"></span>
+              </div>
+            </a>
+          `).join('');
+          div.innerHTML=`<div class="crew-label">Режиссер</div><div class="crew-names">${namesHTML}</div>`;
           crewSection.appendChild(div);
         }
 
         if(cast.length>0){
           const div=document.createElement('div');
           div.className='crew-role';
-          const names = cast.slice(0,10).map(p=>`<a href="/search?query=${encodeURIComponent(p.name)}">${p.name}</a>`).join(', ');
-          div.innerHTML=`<div class="crew-label">В главных ролях</div><div class="crew-names">${names}</div>`;
+          const namesHTML = cast.slice(0,10).map(p=>`
+            <a href="./actor.html?ID=${p.id}" class="crew-member" style="text-decoration:none;">
+              <div class="crew-avatar">
+                ${p.profile_path ? `<img src="${IMG(p.profile_path, 'w185')}" alt="${p.name}">` : '<div style="font-size:10px;color:var(--muted);">Нет фото</div>'}
+              </div>
+              <div class="crew-member-info">
+                <span class="crew-member-name">${p.name}</span>
+                <span class="crew-link-icon"><img src="../ico/Перейти.svg" alt="Перейти"></span>
+              </div>
+              ${p.character ? `<div class="crew-member-role">${p.character}</div>` : ''}
+            </a>
+          `).join('');
+          div.innerHTML=`<div class="crew-label">В главных ролях</div><div class="crew-names">${namesHTML}</div>`;
           crewSection.appendChild(div);
         }
 
@@ -1925,8 +2162,18 @@ body {
         if(writers.length>0){
           const div=document.createElement('div');
           div.className='crew-role';
-          const names = writers.map(p=>`<a href="/search?query=${encodeURIComponent(p.name)}">${p.name}</a>`).join(', ');
-          div.innerHTML=`<div class="crew-label">Сценаристы</div><div class="crew-names">${names}</div>`;
+          const namesHTML = writers.map(p=>`
+            <a href="./actor.html?ID=${p.id}" class="crew-member" style="text-decoration:none;">
+              <div class="crew-avatar">
+                ${p.profile_path ? `<img src="${IMG(p.profile_path, 'w185')}" alt="${p.name}">` : '<div style="font-size:10px;color:var(--muted);">Нет фото</div>'}
+              </div>
+              <div class="crew-member-info">
+                <span class="crew-member-name">${p.name}</span>
+                <span class="crew-link-icon"><img src="../ico/Перейти.svg" alt="Перейти"></span>
+              </div>
+            </a>
+          `).join('');
+          div.innerHTML=`<div class="crew-label">Сценаристы</div><div class="crew-names">${namesHTML}</div>`;
           crewSection.appendChild(div);
         }
 
@@ -1934,17 +2181,18 @@ body {
         if(producers.length>0){
           const div=document.createElement('div');
           div.className='crew-role';
-          const names = producers.slice(0,3).map(p=>`<a href="/search?query=${encodeURIComponent(p.name)}">${p.name}</a>`).join(', ');
-          div.innerHTML=`<div class="crew-label">Продюсер</div><div class="crew-names">${names}</div>`;
-          crewSection.appendChild(div);
-        }
-
-        const cinematographers = crew.filter(c=>c.job==='Director of Photography');
-        if(cinematographers.length>0){
-          const div=document.createElement('div');
-          div.className='crew-role';
-          const names = cinematographers.map(p=>`<a href="/search?query=${encodeURIComponent(p.name)}">${p.name}</a>`).join(', ');
-          div.innerHTML=`<div class="crew-label">Оператор</div><div class="crew-names">${names}</div>`;
+          const namesHTML = producers.slice(0,5).map(p=>`
+            <a href="./actor.html?ID=${p.id}" class="crew-member" style="text-decoration:none;">
+              <div class="crew-avatar">
+                ${p.profile_path ? `<img src="${IMG(p.profile_path, 'w185')}" alt="${p.name}">` : '<div style="font-size:10px;color:var(--muted);">Нет фото</div>'}
+              </div>
+              <div class="crew-member-info">
+                <span class="crew-member-name">${p.name}</span>
+                <span class="crew-link-icon"><img src="../ico/Перейти.svg" alt="Перейти"></span>
+              </div>
+            </a>
+          `).join('');
+          div.innerHTML=`<div class="crew-label">Продюсер</div><div class="crew-names">${namesHTML}</div>`;
           crewSection.appendChild(div);
         }
 
@@ -1955,7 +2203,7 @@ body {
           for(let i=1;i<=d.number_of_seasons;i++){
             const pill=document.createElement('div');
             pill.className='season-pill' + (i===1?' active':'');
-            pill.textContent=`${i} сезон`;
+            pill.textContent=`${i}`;
             pill.dataset.season=i;
             pill.addEventListener('click',()=>loadEpisodesForSeason(i));
             seasonsBar.appendChild(pill);
@@ -1992,14 +2240,17 @@ body {
 
     load();
 
-    // Проверяем параметр autoplay
-    const shouldAutoplay = urlParams.get('autoplay') === '1';
-    if (shouldAutoplay) {
-      setTimeout(() => {
-        if (window.multiPlayer) {
-          window.multiPlayer.playContent(contentId, contentType);
+    // Отслеживание прокрутки episodes-grid
+    const episodesGrid = $('#episodesGrid');
+    const episodesWrapper = episodesGrid?.parentElement;
+    if(episodesGrid && episodesWrapper){
+      episodesGrid.addEventListener('scroll', () => {
+        if(episodesGrid.scrollLeft > 0){
+          episodesWrapper.classList.add('scrolled');
+        } else {
+          episodesWrapper.classList.remove('scrolled');
         }
-      }, 1000);
+      });
     }
 
   </script>
