@@ -1,6 +1,56 @@
 document.addEventListener('DOMContentLoaded', () => {
     const loadingOverlay = document.getElementById('loading-overlay');
 
+    // Установка активного пункта меню на основе текущей страницы
+    function setActiveNavItem() {
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        
+        // Для навигации в header
+        const navLinks = document.querySelectorAll('.nav-tabs a');
+        navLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href === currentPage || (currentPage === '' && href === 'index.html')) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+        
+        // Для мобильной навигации
+        const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
+        mobileNavItems.forEach(item => {
+            const href = item.getAttribute('href');
+            if (href === currentPage || (currentPage === '' && href === 'index.html')) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    }
+    
+    setActiveNavItem();
+
+    // Функция для сохранения источника открытия (текущей страницы) перед переходом в watch
+    function saveWatchSource() {
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        sessionStorage.setItem('watchSource', currentPage);
+    }
+
+    // Восстановление скролла при загрузке страницы
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.width = '';
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    document.body.classList.remove('no-scroll');
+    
+    // Если есть сохраненная позиция скролла, восстановим её
+    const savedScrollY = parseInt(document.body.dataset.scrollY || '0', 10);
+    if (savedScrollY > 0) {
+        setTimeout(() => window.scrollTo(0, savedScrollY), 100);
+    }
+
     // Начало анимации загрузки
     function showLoading() {
         document.body.classList.add('loading');
@@ -293,6 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = heroWatchBtn.dataset.id;
             const type = heroWatchBtn.dataset.type;
             if (id && type) {
+                saveWatchSource();
                 const tvUrl = `watch/watch.html?TV_ID=${id}&autoplay=1`;
                 const movieUrl = `watch/watch.html?M_ID=${id}&autoplay=1`;
                 const url = type === 'tv' ? tvUrl : movieUrl;
@@ -308,6 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = heroInfoBtn.dataset.id;
             const type = heroInfoBtn.dataset.type;
             if (id && type) {
+                saveWatchSource();
                 const tvUrl = `watch/watch.html?TV_ID=${id}`;
                 const movieUrl = `watch/watch.html?M_ID=${id}`;
                 const url = type === 'tv' ? tvUrl : movieUrl;
@@ -1303,6 +1355,7 @@ async function fetchHeroContent() {
     // Открыть модальное окно с деталями фильма
     async function openModal(id, type) {
         // Перенаправляем на watch/watch.html с параметрами вместо открытия встроенного модаладала
+        saveWatchSource();
         const tvUrl = `watch/watch.html?TV_ID=${id}`;
         const movieUrl = `watch/watch.html?M_ID=${id}`;
         

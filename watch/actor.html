@@ -301,28 +301,31 @@
     }
 
     .close-btn{
-      position:absolute;
-      top:20px;
-      right:20px;
+      position:fixed;
+      top:10px;
+      right:24px;
       cursor:pointer;
-      background-color:#181818;
-      border:1px solid rgba(255,255,255,0.2);
+      background-color:rgba(0, 0, 0, 0.637);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+      border:1px solid rgba(255, 255, 255, 0.2);
       border-radius:50%;
       display:flex;
       align-items:center;
       justify-content:center;
       padding:8px;
-      z-index:10;
-      width:40px;
-      height:40px;
+      z-index:1001;
+      pointer-events:auto;
+      width:43px;
+      height:43px;
       transition:transform 0.2s ease;
     }
     .close-btn:active{
       transform:scale(0.95);
     }
     .close-btn img{
-      width:22px;
-      height:22px;
+      width:24px;
+      height:24px;
       filter:brightness(0) invert(1);
       pointer-events:none;
     }
@@ -704,7 +707,7 @@
     const $ = s => document.querySelector(s);
 
     const urlParams = new URLSearchParams(window.location.search);
-    const PERSON_ID = urlParams.get('ID') || '';
+    const PERSON_ID = urlParams.get('ID') || '1356210';
 
     let allWorks = [];
     let currentIndex = 0;

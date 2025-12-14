@@ -865,20 +865,23 @@ img {
 }
 
 .close-btn {
-    position: absolute;
-    top: 24px;
+    position: fixed;
+    top: 10px;
     right: 24px;
     cursor: pointer;
-    background-color: #181818;
+    background-color: rgba(0, 0, 0, 0.637);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 8px;
-    z-index: 10;
-    transition: box-shadow 0.3s ease;
-    width: 40px;
-    height: 40px;
+    z-index: 1001;
+    pointer-events: auto;
+    transition: transform 0.2s ease;
+    width: 43px;
+    height: 43px;
 }
 
 .close-btn::before {
@@ -895,8 +898,8 @@ img {
         rgba(120, 120, 120, 0.1)
     );
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: add, add;
     -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask-composite: exclude;
     pointer-events: none;
     z-index: -1;
@@ -1812,23 +1815,44 @@ img {
 }
 
 .mobile-search-close {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    font-size: 1.5rem;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+    position: fixed;
+    top: 10px;
+    right: 24px;
     cursor: pointer;
+    background-color: rgba(0, 0, 0, 0.637);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    padding: 8px;
+    z-index: 1001;
+    pointer-events: auto;
+    transition: transform 0.2s ease;
+    width: 43px;
+    height: 43px;
 }
 
-.mobile-search-close:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.05);
+.mobile-search-close::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.35),
+        rgba(200, 200, 200, 0.15),
+        rgba(255, 255, 255, 0.25),
+        rgba(120, 120, 120, 0.1)
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: -1;
 }
 
 .mobile-search-close:active {
@@ -1836,25 +1860,9 @@ img {
 }
 
 .mobile-search-close img {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     filter: brightness(0) invert(1);
-}
-
-/* Place close button absolutely at top-right inside header to avoid overlap */
-.mobile-search-close {
-    position: absolute;
-    right: 12px;
-    top: 12px;
-    z-index: 2030;
-}
-
-/* Force close button to top-right of modal (override other rules) */
-.modal.mobile-search-modal .mobile-search-close {
-    position: absolute !important;
-    top: 12px !important;
-    right: 12px !important;
-    z-index: 2050 !important;
 }
 
 /* Search loader styles */
