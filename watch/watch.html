@@ -347,11 +347,11 @@ body {
       max-width:480px;
       filter:drop-shadow(0 6px 24px rgba(0,0,0,.8));
     }
-    .logo-text{
-      color:rgba(200,200,200,0.6);
-      font-size:24px;
-      font-family:'textbold', sans-serif;
-    }
+    .logo-text {
+  color: rgb(255, 255, 255);
+  font-size: 35px;
+  font-family: 'textbold', sans-serif;
+}
     .logo-container,
     .logo-with-title{
       display:flex;
@@ -848,6 +848,130 @@ body {
     .info-tab-panel.active > *:nth-child(4) { animation-delay:0.2s; }
     .info-tab-panel.active > *:nth-child(5) { animation-delay:0.25s; }
     .info-tab-panel.active > *:nth-child(6) { animation-delay:0.3s; }
+
+    /* Трейлеры */
+    .trailers-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+      gap:20px;
+      margin-top:10px;
+      padding:5px;
+      overflow:visible;
+    }
+    @media (max-width: 768px) {
+      .trailers-grid{
+        grid-template-columns:1fr;
+        padding:5px 10px;
+        gap:16px;
+      }
+      .trailer-card:hover .trailer-thumb{
+        transform:none;
+      }
+      .trailer-info{
+        padding:12px 0;
+      }
+    }
+    .trailer-card{
+      background:transparent;
+      transition:.3s;
+      cursor:pointer;
+      position:relative;
+      overflow:visible;
+    }
+    .trailer-card:hover .trailer-thumb{
+      transform:scale(1.015);
+    }
+    .trailer-thumb{
+      position:relative;
+      width:100%;
+      padding-bottom:56.25%;
+      border-radius:16px;
+      overflow:visible;
+      background:transparent;
+      transition:transform 0.25s ease;
+      z-index:0;
+    }
+    .trailer-thumb::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      padding:1px;
+      background:linear-gradient(
+        135deg,
+        rgba(255,255,255,0.35),
+        rgba(200,200,200,0.15),
+        rgba(255,255,255,0.25),
+        rgba(120,120,120,0.1)
+      );
+      -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite:xor;
+      mask-composite:exclude;
+      pointer-events:none;
+      z-index:1;
+    }
+    .trailer-thumb img{
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      pointer-events:all;
+      border-radius:16px;
+    }
+    .trailer-play-icon{
+      position:absolute;
+      bottom:8px;
+      left:8px;
+      z-index:2;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:8px;
+      border-radius:50%;
+      background:rgba(255,255,255,0.08);
+      backdrop-filter:blur(25px);
+      pointer-events:all;
+      cursor:pointer;
+    }
+    .trailer-play-icon::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      padding:1px;
+      background:linear-gradient(
+        135deg,
+        rgba(255,255,255,0.35),
+        rgba(255,255,255,0.05)
+      );
+      -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite:xor;
+      mask-composite:exclude;
+    }
+    .trailer-play-icon img{
+      width:24px;
+      height:24px;
+      position:relative;
+      z-index:1;
+    }
+    .trailer-info{
+      padding:15px;
+      color:var(--text);
+      font-family:'text', sans-serif;
+      font-size:14px;
+      line-height:1.6;
+      text-align:left;
+    }
+    .trailer-name{
+      font-family:'textbold', sans-serif;
+      font-size:16px;
+      margin-bottom:8px;
+      color:#fff;
+    }
     .info-tab-panel.active > *:nth-child(7) { animation-delay:0.35s; }
     .info-tab-panel.active > *:nth-child(8) { animation-delay:0.4s; }
     .info-tab-panel.active > *:nth-child(9) { animation-delay:0.45s; }
@@ -1208,6 +1332,11 @@ body {
       border-top:1px solid rgba(255,255,255,.08);
       margin-top:40px;
       font-family:'text', sans-serif;
+    }
+    @media (max-width: 768px) {
+      .footer{
+        padding-bottom:120px;
+      }
     }
 
     /* ---------- MOBILE ---------- */
@@ -1715,6 +1844,7 @@ body {
           <button class="info-tab-btn active" data-tab="desc">Описание</button>
           <button class="info-tab-btn" data-tab="about">О проекте</button>
           <button class="info-tab-btn" data-tab="crew">Съёмочная группа</button>
+          <button class="info-tab-btn" data-tab="trailers">Трейлеры и другое</button>
         </div>
 
         <div class="info-tabs-content">
@@ -1741,6 +1871,10 @@ body {
 
           <div class="info-tab-panel" id="tab-crew">
             <div class="crew-section" id="crewSection"></div>
+          </div>
+
+          <div class="info-tab-panel" id="tab-trailers">
+            <div class="trailers-grid" id="trailersGrid"></div>
           </div>
         </div>
       </section>
@@ -1770,6 +1904,42 @@ body {
 
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
+    // ИСПРАВЛЕНИЕ: Полностью очищаем блокировку скролла при загрузке страницы watch
+    (function() {
+      // Убираем все стили фиксации с body
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      document.body.style.margin = '';
+      document.body.style.padding = '';
+      
+      // Убираем overflow с html
+      document.documentElement.style.overflow = '';
+      
+      // Убираем все классы блокировки скролла
+      document.body.classList.remove('no-scroll');
+      document.body.classList.remove('loading');
+      document.documentElement.classList.remove('no-scroll');
+      
+      // Восстанавливаем скролл позицию если она была сохранена
+      const savedScrollY = parseInt(document.body.dataset.scrollY || '0', 10);
+      if (savedScrollY > 0) {
+        setTimeout(() => {
+          window.scrollTo(0, savedScrollY);
+        }, 100);
+      }
+      
+      // Очищаем сохраненные данные о скролле
+      try {
+        delete document.body.dataset.scrollY;
+      } catch (e) {
+        document.body.removeAttribute('data-scroll-y');
+      }
+    })();
+
     // Установка активного пункта меню на основе источника открытия
     function setActiveNavItemFromSource() {
       const watchSource = sessionStorage.getItem('watchSource') || 'index.html';
@@ -1813,6 +1983,9 @@ body {
     const urlParams = new URLSearchParams(window.location.search);
     const urlTV_ID = urlParams.get('TV_ID') || '';
     const urlM_ID = urlParams.get('M_ID') || '';
+    const urlAutoplay = urlParams.get('autoplay') === '1';
+    
+    console.log('[INIT] URL параметры: TV_ID=' + urlTV_ID + ', M_ID=' + urlM_ID + ', autoplay=' + urlAutoplay);
     
     // Используем параметры из URL, если они есть, иначе значения по умолчанию
     const API_KEY='06936145fe8e20be28b02e26b55d3ce6';
@@ -1829,10 +2002,13 @@ body {
     const isTV = TV_ID && !M_ID;
     const contentType = isTV ? 'tv' : 'movie';
     const contentId = isTV ? TV_ID : M_ID;
+    
+    console.log('[INIT] contentId=' + contentId + ', contentType=' + contentType);
 
     let player;
     let isMuted = true;
     let trailerTimeout;
+    let shouldAutoplay = urlAutoplay;
     let progressInterval;
     let allTrailers = [];
     let showData = null;
@@ -1917,14 +2093,46 @@ body {
 
     async function getTrailers(){
       try{
-        const response=await fetch(`${API}/${contentType}/${contentId}/videos?api_key=${API_KEY}`);
-        const data=await response.json();
-        const trailers=data.results.filter(v=>v.type==='Trailer' && v.site==='YouTube');
+        // Делаем два запроса: один для всех языков, второй специально для русских
+        const [response1, response2] = await Promise.all([
+          fetch(`${API}/${contentType}/${contentId}/videos?api_key=${API_KEY}`),
+          fetch(`${API}/${contentType}/${contentId}/videos?api_key=${API_KEY}&language=ru-RU`)
+        ]);
+        const data1 = await response1.json();
+        const data2 = await response2.json();
+        
+        // Объединяем результаты и удаляем дубликаты по key
+        const allVideos = [...data1.results, ...data2.results];
+        const uniqueVideos = Array.from(new Map(allVideos.map(v => [v.key, v])).values());
+        
+        const trailers = uniqueVideos.filter(v=>v.type==='Trailer' && v.site==='YouTube');
         trailers.sort((a,b)=>{
           const lp={ru:0,en:1};
           const pa=lp[a.iso_639_1] ?? 2;
           const pb=lp[b.iso_639_1] ?? 2;
           return pa-pb;
+        });
+        return trailers;
+      }catch(e){return [];}
+    }
+
+    // Отдельная функция для получения только официальных английских трейлеров для фона
+    async function getOfficialTrailers(){
+      try{
+        const response = await fetch(`${API}/${contentType}/${contentId}/videos?api_key=${API_KEY}`);
+        const data = await response.json();
+        const trailers = data.results.filter(v=>
+          v.type==='Trailer' && 
+          v.site==='YouTube' &&
+          (v.iso_639_1 === 'en' || !v.iso_639_1)
+        );
+        // Сортировка: официальные первыми
+        trailers.sort((a,b)=>{
+          const aOfficial = a.official || a.name.toLowerCase().includes('official');
+          const bOfficial = b.official || b.name.toLowerCase().includes('official');
+          if(aOfficial && !bOfficial) return -1;
+          if(!aOfficial && bOfficial) return 1;
+          return 0;
         });
         return trailers;
       }catch(e){return [];}
@@ -1986,8 +2194,8 @@ body {
       });
     }
 
-    async function findWorkingTrailer(){
-      for(const t of allTrailers){
+    async function findWorkingTrailer(trailersToTest = allTrailers){
+      for(const t of trailersToTest){
         const ok=await testTrailerQuick(t);
         if(ok) return t;
       }
@@ -2110,6 +2318,28 @@ body {
     // Клик по общей Close-кнопке
     document.querySelector('.close-btn')?.addEventListener('click', () => {
       animateEpisodeThumbsBack();
+      // Полностью очищаем все стили блокировки перед возвратом
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      document.body.style.margin = '';
+      document.body.style.padding = '';
+      document.documentElement.style.overflow = '';
+      document.body.classList.remove('no-scroll');
+      document.body.classList.remove('loading');
+      document.documentElement.classList.remove('no-scroll');
+      
+      // Восстанавливаем скролл
+      const savedScrollY = parseInt(document.body.dataset.scrollY || '0', 10);
+      try {
+        delete document.body.dataset.scrollY;
+      } catch (e) {
+        document.body.removeAttribute('data-scroll-y');
+      }
+      
       // Возврат назад в истории браузера
       setTimeout(() => {
         window.history.back();
@@ -2215,10 +2445,16 @@ body {
 
     $('#episodeModalClose').addEventListener('click',()=>{
       $('#episodeModalBackdrop').classList.remove('active');
+      // Убедимся что скролл страницы не заблокирован
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     });
     $('#episodeModalBackdrop').addEventListener('click',e=>{
       if(e.target.id === 'episodeModalBackdrop'){
         $('#episodeModalBackdrop').classList.remove('active');
+        // Убедимся что скролл страницы не заблокирован
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
       }
     });
 
@@ -2232,11 +2468,70 @@ body {
       
       setTimeout(()=>{
         $('#tab-'+tab).classList.add('active');
+        if(tab === 'trailers'){
+          loadTrailersTab();
+        }
       }, 50);
     });
 
+    // Функция загрузки трейлеров для вкладки
+    let trailersLoaded = false;
+    async function loadTrailersTab(){
+      if(trailersLoaded) return;
+      trailersLoaded = true;
+      
+      const trailersGrid = $('#trailersGrid');
+      trailersGrid.innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px;">Загрузка трейлеров...</p>';
+      
+      try{
+        const trailers = await getTrailers();
+        
+        if(trailers.length === 0){
+          trailersGrid.innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px;">Трейлеры не найдены</p>';
+          return;
+        }
+        
+        // Берем первые 5 трейлеров (уже отсортированы по языку в getTrailers: ru первые)
+        const first5 = trailers.slice(0, 5);
+        
+        trailersGrid.innerHTML = '';
+        
+        for(const trailer of first5){
+          const card = document.createElement('div');
+          card.className = 'trailer-card';
+          
+          // Получаем thumbnail от YouTube
+          const thumbUrl = `https://img.youtube.com/vi/${trailer.key}/hqdefault.jpg`;
+          
+          card.innerHTML = `
+            <div class="trailer-thumb">
+              <img src="${thumbUrl}" alt="${trailer.name}">
+              <span class="episode-runtime-badge">${trailer.iso_639_1?.toUpperCase() || 'EN'}</span>
+              <div class="trailer-play-icon">
+                <img src="../ico/Плей.svg" alt="Play">
+              </div>
+            </div>
+            <div class="trailer-info">
+              <div class="trailer-name">${trailer.name}</div>
+            </div>
+          `;
+          
+          card.addEventListener('click', ()=>{
+            window.open(`https://www.youtube.com/watch?v=${trailer.key}`, '_blank');
+          });
+          
+          trailersGrid.appendChild(card);
+        }
+      }catch(err){
+        console.error('Ошибка загрузки трейлеров:', err);
+        trailersGrid.innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px;">Ошибка загрузки трейлеров</p>';
+      }
+    }
+
     async function load(){
       try{
+        console.log('[LOAD] Начало загрузки. contentType=' + contentType + ', contentId=' + contentId);
+        
         const append=isTV
           ? 'credits,content_ratings,images,videos,external_ids'
           : 'credits,releases,images,videos,external_ids';
@@ -2247,6 +2542,8 @@ body {
         // Обновляем title страницы
         const title = isTV ? d.name : d.title;
         document.title = `Смотреть ${title}`;
+        
+        console.log('[LOAD] Загрузка успешна. Title=' + title);
 
         $('#contentId').textContent=isTV?`tv/${TV_ID}`:`film/${M_ID}`;
 
@@ -2465,13 +2762,40 @@ body {
             document.querySelectorAll('.hero-content .fade-in').forEach(el=>el.classList.add('visible'));
           },100);
 
-          trailerTimeout=setTimeout(async()=>{
-            allTrailers=await getTrailers();
-            if(allTrailers.length>0){
-              const working=await findWorkingTrailer();
-              if(working) playTrailer(working.key);
-            }
-          },10000);
+          // Если параметр autoplay=1, автоматически запускаем плеер
+          if(shouldAutoplay){
+            console.log('[AUTOPLAY] Параметр autoplay найден. contentId:', contentId, 'contentType:', contentType);
+            const id=contentId.replace(/^(film|tv)\//,'');
+            console.log('[AUTOPLAY] Очищенный ID:', id);
+            
+            // Ждем инициализации multiPlayer
+            let retries = 0;
+            const autoplayInterval = setInterval(()=>{
+              retries++;
+              console.log('[AUTOPLAY] Попытка', retries, 'window.multiPlayer доступен:', !!window.multiPlayer);
+              
+              if(window.multiPlayer && id){
+                clearInterval(autoplayInterval);
+                console.log('[AUTOPLAY] Запускаем плеер с ID:', id, 'Type:', contentType);
+                window.multiPlayer.playContent(id, contentType);
+              } else if(retries > 50) {
+                // После 50 попыток (5 секунд) останавливаемся
+                clearInterval(autoplayInterval);
+                console.error('[AUTOPLAY] Не удалось инициализировать multiPlayer');
+              }
+            }, 100);
+          } else {
+            // Иначе загружаем трейлер через 10 секунд
+            trailerTimeout=setTimeout(async()=>{
+              allTrailers=await getTrailers();
+              // Для фона получаем только английские официальные трейлеры
+              const officialTrailers = await getOfficialTrailers();
+              if(officialTrailers.length>0){
+                const working=await findWorkingTrailer(officialTrailers);
+                if(working) playTrailer(working.key);
+              }
+            },10000);
+          }
         },800);
 
       }catch(err){
@@ -2483,6 +2807,7 @@ body {
       }
     }
 
+    console.log('[MAIN] Вызов load(). shouldAutoplay=' + shouldAutoplay);
     load();
 
     // Отслеживание прокрутки episodes-grid

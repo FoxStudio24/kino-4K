@@ -430,7 +430,12 @@
         if (this.playerContainer) {
             this.playerContainer.remove();
         }
+        
+        // Полная блокировка скролла - применяем на body и html
         document.body.classList.add('no-scroll');
+        document.documentElement.classList.add('no-scroll');
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
 
         this.playerContainer = document.createElement('div');
         this.playerContainer.id = 'multi-player-modal';
@@ -527,7 +532,7 @@
             '                    </div>',
             '                </div>',
             '                <div class="separator" style="width: 1px; height: 20px; background: rgba(68, 68, 68, 0.5);"></div>',
-            '                <button class="close-btn" onclick="this.closest(\'#multi-player-modal\').remove(); document.body.classList.remove(\'no-scroll\');" style="' +
+            '                <button class="close-btn" id="player-close-btn" style="' +
             '                    position: relative;' +
             '                    z-index: 1000001;' +
             '                    display: flex;' +
@@ -618,6 +623,40 @@
         this.loadingOverlay = document.getElementById('player-loading-overlay');
         
         var self = this;
+        
+        // Обработчик для кнопки закрытия плеера
+        var closeBtn = document.getElementById('player-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                var modal = document.getElementById('multi-player-modal');
+                if (modal) {
+                    modal.remove();
+                }
+                // Полное удаление блокировки скролла
+                document.body.classList.remove('no-scroll');
+                document.documentElement.classList.remove('no-scroll');
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+            });
+        }
+        
+        // Обработчик для ESC клавиши чтобы закрыть плеер
+        var escHandler = function(e) {
+            if (e.key === 'Escape') {
+                var modal = document.getElementById('multi-player-modal');
+                if (modal) {
+                    modal.remove();
+                    // Полное удаление блокировки скролла
+                    document.body.classList.remove('no-scroll');
+                    document.documentElement.classList.remove('no-scroll');
+                    document.body.style.overflow = '';
+                    document.documentElement.style.overflow = '';
+                    document.removeEventListener('keydown', escHandler);
+                }
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+        
         document.addEventListener('mousedown', function (e) {
             if (self.isDropdownOpen && !e.target.closest('.balancer-selector')) {
                 self.toggleDropdown();
@@ -708,6 +747,8 @@
 
     MultiPlayer.prototype.playContent = async function (tmdbId, type, season, episode) {
         try {
+            console.log('[PLAYER.playContent] Запуск плеера: tmdbId=' + tmdbId + ', type=' + type + ', season=' + season + ', episode=' + episode);
+            
             this.currentContent = { tmdbId: tmdbId, type: type, season: season, episode: episode };
             this.hasError = false;
             
@@ -771,6 +812,8 @@
 
     window.multiPlayer = new MultiPlayer();
     window.vibixPlayer = window.multiPlayer;
+    
+    console.log('[PLAYER] MultiPlayer инициализирован, window.multiPlayer доступен');
 
     window.openPlayer = function (item) {
         return window.multiPlayer.openPlayer(item);

@@ -87,8 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const id = topCard.dataset.id;
         const type = topCard.dataset.type || 'movie';
         if (id) {
-            // Сначала блокируем прокрутку, затем открываем модал и прячем другие оверлеи
-            lockScroll();
+            // НЕ блокируем скролл перед переходом на watch страницу
             openModal(id, type);
             if (searchModal) searchModal.style.display = 'none';
         }
@@ -1120,7 +1119,7 @@ async function fetchHeroContent() {
             movieCard.dataset.type = type;
             movieCard.addEventListener('click', (e) => {
                 e.preventDefault();
-                lockScroll();
+                // НЕ блокируем скролл перед переходом на watch страницу
                 openModal(movie.id, type);
                     if (searchModal) searchModal.style.display = 'none';
             });
