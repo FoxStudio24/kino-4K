@@ -316,6 +316,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Обновление иконки избранного в навигации в зависимости от текущей страницы
+    function updateFavoritesNavIcon() {
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        const isFavoritesPage = currentPage === 'favorites.html';
+        
+        // Ищем все ссылки на favorites в навигации
+        document.querySelectorAll('a[href="favorites.html"]').forEach(link => {
+            const img = link.querySelector('img');
+            if (img && img.alt === 'Избранное') {
+                if (isFavoritesPage) {
+                    img.src = 'ico/Избранное_добавлено.svg';
+                } else {
+                    img.src = 'ico/Избранное_добавить.svg';
+                }
+            }
+        });
+    }
+    
+    // Обновляем иконку при загрузке
+    updateFavoritesNavIcon();
+
     const API_KEY = '06936145fe8e20be28b02e26b55d3ce6';
     const BASE_URL = 'https://api.themoviedb.org/3';
     const IMG_URL = 'https://image.tmdb.org/t/p/original';
@@ -803,24 +824,25 @@ async function fetchHeroContent() {
     }
 
     async function findAndPlayTrailer() {
-        searchStartTime = Date.now();
+        console.log('[HERO TRAILER] Начало поиска трейлера. Всего трейлеров:', allTrailers.length);
         
-        for (const trailer of allTrailers) {
-            if (trailerSuccessfullyPlayed) break;
-            
-            const isWorking = await testTrailerQuick(trailer);
-            if (isWorking) {
-                const timeToWait = 10000 - (Date.now() - searchStartTime);
-                if (timeToWait > 0) {
-                    await new Promise(resolve => setTimeout(resolve, timeToWait));
-                }
-                
-                playTrailer(trailer);
-                return;
-            }
+        if (allTrailers.length === 0) {
+            console.log('[HERO TRAILER] Трейлеры не найдены');
+            return;
         }
         
-        restoreBackground();
+        // Берем первый трейлер (они уже отсортированы по приоритету языка)
+        const trailer = allTrailers[0];
+        console.log('[HERO TRAILER] Выбран трейлер:', trailer.name, 'язык:', trailer.iso_639_1, 'key:', trailer.key);
+        
+        // Ждем 10 секунд перед запуском
+        console.log('[HERO TRAILER] Ожидание 10 секунд перед запуском...');
+        await new Promise(resolve => setTimeout(resolve, 10000));
+        
+        if (!trailerSuccessfullyPlayed) {
+            console.log('[HERO TRAILER] Запуск трейлера:', trailer.name);
+            playTrailer(trailer);
+        }
     }
 
     function playTrailer(trailer) {
@@ -989,12 +1011,17 @@ async function fetchHeroContent() {
     const heroContent = document.querySelector('.hero-content');
     if (heroContent) heroContent.classList.add('active');
 
+    console.log('[HERO TRAILER] Ожидание загрузки YouTube API...');
     const waitForYT = setInterval(async () => {
         if (window.YT && window.YT.Player) {
             clearInterval(waitForYT);
+            console.log('[HERO TRAILER] YouTube API загружен. Получение трейлеров...');
             allTrailers = await getAllTrailers(selectedContent.id, selectedContent.type);
+            console.log('[HERO TRAILER] Получено трейлеров:', allTrailers.length);
             if (allTrailers.length > 0) {
                 findAndPlayTrailer();
+            } else {
+                console.log('[HERO TRAILER] Трейлеры не найдены');
             }
         }
     }, 100);
@@ -1086,6 +1113,31 @@ async function fetchHeroContent() {
         });
     }
 
+    // Функции управления избранным
+    function isFavorite(id, type) {
+        const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        return favorites.some(item => item.id == id && item.type === type);
+    }
+
+    function toggleFavorite(id, type) {
+        const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        console.log('[FAVORITES] Текущее избранное:', favorites);
+        console.log('[FAVORITES] Переключение для:', { id, type });
+        const index = favorites.findIndex(item => item.id == id && item.type === type);
+        
+        if (index > -1) {
+            favorites.splice(index, 1);
+            console.log('[FAVORITES] Удалено из избранного');
+        } else {
+            favorites.push({ id, type });
+            console.log('[FAVORITES] Добавлено в избранное');
+        }
+        
+        localStorage.setItem('favorites', JSON.stringify(favorites));
+        console.log('[FAVORITES] Сохранено в localStorage:', favorites);
+        return index === -1; // возвращает true если добавлено
+    }
+
     function displayMovies(movies, container, type) {
         if (!container) return;
         container.innerHTML = '';
@@ -1094,6 +1146,7 @@ async function fetchHeroContent() {
             movieCard.classList.add('movie-card');
             const posterUrl = movie.poster_path ? `${IMG_URL}${movie.poster_path}` : NO_PICTURE_URL;
             const rating = movie.vote_average ? parseFloat(movie.vote_average.toFixed(1)) : null;
+            const isInFavorites = isFavorite(movie.id, type);
 
             let ratingClass = 'movie-card-rating';
             if (!rating) {
@@ -1113,11 +1166,40 @@ async function fetchHeroContent() {
                 <div class="gradient-overlay"></div>
                 <p>${movie.title || movie.name}</p>
                 ${rating ? `<div class="${ratingClass}">${rating}</div>` : ''}
+                <button class="favorite-btn ${isInFavorites ? 'active' : ''}" data-id="${movie.id}" data-type="${type}" title="${isInFavorites ? 'Удалить из избранного' : 'Добавить в избранное'}">
+                    <img src="ico/${isInFavorites ? 'Избранное_добавлено' : 'Избранное_добавить'}.svg" alt="Избранное">
+                </button>
             `;
 
             movieCard.dataset.id = movie.id;
             movieCard.dataset.type = type;
+            
+            const favoriteBtn = movieCard.querySelector('.favorite-btn');
+            favoriteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const isAdded = toggleFavorite(movie.id, type);
+                const img = favoriteBtn.querySelector('img');
+                
+                // Запускаем анимацию
+                img.classList.add('animate');
+                setTimeout(() => img.classList.remove('animate'), 600);
+                
+                if (isAdded) {
+                    favoriteBtn.classList.add('active');
+                    img.src = 'ico/Избранное_добавлено.svg';
+                    favoriteBtn.title = 'Удалить из избранного';
+                } else {
+                    favoriteBtn.classList.remove('active');
+                    img.src = 'ico/Избранное_добавить.svg';
+                    favoriteBtn.title = 'Добавить в избранное';
+                }
+            });
+            
             movieCard.addEventListener('click', (e) => {
+                if (e.target.closest('.favorite-btn')) {
+                    return;
+                }
                 e.preventDefault();
                 // НЕ блокируем скролл перед переходом на watch страницу
                 openModal(movie.id, type);

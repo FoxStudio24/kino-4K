@@ -389,7 +389,6 @@ body {
       padding:4px 20px;
       border-radius:999px;
       background:rgba(255,255,255,0.08);
-      backdrop-filter:blur(25px);
       color:var(--text);
       white-space:nowrap;
       flex-shrink:0;
@@ -458,6 +457,71 @@ body {
       width:20px;
       height:20px;
       filter:invert(1);
+    }
+
+    .btn-favorite{
+      position:relative;
+      background-color:#141414ea;
+      border:none;
+      width:55px;
+      height:40px;
+      cursor:pointer;
+      border-radius:25px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:0;
+    }
+    
+    .btn-favorite::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      padding:1px;
+      background:linear-gradient(
+        135deg,
+        rgba(255,255,255,0.35),
+        rgba(200,200,200,0.15),
+        rgba(255,255,255,0.25),
+        rgba(120,120,120,0.1)
+      );
+      -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite:xor;
+      mask-composite:exclude;
+      pointer-events:none;
+      z-index:-1;
+    }
+    
+    .btn-favorite img{
+      width:24px;
+      height:24px;
+      transition:transform 0.2s ease;
+    }
+    
+    /* Анимация при добавлении/удалении из избранного */
+    @keyframes btnFavoriteToggle {
+      0% {
+        transform: scale(1) rotate(0deg);
+      }
+      50% {
+        transform: scale(1.3) rotate(15deg);
+      }
+      100% {
+        transform: scale(1) rotate(0deg);
+      }
+    }
+    
+    .btn-favorite img.animate {
+      animation: btnFavoriteToggle 0.6s ease-in-out;
+    }
+    
+    .btn-favorite:hover img{
+      transform:scale(0.85);
+    }
+    
+    .btn-favorite.active{
+      background-color:rgba(255, 0, 0, 0.3);
     }
 
     .close-btn{
@@ -1402,6 +1466,17 @@ body {
         gap:8px;
       }
       .info-row span{padding:4px 12px}
+      
+      .btn-favorite{
+        width:44px;
+        height:44px;
+      }
+      
+      .btn-favorite img{
+        width:22px;
+        height:22px;
+      }
+      
       .details{
         padding:0 16px;
         margin:24px auto;
@@ -1448,10 +1523,12 @@ body {
       .info-row{font-size:11px}
       .info-row span{padding:3px 10px}
       .actions{
-        flex-direction:column;
+        flex-direction:row;
         width:100%;
+        flex-wrap:nowrap;
       }
-      .btn{width:100%}
+      .btn{width:auto;flex:1}
+      .btn-favorite{width:40px;height:40px}
       .episode-card{
         min-width:180px;
         max-width:180px;
@@ -1761,6 +1838,10 @@ body {
         <img src="../ico/nav_mob/Сериалы.svg" alt="Сериалы" style="width:20px; height:20px; margin-right:8px; object-fit:contain;">
         Сериалы
     </a>
+    <a href="../favorites.html">
+        <img src="../ico/Избранное_добавить.svg" alt="Избранное" style="width:20px; height:20px; margin-right:8px; object-fit:contain;">
+        Избранное
+    </a>
 </nav>
 
 <style>
@@ -1814,6 +1895,9 @@ body {
           <button id="watchLink" class="btn">
             <img alt="Смотреть" id="watchIcon" src="../ico/Плей.svg">
             <span>Смотреть</span>
+          </button>
+          <button id="favoriteBtn" class="btn-favorite" title="Добавить в избранное">
+            <img alt="Избранное" src="../ico/Избранное_добавить.svg">
           </button>
         </div>
       </div>
@@ -1999,11 +2083,65 @@ body {
     const trailerContainer=$('#trailerContainer');
     const trailerControls=$('#trailerControls');
     const logoBox=$('#logoBox');
+    const favoriteBtn=$('#favoriteBtn');
     const isTV = TV_ID && !M_ID;
     const contentType = isTV ? 'tv' : 'movie';
     const contentId = isTV ? TV_ID : M_ID;
     
     console.log('[INIT] contentId=' + contentId + ', contentType=' + contentType);
+
+    // Функции управления избранным
+    function isFavorite(id, type) {
+      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+      return favorites.some(item => item.id == id && item.type === type);
+    }
+
+    function toggleFavorite(id, type) {
+      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+      console.log('[WATCH FAVORITES] Текущее избранное:', favorites);
+      console.log('[WATCH FAVORITES] Переключение для:', { id, type });
+      const index = favorites.findIndex(item => item.id == id && item.type === type);
+      
+      if (index > -1) {
+        favorites.splice(index, 1);
+        console.log('[WATCH FAVORITES] Удалено из избранного');
+      } else {
+        favorites.push({ id, type });
+        console.log('[WATCH FAVORITES] Добавлено в избранное');
+      }
+      
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+      console.log('[WATCH FAVORITES] Сохранено в localStorage:', favorites);
+      return index === -1;
+    }
+
+    function updateFavoriteButton() {
+      const isInFavorites = isFavorite(contentId, contentType);
+      const img = favoriteBtn.querySelector('img');
+      if (isInFavorites) {
+        favoriteBtn.classList.add('active');
+        favoriteBtn.title = 'Удалить из избранного';
+        img.src = '../ico/Избранное_добавлено.svg';
+      } else {
+        favoriteBtn.classList.remove('active');
+        favoriteBtn.title = 'Добавить в избранное';
+        img.src = '../ico/Избранное_добавить.svg';
+      }
+    }
+
+    // Обработчик клика по кнопке избранного
+    if (favoriteBtn) {
+      favoriteBtn.addEventListener('click', () => {
+        const img = favoriteBtn.querySelector('img');
+        
+        // Запускаем анимацию
+        img.classList.add('animate');
+        setTimeout(() => img.classList.remove('animate'), 600);
+        
+        const isAdded = toggleFavorite(contentId, contentType);
+        updateFavoriteButton();
+      });
+    }
 
     let player;
     let isMuted = true;
@@ -2551,11 +2689,21 @@ body {
         if(d.backdrop_path) bg=d.backdrop_path;
         else if(d.images?.backdrops?.length) bg=d.images.backdrops[0].file_path;
         else if(d.poster_path) bg=d.poster_path;
-        if(bg) backgroundContainer.style.backgroundImage=`url(${IMG(bg)})`;
+        
+        console.log('[LOAD] Фон:', bg);
+        console.log('[LOAD] backgroundContainer:', backgroundContainer);
+        
+        if(bg) {
+          const bgUrl = `url(${IMG(bg)})`;
+          console.log('[LOAD] Установка фона:', bgUrl);
+          backgroundContainer.style.backgroundImage = bgUrl;
+        }
 
         // Постер для 3D
         if(d.poster_path){
-          $('#poster3dImage').src = IMG(d.poster_path,'w500');
+          const posterUrl = IMG(d.poster_path,'w500');
+          console.log('[LOAD] Установка постера:', posterUrl);
+          $('#poster3dImage').src = posterUrl;
         }
 
         const logos=d.images?.logos||[];
@@ -2762,6 +2910,9 @@ body {
             document.querySelectorAll('.hero-content .fade-in').forEach(el=>el.classList.add('visible'));
           },100);
 
+          // Обновляем состояние кнопки избранного
+          updateFavoriteButton();
+
           // Если параметр autoplay=1, автоматически запускаем плеер
           if(shouldAutoplay){
             console.log('[AUTOPLAY] Параметр autoplay найден. contentId:', contentId, 'contentType:', contentType);
@@ -2786,13 +2937,26 @@ body {
             }, 100);
           } else {
             // Иначе загружаем трейлер через 10 секунд
+            console.log('[WATCH TRAILER] Запуск таймера автовоспроизведения трейлера (10 сек)');
             trailerTimeout=setTimeout(async()=>{
+              console.log('[WATCH TRAILER] Таймер сработал. Получение трейлеров...');
               allTrailers=await getTrailers();
+              console.log('[WATCH TRAILER] Получено трейлеров (все):', allTrailers.length);
               // Для фона получаем только английские официальные трейлеры
               const officialTrailers = await getOfficialTrailers();
+              console.log('[WATCH TRAILER] Получено официальных трейлеров:', officialTrailers.length);
               if(officialTrailers.length>0){
-                const working=await findWorkingTrailer(officialTrailers);
-                if(working) playTrailer(working.key);
+                // Берем первый официальный трейлер (они уже отсортированы)
+                const trailer = officialTrailers[0];
+                console.log('[WATCH TRAILER] Запуск трейлера:', trailer.name, 'key:', trailer.key);
+                playTrailer(trailer.key);
+              } else if(allTrailers.length>0) {
+                // Если нет официальных, берем первый любой трейлер
+                const trailer = allTrailers[0];
+                console.log('[WATCH TRAILER] Запуск резервного трейлера:', trailer.name, 'key:', trailer.key);
+                playTrailer(trailer.key);
+              } else {
+                console.log('[WATCH TRAILER] Трейлеры отсутствуют');
               }
             },10000);
           }
@@ -2844,6 +3008,12 @@ body {
                 <img src="../ico/nav_mob/Сериалы.svg" alt="Сериалы" style="width: 24px; height: 24px;">
             </span>
             <span class="mobile-nav-text">Сериалы</span>
+        </a>
+        <a href="../favorites.html" class="mobile-nav-item">
+            <span class="mobile-nav-icon">
+                <img src="../ico/Избранное_добавить.svg" alt="Избранное" style="width: 24px; height: 24px;">
+            </span>
+            <span class="mobile-nav-text">Избранное</span>
         </a>
     </nav>
 </body>

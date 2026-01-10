@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кино+  Избранное</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .empty-favorites {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 50vh;
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted, #9aa0a6);
+        }
+        
+        .empty-favorites img {
+            width: 120px;
+            height: 120px;
+            opacity: 0.5;
+            margin-bottom: 24px;
+        }
+        
+        .empty-favorites h2 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: var(--text, #e6e6ea);
+            font-family: 'textbold', sans-serif;
+        }
+        
+        .empty-favorites p {
+            font-size: 16px;
+            max-width: 400px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loader">
+            <svg viewBox="0 0 80 80">
+                <circle r="32" cy="40" cx="40" id="test"></circle>
+            </svg>
+        </div>
+
+        <div class="loader triangle">
+            <svg viewBox="0 0 86 80">
+                <polygon points="43 8 79 72 7 72"></polygon>
+            </svg>
+        </div>
+
+        <div class="loader">
+            <svg viewBox="0 0 80 80">
+                <rect height="64" width="64" y="8" x="8"></rect>
+            </svg>
+        </div>
+    </div>
+
+    <header class="header">
+        <button class="search-trigger" id="search-trigger">
+            <img src="ico/nav_mob/Поиск.svg" alt="Поиск" style="width: 24px; height: 24px;">
+        </button>
+
+        <nav class="nav-tabs">
+            <a href="index.html">
+                <img src="ico/nav_mob/Главная.svg" alt="Главная" style="width:20px; height:20px; margin-right:8px; object-fit:contain;">
+                Главная
+            </a>
+            <a href="movies.html">
+                <img src="ico/nav_mob/Фильмы.svg" alt="Фильмы" style="width:20px; height:20px; margin-right:8px; object-fit:contain;">
+                Фильмы
+            </a>
+            <a href="series.html">
+                <img src="ico/nav_mob/Сериалы.svg" alt="Сериалы" style="width:20px; height:20px; object-fit:contain; margin-right:8px;">
+                Сериалы
+            </a>
+            <a href="favorites.html" class="active">
+                <img src="ico/Избранное_добавлено.svg" alt="Избранное" style="width:20px; height:20px; object-fit:contain; margin-right:8px;">
+                Избранное
+            </a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="category">
+            <h2>Избранное</h2>
+            <!-- Временная кнопка для отладки -->
+            <button onclick="console.log('localStorage favorites:', localStorage.getItem('favorites')); alert('Проверьте консоль (F12)');" style="padding:8px 16px;margin:10px 0;background:#333;color:#fff;border:none;border-radius:8px;cursor:pointer;">
+                Проверить данные в localStorage
+            </button>
+            <div id="favorites-loading" style="display:none;text-align:center;padding:40px;color:var(--muted);">
+                <img src="ico/Загрузка.svg" alt="Загрузка" style="width:64px;height:64px;margin:0 auto 16px;">
+                <p>Загрузка избранного...</p>
+            </div>
+            <div id="favorites-container" class="movie-row"></div>
+            <div id="empty-favorites" class="empty-favorites" style="display:none;">
+                <img src="ico/Избранное_добавлено.svg" alt="Избранное">
+                <h2>Избранное пусто</h2>
+                <p>Добавляйте фильмы и сериалы в избранное, чтобы легко найти их позже</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Модальное окно поиска -->
+    <div id="search-modal" class="modal mobile-search-modal">
+        <div class="modal-content mobile-search-content">
+            <button class="mobile-search-close" id="search-close">
+                <img src="ico/закрыть.svg" alt="Закрыть" style="width: 24px; height: 24px;">
+            </button>
+            <div id="search-loader" class="search-loader" style="display:none;">
+                <img src="ico/Загрузка.svg" alt="Загрузка" style="width:64px;height:64px;">
+            </div>
+            <div class="mobile-search-header">
+                <h3>Поиск</h3>
+            </div>
+            <div id="search-empty" class="search-empty" style="display:none;">
+                <img src="ico/Поискмд.png" alt="Поиск" style="width:96px;height:96px;margin-bottom:16px;">
+                <p class="search-empty-text">Введите имя фильма, сериала или актера</p>
+            </div>
+            <form class="mobile-search-form" id="search-form">
+                <input type="text" class="mobile-search-input" id="search-input" placeholder="Поиск фильмов, сериалов и актера...">
+                <button type="submit" class="mobile-search-btn">
+                    <img src="ico/nav_mob/Поиск.svg" alt="Поиск" style="width: 24px; height: 24px;">
+                </button>
+            </form>
+            <div id="search-recent" class="search-recent" aria-hidden="true"></div>
+            <div class="mobile-search-results">
+                <div class="search-category">
+                    <h3>Фильмы</h3>
+                    <div id="search-movies" class="movie-row"></div>
+                </div>
+                <div class="search-category">
+                    <h3>Сериалы</h3>
+                    <div id="search-series" class="movie-row"></div>
+                </div>
+                <div class="search-category">
+                    <h3>Актеры</h3>
+                    <div id="search-actors" class="actor-row"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav">
+        <a href="index.html" class="mobile-nav-item">
+            <span class="mobile-nav-icon">
+                <img src="ico/nav_mob/Главная.svg" alt="Главная" style="width: 24px; height: 24px;">
+            </span>
+            <span class="mobile-nav-text">Главная</span>
+        </a>
+        <a href="movies.html" class="mobile-nav-item">
+            <span class="mobile-nav-icon">
+                <img src="ico/nav_mob/Фильмы.svg" alt="Фильмы" style="width: 24px; height: 24px;">
+            </span>
+            <span class="mobile-nav-text">Фильмы</span>
+        </a>
+        <a href="series.html" class="mobile-nav-item">
+            <span class="mobile-nav-icon">
+                <img src="ico/nav_mob/Сериалы.svg" alt="Сериалы" style="width: 24px; height: 24px;">
+            </span>
+            <span class="mobile-nav-text">Сериалы</span>
+        </a>
+        <a href="favorites.html" class="mobile-nav-item active">
+            <span class="mobile-nav-icon">
+                <img src="ico/Избранное.svg" alt="Избранное" style="width: 24px; height: 24px;">
+            </span>
+            <span class="mobile-nav-text">Избранное</span>
+        </a>
+    </nav>
+
+    <script src="js/player.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // Скрипт для страницы избранного
+        const API_KEY = '06936145fe8e20be28b02e26b55d3ce6';
+        const BASE_URL = 'https://api.themoviedb.org/3';
+        const IMG_URL = 'https://image.tmdb.org/t/p/w500';
+        const NO_PICTURE_URL = 'ico/Нет постера.png';
+
+        const favoritesContainer = document.getElementById('favorites-container');
+        const emptyFavorites = document.getElementById('empty-favorites');
+        const favoritesLoading = document.getElementById('favorites-loading');
+
+        // Загрузка избранного
+        async function loadFavorites() {
+            const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+            
+            console.log('[FAVORITES] Загрузка избранного. Всего элементов:', favorites.length);
+            
+            if (favorites.length === 0) {
+                favoritesContainer.style.display = 'none';
+                emptyFavorites.style.display = 'flex';
+                favoritesLoading.style.display = 'none';
+                return;
+            }
+
+            favoritesContainer.style.display = 'none';
+            emptyFavorites.style.display = 'none';
+            favoritesLoading.style.display = 'block';
+            favoritesContainer.innerHTML = '';
+
+            for (const item of favorites) {
+                try {
+                    console.log('[FAVORITES] Загрузка:', item.type, item.id);
+                    const response = await fetch(`${BASE_URL}/${item.type}/${item.id}?api_key=${API_KEY}&language=ru-RU`);
+                    
+                    if (!response.ok) {
+                        console.error('[FAVORITES] Ошибка ответа:', response.status);
+                        continue;
+                    }
+                    
+                    const data = await response.json();
+                    console.log('[FAVORITES] Получены данные:', data);
+                    
+                    if (!data || (!data.title && !data.name)) {
+                        console.error('[FAVORITES] Некорректные данные:', data);
+                        continue;
+                    }
+                    
+                    const movieCard = document.createElement('div');
+                    movieCard.classList.add('movie-card');
+                    const posterUrl = data.poster_path ? `${IMG_URL}${data.poster_path}` : NO_PICTURE_URL;
+                    const title = data.title || data.name || 'Без названия';
+                    const rating = data.vote_average ? parseFloat(data.vote_average.toFixed(1)) : null;
+
+                    let ratingClass = 'movie-card-rating';
+                    if (!rating) {
+                        ratingClass += ' dark-red';
+                    } else if (rating >= 6.5) {
+                        ratingClass += ' high';
+                    } else if (rating < 6.5 && rating >= 5) {
+                        ratingClass += ' low';
+                    } else if (rating < 5 && rating >= 4) {
+                        ratingClass += ' very-low';
+                    } else {
+                        ratingClass += ' dark-red';
+                    }
+
+                    movieCard.innerHTML = `
+                        <img src="${posterUrl}" alt="${title}">
+                        <div class="gradient-overlay"></div>
+                        <p>${title}</p>
+                        ${rating ? `<div class="${ratingClass}">${rating}</div>` : ''}
+                        <button class="favorite-btn active" data-id="${item.id}" data-type="${item.type}" title="Удалить из избранного">
+                            <img src="ico/Избранное_добавлено.svg" alt="Избранное">
+                        </button>
+                    `;
+
+                    movieCard.addEventListener('click', (e) => {
+                        if (e.target.closest('.favorite-btn')) {
+                            return;
+                        }
+                        e.preventDefault();
+                        const url = item.type === 'tv' 
+                            ? `watch/watch.html?TV_ID=${item.id}` 
+                            : `watch/watch.html?M_ID=${item.id}`;
+                        window.location.href = url;
+                    });
+
+                    favoritesContainer.appendChild(movieCard);
+                } catch (error) {
+                    console.error('[FAVORITES] Ошибка загрузки избранного:', error, item);
+                }
+            }
+
+            // Скрываем индикатор загрузки и показываем контейнер
+            favoritesLoading.style.display = 'none';
+            favoritesContainer.style.display = 'flex';
+
+            // Добавляем обработчики для кнопок избранного
+            document.querySelectorAll('.favorite-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const img = btn.querySelector('img');
+                    const id = btn.dataset.id;
+                    const type = btn.dataset.type;
+                    
+                    // Запускаем анимацию
+                    img.classList.add('animate');
+                    setTimeout(() => img.classList.remove('animate'), 600);
+                    
+                    removeFavorite(id, type);
+                    loadFavorites();
+                });
+            });
+        }
+
+        function removeFavorite(id, type) {
+            const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+            const newFavorites = favorites.filter(item => !(item.id == id && item.type === type));
+            localStorage.setItem('favorites', JSON.stringify(newFavorites));
+        }
+
+        // Загружаем избранное при загрузке страницы
+        loadFavorites();
+
+        // Скрываем loading overlay
+        setTimeout(() => {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+            }
+        }, 500);
+    </script>
+</body>
+</html>
