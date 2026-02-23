@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Установка активного пункта меню на основе текущей страницы
     function setActiveNavItem() {
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-        
+
         // Для навигации в header
         const navLinks = document.querySelectorAll('.nav-tabs a');
         navLinks.forEach(link => {
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 link.classList.remove('active');
             }
         });
-        
+
         // Для мобильной навигации
         const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
         mobileNavItems.forEach(item => {
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
+
     setActiveNavItem();
 
     // Функция для сохранения источника открытия (текущей страницы) перед переходом в watch
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.overflow = '';
     document.documentElement.style.overflow = '';
     document.body.classList.remove('no-scroll');
-    
+
     // Если есть сохраненная позиция скролла, восстановим её
     const savedScrollY = parseInt(document.body.dataset.scrollY || '0', 10);
     if (savedScrollY > 0) {
@@ -81,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Делегированный обработчик кликов для Top10 карточек (открывает общий модал)
     document.addEventListener('click', (e) => {
+        // Если клик по кнопке избранного — игнорируем открытие модала
+        if (e.target.closest && e.target.closest('.favorite-btn')) return;
         const topCard = e.target.closest && e.target.closest('.top10-card');
         if (!topCard) return;
         e.preventDefault();
@@ -101,9 +103,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
     }
 
-    // Запуск анимации при загрузке страницы
-    showLoading();
-    window.addEventListener('load', hideLoading);
+    // Запуск анимации при загрузке страницы (кроме страницы поиска)
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    if (currentPage !== 'search.html') {
+        showLoading();
+        window.addEventListener('load', hideLoading);
+    } else {
+        // На странице поиска не блокируем прокрутку загрузкой
+        document.body.classList.remove('loading');
+    }
 
     // Логика для кнопки поиска
     const searchTrigger = document.getElementById('search-trigger');
@@ -115,6 +123,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (searchTrigger) {
         searchTrigger.addEventListener('click', (e) => {
             e.preventDefault();
+            // Если модального окна нет — перенаправляем на страницу поиска
+            if (!searchModal) {
+                window.location.href = 'search.html';
+                return;
+            }
             searchModal.style.display = 'block';
             lockScroll();
             try {
@@ -126,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         modalContent.classList.remove('modal-opening');
                     }, 700);
                 }
-            } catch (e) {}
+            } catch (e) { }
             setTimeout(() => {
                 searchInput.focus();
                 // if empty input — show empty state (desktop behavior)
@@ -141,6 +154,11 @@ document.addEventListener('DOMContentLoaded', () => {
         mobileSearchTriggers.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
+                // Если модального окна нет — перенаправляем на страницу поиска
+                if (!searchModal) {
+                    window.location.href = 'search.html';
+                    return;
+                }
                 if (searchModal) searchModal.style.display = 'block';
                 lockScroll();
                 try {
@@ -151,12 +169,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             modalContent.classList.remove('modal-opening');
                         }, 700);
                     }
-                } catch (e) {}
+                } catch (e) { }
                 // Скрываем мобильную навигацию пока открыт поиск
                 try {
                     const mobileNav = document.querySelector('.mobile-nav');
                     if (mobileNav) mobileNav.style.display = 'none';
-                } catch (err) {}
+                } catch (err) { }
                 setTimeout(() => {
                     if (searchInput) searchInput.focus();
                     updateSearchEmptyState();
@@ -187,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // on mobile also render recent if empty
                 if (q === '') renderRecentSearches();
             }
-        } catch (e) {}
+        } catch (e) { }
     }
 
     // Toggle empty state on input
@@ -195,6 +213,18 @@ document.addEventListener('DOMContentLoaded', () => {
         searchInput.addEventListener('input', () => {
             updateSearchEmptyState();
         });
+    }
+
+    // На странице поиска при загрузке сразу показать пустое состояние и сфокусировать инпут
+    if (currentPage === 'search.html') {
+        try {
+            setTimeout(() => {
+                if (searchInput) {
+                    searchInput.focus();
+                }
+                updateSearchEmptyState();
+            }, 50);
+        } catch (e) { }
     }
 
     // Recent searches storage and rendering
@@ -206,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!raw) return [];
             const arr = JSON.parse(raw);
             if (Array.isArray(arr)) return arr;
-        } catch (e) {}
+        } catch (e) { }
         return [];
     }
 
@@ -217,9 +247,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // remove duplicates
             arr = arr.filter(item => item.toLowerCase() !== query.toLowerCase());
             arr.unshift(query);
-            if (arr.length > 5) arr = arr.slice(0,5);
+            if (arr.length > 5) arr = arr.slice(0, 5);
             localStorage.setItem(RECENT_KEY, JSON.stringify(arr));
-        } catch (e) {}
+        } catch (e) { }
     }
 
     function renderRecentSearches() {
@@ -229,10 +259,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const list = loadRecentSearches();
             container.innerHTML = '';
             if (!list || list.length === 0) {
-                container.setAttribute('aria-hidden','true');
+                container.setAttribute('aria-hidden', 'true');
                 return;
             }
-            container.setAttribute('aria-hidden','false');
+            container.setAttribute('aria-hidden', 'false');
             list.forEach(q => {
                 const btn = document.createElement('div');
                 btn.className = 'pill';
@@ -244,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 container.appendChild(btn);
             });
-        } catch (e) {}
+        } catch (e) { }
     }
 
     function closeSearch() {
@@ -260,14 +290,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (empty) empty.style.display = 'flex';
                 if (resultsContainer) resultsContainer.style.display = 'none';
             }
-        } catch (e) {}
+        } catch (e) { }
         // Вернуть мобильную навигацию, если она была скрыта
         try {
             const mobileNav = document.querySelector('.mobile-nav');
             if (mobileNav && window.innerWidth <= 768) {
                 mobileNav.style.display = 'flex';
             }
-        } catch (e) {}
+        } catch (e) { }
 
         searchInput.value = '';
         document.getElementById('search-movies').innerHTML = '';
@@ -276,7 +306,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (searchClose) {
-        searchClose.addEventListener('click', closeSearch);
+        if (currentPage === 'search.html') {
+            // На странице поиска кнопка закрытия ведет назад/на главную
+            searchClose.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = 'index.html';
+                }
+            });
+        } else {
+            searchClose.addEventListener('click', closeSearch);
+        }
     }
 
     if (searchModal) {
@@ -320,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateFavoritesNavIcon() {
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
         const isFavoritesPage = currentPage === 'favorites.html';
-        
+
         // Ищем все ссылки на favorites в навигации
         document.querySelectorAll('a[href="favorites.html"]').forEach(link => {
             const img = link.querySelector('img');
@@ -333,13 +375,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
+
     // Обновляем иконку при загрузке
     updateFavoritesNavIcon();
 
     const API_KEY = '06936145fe8e20be28b02e26b55d3ce6';
     const BASE_URL = 'https://api.themoviedb.org/3';
     const IMG_URL = 'https://image.tmdb.org/t/p/original';
+    const POSTER_URL = 'https://image.tmdb.org/t/p/w500';
     const NO_PICTURE_URL = 'ico/No picture.svg';
 
     const hero = document.getElementById('hero');
@@ -434,26 +477,26 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-// Получить и отобразить 1 слайд с YouTube трейлером
-async function fetchHeroContent() {
-    const response = await fetch(`${BASE_URL}/trending/all/week?api_key=${API_KEY}&language=ru-RU`);
-    const data = await response.json();
-    const content = data.results
-        .filter(item => item.vote_average >= 6 && item.overview && item.backdrop_path)
-        .map(item => ({ ...item, type: item.media_type }));
+    // Получить и отобразить 1 слайд с YouTube трейлером
+    async function fetchHeroContent() {
+        const response = await fetch(`${BASE_URL}/trending/all/week?api_key=${API_KEY}&language=ru-RU`);
+        const data = await response.json();
+        const content = data.results
+            .filter(item => item.vote_average >= 6 && item.overview && item.backdrop_path)
+            .map(item => ({ ...item, type: item.media_type }));
 
-    const selectedContent = content[0];
-    if (!selectedContent) return;
+        const selectedContent = content[0];
+        if (!selectedContent) return;
 
-    let player;
-    let isTrailerPlaying = false;
-    let allTrailers = [];
-    let trailerSuccessfullyPlayed = false;
-    let progressInterval;
-    let searchStartTime = null;
+        let player;
+        let isTrailerPlaying = false;
+        let allTrailers = [];
+        let trailerSuccessfullyPlayed = false;
+        let progressInterval;
+        let searchStartTime = null;
 
-    const style = document.createElement('style');
-    style.textContent = `
+        const style = document.createElement('style');
+        style.textContent = `
         .hero {
             position: relative;
             overflow: visible;
@@ -637,33 +680,33 @@ async function fetchHeroContent() {
             }
         }
     `;
-    document.head.appendChild(style);
+        document.head.appendChild(style);
 
-    const ambient = document.createElement('div');
-    ambient.className = 'hero-ambient';
-    ambient.style.backgroundImage = `url(${IMG_URL}${selectedContent.backdrop_path})`;
-    hero.insertBefore(ambient, hero.firstChild);
+        const ambient = document.createElement('div');
+        ambient.className = 'hero-ambient';
+        ambient.style.backgroundImage = `url(${IMG_URL}${selectedContent.backdrop_path})`;
+        hero.insertBefore(ambient, hero.firstChild);
 
-    const bg = document.createElement('div');
-    bg.className = 'hero-background';
-    bg.style.backgroundImage = `url(${IMG_URL}${selectedContent.backdrop_path})`;
-    hero.insertBefore(bg, hero.firstChild);
+        const bg = document.createElement('div');
+        bg.className = 'hero-background';
+        bg.style.backgroundImage = `url(${IMG_URL}${selectedContent.backdrop_path})`;
+        hero.insertBefore(bg, hero.firstChild);
 
-    const trailerContainer = document.createElement('div');
-    trailerContainer.className = 'hero-trailer';
-    hero.insertBefore(trailerContainer, hero.firstChild);
+        const trailerContainer = document.createElement('div');
+        trailerContainer.className = 'hero-trailer';
+        hero.insertBefore(trailerContainer, hero.firstChild);
 
-    const controlsContainer = document.createElement('div');
-    controlsContainer.className = 'trailer-controls';
-    controlsContainer.style.position = 'absolute';
-    controlsContainer.style.bottom = '30px';
-    controlsContainer.style.right = '30px';
-    controlsContainer.style.zIndex = '10';
-    controlsContainer.style.display = 'none';
-    controlsContainer.style.gap = '10px';
-    controlsContainer.style.pointerEvents = 'all';
+        const controlsContainer = document.createElement('div');
+        controlsContainer.className = 'trailer-controls';
+        controlsContainer.style.position = 'absolute';
+        controlsContainer.style.bottom = '30px';
+        controlsContainer.style.right = '30px';
+        controlsContainer.style.zIndex = '10';
+        controlsContainer.style.display = 'none';
+        controlsContainer.style.gap = '10px';
+        controlsContainer.style.pointerEvents = 'all';
 
-    controlsContainer.innerHTML = `
+        controlsContainer.innerHTML = `
         <button id="trailer-sound-btn" style="
             background: rgba(32, 32, 32, 0.35);
             border: none;
@@ -702,330 +745,330 @@ async function fetchHeroContent() {
         </button>
     `;
 
-    controlsContainer.style.display = 'none';
-    controlsContainer.style.flexDirection = 'row';
-    controlsContainer.style.alignItems = 'center';
-    controlsContainer.style.justifyContent = 'center';
+        controlsContainer.style.display = 'none';
+        controlsContainer.style.flexDirection = 'row';
+        controlsContainer.style.alignItems = 'center';
+        controlsContainer.style.justifyContent = 'center';
 
-    hero.appendChild(controlsContainer);
+        hero.appendChild(controlsContainer);
 
-    const soundBtn = document.getElementById('trailer-sound-btn');
-    const exitBtn = document.getElementById('trailer-exit-btn');
+        const soundBtn = document.getElementById('trailer-sound-btn');
+        const exitBtn = document.getElementById('trailer-exit-btn');
 
-    let isSoundMuted = true;
-    const soundIcon = soundBtn.querySelector('img');
+        let isSoundMuted = true;
+        const soundIcon = soundBtn.querySelector('img');
 
-    soundBtn.addEventListener('click', () => {
-        if (!player) return;
-        try {
-            if (isSoundMuted) {
-                player.unMute();
-                player.setVolume(100);
-                soundIcon.src = 'ico/Звук_вкл.png';
-            } else {
-                player.mute();
-                soundIcon.src = 'ico/Звук_выкл.png';
-            }
-            isSoundMuted = !isSoundMuted;
-        } catch (error) {}
-    });
-
-    exitBtn.addEventListener('click', () => {
-        trailerSuccessfullyPlayed = true;
-        stopTrailer();
-    });
-
-    async function getAllTrailers(contentId, contentType) {
-        try {
-            const response = await fetch(
-                `${BASE_URL}/${contentType}/${contentId}/videos?api_key=${API_KEY}`
-            );
-            const data = await response.json();
-            
-            const trailers = data.results.filter(
-                video => video.type === 'Trailer' && video.site === 'YouTube'
-            );
-
-            trailers.sort((a, b) => {
-                const langPriority = { 'ru': 0, 'en': 1 };
-                const priorityA = langPriority[a.iso_639_1] ?? 2;
-                const priorityB = langPriority[b.iso_639_1] ?? 2;
-                return priorityA - priorityB;
-            });
-
-            return trailers;
-        } catch (error) {
-            return [];
-        }
-    }
-
-    if (!window.YT) {
-        const tag = document.createElement('script');
-        tag.src = 'https://www.youtube.com/iframe_api';
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    }
-
-    function testTrailerQuick(trailer) {
-        return new Promise((resolve) => {
-            const testDiv = document.createElement('div');
-            testDiv.style.display = 'none';
-            document.body.appendChild(testDiv);
-            
-            let resolved = false;
-            const timeout = setTimeout(() => {
-                if (!resolved) {
-                    resolved = true;
-                    try { testPlayer?.destroy(); } catch (e) {}
-                    if (document.body.contains(testDiv)) document.body.removeChild(testDiv);
-                    resolve(false);
-                }
-            }, 2500);
-            
+        soundBtn.addEventListener('click', () => {
+            if (!player) return;
             try {
-                const testPlayer = new YT.Player(testDiv, {
-                    videoId: trailer.key,
-                    playerVars: { autoplay: 1, mute: 1, controls: 0, fs: 0 },
-                    events: {
-                        'onReady': (e) => {
-                            setTimeout(() => {
-                                try {
-                                    const time = e.target.getCurrentTime();
-                                    if (time > 0 && !resolved) {
-                                        resolved = true;
-                                        clearTimeout(timeout);
-                                        e.target.destroy();
-                                        if (document.body.contains(testDiv)) document.body.removeChild(testDiv);
-                                        resolve(true);
-                                    }
-                                } catch (err) {}
-                            }, 800);
-                        },
-                        'onError': (e) => {
-                            if (!resolved) {
-                                resolved = true;
-                                clearTimeout(timeout);
-                                testPlayer.destroy();
-                                if (document.body.contains(testDiv)) document.body.removeChild(testDiv);
-                                resolve(false);
+                if (isSoundMuted) {
+                    player.unMute();
+                    player.setVolume(100);
+                    soundIcon.src = 'ico/Звук_вкл.png';
+                } else {
+                    player.mute();
+                    soundIcon.src = 'ico/Звук_выкл.png';
+                }
+                isSoundMuted = !isSoundMuted;
+            } catch (error) { }
+        });
+
+        exitBtn.addEventListener('click', () => {
+            trailerSuccessfullyPlayed = true;
+            stopTrailer();
+        });
+
+        async function getAllTrailers(contentId, contentType) {
+            try {
+                const response = await fetch(
+                    `${BASE_URL}/${contentType}/${contentId}/videos?api_key=${API_KEY}`
+                );
+                const data = await response.json();
+
+                const trailers = data.results.filter(
+                    video => video.type === 'Trailer' && video.site === 'YouTube'
+                );
+
+                trailers.sort((a, b) => {
+                    const langPriority = { 'ru': 0, 'en': 1 };
+                    const priorityA = langPriority[a.iso_639_1] ?? 2;
+                    const priorityB = langPriority[b.iso_639_1] ?? 2;
+                    return priorityA - priorityB;
+                });
+
+                return trailers;
+            } catch (error) {
+                return [];
+            }
+        }
+
+        if (!window.YT) {
+            const tag = document.createElement('script');
+            tag.src = 'https://www.youtube.com/iframe_api';
+            const firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        }
+
+        function testTrailerQuick(trailer) {
+            return new Promise((resolve) => {
+                const testDiv = document.createElement('div');
+                testDiv.style.display = 'none';
+                document.body.appendChild(testDiv);
+
+                let resolved = false;
+                const timeout = setTimeout(() => {
+                    if (!resolved) {
+                        resolved = true;
+                        try { testPlayer?.destroy(); } catch (e) { }
+                        if (document.body.contains(testDiv)) document.body.removeChild(testDiv);
+                        resolve(false);
+                    }
+                }, 2500);
+
+                try {
+                    const testPlayer = new YT.Player(testDiv, {
+                        videoId: trailer.key,
+                        playerVars: { autoplay: 1, mute: 1, controls: 0, fs: 0 },
+                        events: {
+                            'onReady': (e) => {
+                                setTimeout(() => {
+                                    try {
+                                        const time = e.target.getCurrentTime();
+                                        if (time > 0 && !resolved) {
+                                            resolved = true;
+                                            clearTimeout(timeout);
+                                            e.target.destroy();
+                                            if (document.body.contains(testDiv)) document.body.removeChild(testDiv);
+                                            resolve(true);
+                                        }
+                                    } catch (err) { }
+                                }, 800);
+                            },
+                            'onError': (e) => {
+                                if (!resolved) {
+                                    resolved = true;
+                                    clearTimeout(timeout);
+                                    testPlayer.destroy();
+                                    if (document.body.contains(testDiv)) document.body.removeChild(testDiv);
+                                    resolve(false);
+                                }
                             }
                         }
+                    });
+                } catch (err) {
+                    if (!resolved) {
+                        resolved = true;
+                        clearTimeout(timeout);
+                        if (document.body.contains(testDiv)) document.body.removeChild(testDiv);
+                        resolve(false);
                     }
-                });
-            } catch (err) {
-                if (!resolved) {
-                    resolved = true;
-                    clearTimeout(timeout);
-                    if (document.body.contains(testDiv)) document.body.removeChild(testDiv);
-                    resolve(false);
-                }
-            }
-        });
-    }
-
-    async function findAndPlayTrailer() {
-        console.log('[HERO TRAILER] Начало поиска трейлера. Всего трейлеров:', allTrailers.length);
-        
-        if (allTrailers.length === 0) {
-            console.log('[HERO TRAILER] Трейлеры не найдены');
-            return;
-        }
-        
-        // Берем первый трейлер (они уже отсортированы по приоритету языка)
-        const trailer = allTrailers[0];
-        console.log('[HERO TRAILER] Выбран трейлер:', trailer.name, 'язык:', trailer.iso_639_1, 'key:', trailer.key);
-        
-        // Ждем 10 секунд перед запуском
-        console.log('[HERO TRAILER] Ожидание 10 секунд перед запуском...');
-        await new Promise(resolve => setTimeout(resolve, 10000));
-        
-        if (!trailerSuccessfullyPlayed) {
-            console.log('[HERO TRAILER] Запуск трейлера:', trailer.name);
-            playTrailer(trailer);
-        }
-    }
-
-    function playTrailer(trailer) {
-        const heroDescription = document.querySelector('.hero-content p');
-        const heroLogo = document.querySelector('.hero-logo');
-        const heroLogoText = document.querySelector('.hero-logo-text');
-
-        if (heroDescription) heroDescription.classList.add('hidden');
-        if (heroLogo) heroLogo.classList.add('move-down');
-        if (heroLogoText) heroLogoText.classList.add('hidden');
-
-        const playerDiv = document.createElement('div');
-        playerDiv.id = 'youtube-player-main';
-        trailerContainer.innerHTML = '';
-        trailerContainer.appendChild(playerDiv);
-
-        const waitForAPI = setInterval(() => {
-            if (window.YT && window.YT.Player) {
-                clearInterval(waitForAPI);
-                initPlayer(playerDiv.id, trailer.key);
-            }
-        }, 100);
-    }
-
-    function initPlayer(elementId, videoKey) {
-        try {
-            player = new YT.Player(elementId, {
-                videoId: videoKey,
-                playerVars: {
-                    autoplay: 1,
-                    mute: 1,
-                    controls: 0,
-                    disablekb: 1,
-                    fs: 0,
-                    modestbranding: 1,
-                    rel: 0,
-                    showinfo: 0,
-                    iv_load_policy: 3,
-                    playsinline: 1,
-                    enablejsapi: 1,
-                    origin: window.location.origin
-                },
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange,
-                    'onError': onPlayerError
                 }
             });
-        } catch (error) {}
-    }
+        }
 
-    function onPlayerReady(event) {
-        try {
-            event.target.playVideo();
-            event.target.mute();
-        } catch (e) {}
-        
-        setTimeout(() => {
-            trailerContainer.classList.add('active');
-            controlsContainer.style.display = 'flex';
-            isTrailerPlaying = true;
-            trailerSuccessfullyPlayed = true;
-            startProgressMonitoring(event.target);
-        }, 300);
-    }
+        async function findAndPlayTrailer() {
+            console.log('[HERO TRAILER] Начало поиска трейлера. Всего трейлеров:', allTrailers.length);
 
-    function startProgressMonitoring(playerInstance) {
-        if (progressInterval) clearInterval(progressInterval);
+            if (allTrailers.length === 0) {
+                console.log('[HERO TRAILER] Трейлеры не найдены');
+                return;
+            }
 
-        progressInterval = setInterval(() => {
-            if (playerInstance?.getDuration && playerInstance?.getCurrentTime) {
-                try {
-                    const duration = playerInstance.getDuration();
-                    const currentTime = playerInstance.getCurrentTime();
-                    const timeLeft = duration - currentTime;
-                    
-                    if (timeLeft <= 10.5 && timeLeft >= 9.5) {
-                        clearInterval(progressInterval);
-                        stopTrailer();
+            // Берем первый трейлер (они уже отсортированы по приоритету языка)
+            const trailer = allTrailers[0];
+            console.log('[HERO TRAILER] Выбран трейлер:', trailer.name, 'язык:', trailer.iso_639_1, 'key:', trailer.key);
+
+            // Ждем 10 секунд перед запуском
+            console.log('[HERO TRAILER] Ожидание 10 секунд перед запуском...');
+            await new Promise(resolve => setTimeout(resolve, 10000));
+
+            if (!trailerSuccessfullyPlayed) {
+                console.log('[HERO TRAILER] Запуск трейлера:', trailer.name);
+                playTrailer(trailer);
+            }
+        }
+
+        function playTrailer(trailer) {
+            const heroDescription = document.querySelector('.hero-content p');
+            const heroLogo = document.querySelector('.hero-logo');
+            const heroLogoText = document.querySelector('.hero-logo-text');
+
+            if (heroDescription) heroDescription.classList.add('hidden');
+            if (heroLogo) heroLogo.classList.add('move-down');
+            if (heroLogoText) heroLogoText.classList.add('hidden');
+
+            const playerDiv = document.createElement('div');
+            playerDiv.id = 'youtube-player-main';
+            trailerContainer.innerHTML = '';
+            trailerContainer.appendChild(playerDiv);
+
+            const waitForAPI = setInterval(() => {
+                if (window.YT && window.YT.Player) {
+                    clearInterval(waitForAPI);
+                    initPlayer(playerDiv.id, trailer.key);
+                }
+            }, 100);
+        }
+
+        function initPlayer(elementId, videoKey) {
+            try {
+                player = new YT.Player(elementId, {
+                    videoId: videoKey,
+                    playerVars: {
+                        autoplay: 1,
+                        mute: 1,
+                        controls: 0,
+                        disablekb: 1,
+                        fs: 0,
+                        modestbranding: 1,
+                        rel: 0,
+                        showinfo: 0,
+                        iv_load_policy: 3,
+                        playsinline: 1,
+                        enablejsapi: 1,
+                        origin: window.location.origin
+                    },
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onStateChange': onPlayerStateChange,
+                        'onError': onPlayerError
                     }
-                } catch (e) {}
+                });
+            } catch (error) { }
+        }
+
+        function onPlayerReady(event) {
+            try {
+                event.target.playVideo();
+                event.target.mute();
+            } catch (e) { }
+
+            setTimeout(() => {
+                trailerContainer.classList.add('active');
+                controlsContainer.style.display = 'flex';
+                isTrailerPlaying = true;
+                trailerSuccessfullyPlayed = true;
+                startProgressMonitoring(event.target);
+            }, 300);
+        }
+
+        function startProgressMonitoring(playerInstance) {
+            if (progressInterval) clearInterval(progressInterval);
+
+            progressInterval = setInterval(() => {
+                if (playerInstance?.getDuration && playerInstance?.getCurrentTime) {
+                    try {
+                        const duration = playerInstance.getDuration();
+                        const currentTime = playerInstance.getCurrentTime();
+                        const timeLeft = duration - currentTime;
+
+                        if (timeLeft <= 10.5 && timeLeft >= 9.5) {
+                            clearInterval(progressInterval);
+                            stopTrailer();
+                        }
+                    } catch (e) { }
+                }
+            }, 100);
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === 0) {
+                stopTrailer();
+            }
+        }
+
+        function onPlayerError(event) {
+            stopTrailer();
+        }
+
+        function stopTrailer() {
+            if (progressInterval) clearInterval(progressInterval);
+
+            trailerContainer.classList.remove('active');
+            controlsContainer.style.display = 'none';
+            isTrailerPlaying = false;
+            restoreBackground();
+
+            if (player) {
+                setTimeout(() => {
+                    try { player.destroy(); } catch (error) { }
+                    trailerContainer.innerHTML = '';
+                    player = null;
+                }, 500);
+            }
+        }
+
+        function restoreBackground() {
+            const heroDescription = document.querySelector('.hero-content p');
+            const heroLogo = document.querySelector('.hero-logo');
+            const heroLogoText = document.querySelector('.hero-logo-text');
+
+            setTimeout(() => {
+                if (heroDescription) heroDescription.classList.remove('hidden');
+                if (heroLogo) {
+                    heroLogo.classList.remove('move-down');
+                    heroLogo.classList.add('move-up');
+                    setTimeout(() => heroLogo.classList.remove('move-up'), 1200);
+                }
+                if (heroLogoText) heroLogoText.classList.remove('hidden');
+            }, 500);
+        }
+
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    const isModalOpen = document.querySelector('.modal.active') ||
+                        document.querySelector('.player-modal.active');
+
+                    if (isModalOpen && isTrailerPlaying && player) {
+                        try { player.pauseVideo(); } catch (e) { }
+                    }
+                }
+            });
+        });
+
+        observer.observe(document.body, {
+            attributes: true,
+            subtree: true,
+            attributeFilter: ['class']
+        });
+
+        const logoUrl = await getLogo(selectedContent.id, selectedContent.type);
+
+        if (logoUrl) {
+            heroLogo.src = logoUrl;
+            heroLogo.style.display = 'block';
+            heroLogoText.style.display = 'none';
+        } else {
+            heroLogo.style.display = 'none';
+            heroLogoText.textContent = selectedContent.title || selectedContent.name;
+            heroLogoText.style.display = 'block';
+        }
+
+        heroDescription.textContent = selectedContent.overview || 'Описание отсутствует';
+        heroWatchBtn.dataset.id = selectedContent.id;
+        heroWatchBtn.dataset.type = selectedContent.type;
+        heroInfoBtn.dataset.id = selectedContent.id;
+        heroInfoBtn.dataset.type = selectedContent.type;
+
+        const heroContent = document.querySelector('.hero-content');
+        if (heroContent) heroContent.classList.add('active');
+
+        console.log('[HERO TRAILER] Ожидание загрузки YouTube API...');
+        const waitForYT = setInterval(async () => {
+            if (window.YT && window.YT.Player) {
+                clearInterval(waitForYT);
+                console.log('[HERO TRAILER] YouTube API загружен. Получение трейлеров...');
+                allTrailers = await getAllTrailers(selectedContent.id, selectedContent.type);
+                console.log('[HERO TRAILER] Получено трейлеров:', allTrailers.length);
+                if (allTrailers.length > 0) {
+                    findAndPlayTrailer();
+                } else {
+                    console.log('[HERO TRAILER] Трейлеры не найдены');
+                }
             }
         }, 100);
     }
-
-    function onPlayerStateChange(event) {
-        if (event.data === 0) {
-            stopTrailer();
-        }
-    }
-
-    function onPlayerError(event) {
-        stopTrailer();
-    }
-
-    function stopTrailer() {
-        if (progressInterval) clearInterval(progressInterval);
-
-        trailerContainer.classList.remove('active');
-        controlsContainer.style.display = 'none';
-        isTrailerPlaying = false;
-        restoreBackground();
-
-        if (player) {
-            setTimeout(() => {
-                try { player.destroy(); } catch (error) {}
-                trailerContainer.innerHTML = '';
-                player = null;
-            }, 500);
-        }
-    }
-
-    function restoreBackground() {
-        const heroDescription = document.querySelector('.hero-content p');
-        const heroLogo = document.querySelector('.hero-logo');
-        const heroLogoText = document.querySelector('.hero-logo-text');
-
-        setTimeout(() => {
-            if (heroDescription) heroDescription.classList.remove('hidden');
-            if (heroLogo) {
-                heroLogo.classList.remove('move-down');
-                heroLogo.classList.add('move-up');
-                setTimeout(() => heroLogo.classList.remove('move-up'), 1200);
-            }
-            if (heroLogoText) heroLogoText.classList.remove('hidden');
-        }, 500);
-    }
-
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.attributeName === 'class') {
-                const isModalOpen = document.querySelector('.modal.active') || 
-                                   document.querySelector('.player-modal.active');
-                
-                if (isModalOpen && isTrailerPlaying && player) {
-                    try { player.pauseVideo(); } catch (e) {}
-                }
-            }
-        });
-    });
-
-    observer.observe(document.body, {
-        attributes: true,
-        subtree: true,
-        attributeFilter: ['class']
-    });
-
-    const logoUrl = await getLogo(selectedContent.id, selectedContent.type);
-
-    if (logoUrl) {
-        heroLogo.src = logoUrl;
-        heroLogo.style.display = 'block';
-        heroLogoText.style.display = 'none';
-    } else {
-        heroLogo.style.display = 'none';
-        heroLogoText.textContent = selectedContent.title || selectedContent.name;
-        heroLogoText.style.display = 'block';
-    }
-
-    heroDescription.textContent = selectedContent.overview || 'Описание отсутствует';
-    heroWatchBtn.dataset.id = selectedContent.id;
-    heroWatchBtn.dataset.type = selectedContent.type;
-    heroInfoBtn.dataset.id = selectedContent.id;
-    heroInfoBtn.dataset.type = selectedContent.type;
-
-    const heroContent = document.querySelector('.hero-content');
-    if (heroContent) heroContent.classList.add('active');
-
-    console.log('[HERO TRAILER] Ожидание загрузки YouTube API...');
-    const waitForYT = setInterval(async () => {
-        if (window.YT && window.YT.Player) {
-            clearInterval(waitForYT);
-            console.log('[HERO TRAILER] YouTube API загружен. Получение трейлеров...');
-            allTrailers = await getAllTrailers(selectedContent.id, selectedContent.type);
-            console.log('[HERO TRAILER] Получено трейлеров:', allTrailers.length);
-            if (allTrailers.length > 0) {
-                findAndPlayTrailer();
-            } else {
-                console.log('[HERO TRAILER] Трейлеры не найдены');
-            }
-        }
-    }, 100);
-}
 
 
     // Получить новые фильмы
@@ -1095,7 +1138,7 @@ async function fetchHeroContent() {
             const actorCard = document.createElement('div');
             actorCard.classList.add('movie-card');
             const profileUrl = actor.profile_path ? `${IMG_URL}${actor.profile_path}` : NO_PICTURE_URL;
-            
+
             actorCard.innerHTML = `
                 <img src="${profileUrl}" alt="${actor.name}">
                 <div class="gradient-overlay"></div>
@@ -1113,30 +1156,133 @@ async function fetchHeroContent() {
         });
     }
 
-    // Функции управления избранным
-    function isFavorite(id, type) {
-        const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-        return favorites.some(item => item.id == id && item.type === type);
+    // Загрузка кэша избранного из TMDB при инициализации для быстрого UI
+    let tmdbFavoritesCache = [];
+    async function loadTMDBFavoritesCache() {
+        const sessionId = localStorage.getItem('tmdb_session_id');
+        const accountId = localStorage.getItem('tmdb_account_id');
+        if (!sessionId || !accountId) return;
+
+        try {
+            const moviesRes = await fetch(`${BASE_URL}/account/${accountId}/favorite/movies?api_key=${API_KEY}&session_id=${sessionId}`);
+            const tvRes = await fetch(`${BASE_URL}/account/${accountId}/favorite/tv?api_key=${API_KEY}&session_id=${sessionId}`);
+
+            const mData = await moviesRes.json();
+            const tData = await tvRes.json();
+
+            const mFavs = (mData.results || []).map(m => ({ id: m.id, type: 'movie' }));
+            const tFavs = (tData.results || []).map(t => ({ id: t.id, type: 'tv' }));
+
+            tmdbFavoritesCache = [...mFavs, ...tFavs];
+            // Сохраняем в localStorage как кэш для быстрой работы UI до загрузки
+            localStorage.setItem('tmdb_favorites_cache', JSON.stringify(tmdbFavoritesCache));
+
+            // Обновляем UI всех кнопок на странице
+            document.querySelectorAll('.favorite-btn').forEach(btn => {
+                const card = btn.closest('.movie-card, .top10-card');
+                if (!card) return;
+                const id = card.dataset.id;
+                // Для разных мест может понадобиться по-разному получать тип
+                let type = 'movie'; // по умолчанию
+                if (window.location.pathname.includes('series.html')) type = 'tv';
+                if (card.dataset.type) type = card.dataset.type;
+
+                const icon = btn.querySelector('i');
+                const textSpan = btn.querySelector('span');
+
+                if (isFavorite(id, type)) {
+                    btn.classList.add('active');
+                    btn.title = 'Убрать из избранных';
+                    if (icon) icon.className = 'fa-solid fa-heart';
+                    if (textSpan) textSpan.textContent = 'Убрать из избранных';
+                } else {
+                    btn.classList.remove('active');
+                    btn.title = 'Добавить в избранные';
+                    if (icon) icon.className = 'fa-regular fa-heart';
+                    if (textSpan) textSpan.textContent = 'Добавить в избранные';
+                }
+            });
+        } catch (e) {
+            console.error('Ошибка загрузки кэша избранного', e);
+        }
     }
 
-    function toggleFavorite(id, type) {
-        const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-        console.log('[FAVORITES] Текущее избранное:', favorites);
-        console.log('[FAVORITES] Переключение для:', { id, type });
-        const index = favorites.findIndex(item => item.id == id && item.type === type);
-        
-        if (index > -1) {
-            favorites.splice(index, 1);
-            console.log('[FAVORITES] Удалено из избранного');
-        } else {
-            favorites.push({ id, type });
-            console.log('[FAVORITES] Добавлено в избранное');
-        }
-        
-        localStorage.setItem('favorites', JSON.stringify(favorites));
-        console.log('[FAVORITES] Сохранено в localStorage:', favorites);
-        return index === -1; // возвращает true если добавлено
+    // Запускаем загрузку кэша если авторизованы
+    if (localStorage.getItem('tmdb_session_id')) {
+        // Восстанавливаем из кэша сразу
+        try {
+            const cached = localStorage.getItem('tmdb_favorites_cache');
+            if (cached) tmdbFavoritesCache = JSON.parse(cached);
+        } catch (e) { }
+        loadTMDBFavoritesCache();
     }
+
+    // Функции управления избранным
+    function isFavorite(id, type) {
+        if (localStorage.getItem('tmdb_session_id')) {
+            return tmdbFavoritesCache.some(item => item.id == id && item.type === type);
+        } else {
+            return false;
+        }
+    }
+
+    async function toggleFavorite(id, type) {
+        const sessionId = localStorage.getItem('tmdb_session_id');
+        const accountId = localStorage.getItem('tmdb_account_id');
+
+        if (sessionId && accountId) {
+            // Работаем через TMDB API
+            const isFavNow = isFavorite(id, type);
+            const newState = !isFavNow;
+
+            // Оптимистичное обновление UI (кэша)
+            if (newState) {
+                tmdbFavoritesCache.push({ id: parseInt(id), type });
+            } else {
+                const idx = tmdbFavoritesCache.findIndex(item => item.id == id && item.type === type);
+                if (idx > -1) tmdbFavoritesCache.splice(idx, 1);
+            }
+            localStorage.setItem('tmdb_favorites_cache', JSON.stringify(tmdbFavoritesCache));
+
+            try {
+                const res = await fetch(`${BASE_URL}/account/${accountId}/favorite?api_key=${API_KEY}&session_id=${sessionId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json;charset=utf-8'
+                    },
+                    body: JSON.stringify({
+                        media_type: type,
+                        media_id: parseInt(id),
+                        favorite: newState
+                    })
+                });
+                const data = await res.json();
+                if (!data.success && data.status_code !== 1 && data.status_code !== 12 && data.status_code !== 13) {
+                    console.error('Ошибка при добавлении в избранное TMDB', data);
+                    // Откат при ошибке
+                    if (!newState) {
+                        tmdbFavoritesCache.push({ id: parseInt(id), type });
+                    } else {
+                        const idx = tmdbFavoritesCache.findIndex(item => item.id == id && item.type === type);
+                        if (idx > -1) tmdbFavoritesCache.splice(idx, 1);
+                    }
+                    localStorage.setItem('tmdb_favorites_cache', JSON.stringify(tmdbFavoritesCache));
+                    return isFavNow; // возвращаем старое состояние, так как произошла ошибка
+                }
+            } catch (e) {
+                console.error('Network error toggleFavorite', e);
+            }
+
+            return newState;
+        } else {
+            window.location.href = 'account.html';
+            return false;
+        }
+    }
+
+    // Делаем функции доступными глобально
+    window.toggleFavorite = toggleFavorite;
+    window.isFavorite = isFavorite;
 
     function displayMovies(movies, container, type) {
         if (!container) return;
@@ -1144,7 +1290,7 @@ async function fetchHeroContent() {
         movies.slice(0, 10).forEach(movie => {
             const movieCard = document.createElement('div');
             movieCard.classList.add('movie-card');
-            const posterUrl = movie.poster_path ? `${IMG_URL}${movie.poster_path}` : NO_PICTURE_URL;
+            const posterUrl = movie.poster_path ? `${POSTER_URL}${movie.poster_path}` : NO_PICTURE_URL;
             const rating = movie.vote_average ? parseFloat(movie.vote_average.toFixed(1)) : null;
             const isInFavorites = isFavorite(movie.id, type);
 
@@ -1166,36 +1312,40 @@ async function fetchHeroContent() {
                 <div class="gradient-overlay"></div>
                 <p>${movie.title || movie.name}</p>
                 ${rating ? `<div class="${ratingClass}">${rating}</div>` : ''}
-                <button class="favorite-btn ${isInFavorites ? 'active' : ''}" data-id="${movie.id}" data-type="${type}" title="${isInFavorites ? 'Удалить из избранного' : 'Добавить в избранное'}">
-                    <img src="ico/${isInFavorites ? 'Избранное_добавлено' : 'Избранное_добавить'}.svg" alt="Избранное">
+                <button class="favorite-btn ${isInFavorites ? 'active' : ''}" data-id="${movie.id}" data-type="${type}" title="${isInFavorites ? 'Убрать из избранных' : 'Добавить в избранные'}">
+                    <i class="fa-${isInFavorites ? 'solid' : 'regular'} fa-heart"></i>
+                    <span>${isInFavorites ? 'Убрать из избранных' : 'Добавить в избранные'}</span>
                 </button>
             `;
 
             movieCard.dataset.id = movie.id;
             movieCard.dataset.type = type;
-            
+
             const favoriteBtn = movieCard.querySelector('.favorite-btn');
-            favoriteBtn.addEventListener('click', (e) => {
+            favoriteBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                const isAdded = toggleFavorite(movie.id, type);
-                const img = favoriteBtn.querySelector('img');
-                
+                const isAdded = await toggleFavorite(movie.id, type);
+                const icon = favoriteBtn.querySelector('i');
+                const textSpan = favoriteBtn.querySelector('span');
+
                 // Запускаем анимацию
-                img.classList.add('animate');
-                setTimeout(() => img.classList.remove('animate'), 600);
-                
+                icon.classList.add('animate');
+                setTimeout(() => icon.classList.remove('animate'), 600);
+
                 if (isAdded) {
                     favoriteBtn.classList.add('active');
-                    img.src = 'ico/Избранное_добавлено.svg';
-                    favoriteBtn.title = 'Удалить из избранного';
+                    icon.className = 'fa-solid fa-heart';
+                    favoriteBtn.title = 'Убрать из избранных';
+                    if (textSpan) textSpan.textContent = 'Убрать из избранных';
                 } else {
                     favoriteBtn.classList.remove('active');
-                    img.src = 'ico/Избранное_добавить.svg';
-                    favoriteBtn.title = 'Добавить в избранное';
+                    icon.className = 'fa-regular fa-heart';
+                    favoriteBtn.title = 'Добавить в избранные';
+                    if (textSpan) textSpan.textContent = 'Добавить в избранные';
                 }
             });
-            
+
             movieCard.addEventListener('click', (e) => {
                 if (e.target.closest('.favorite-btn')) {
                     return;
@@ -1203,7 +1353,7 @@ async function fetchHeroContent() {
                 e.preventDefault();
                 // НЕ блокируем скролл перед переходом на watch страницу
                 openModal(movie.id, type);
-                    if (searchModal) searchModal.style.display = 'none';
+                if (searchModal) searchModal.style.display = 'none';
             });
 
             container.appendChild(movieCard);
@@ -1307,14 +1457,14 @@ async function fetchHeroContent() {
     // Функция поиска
     async function performSearch(query) {
         // save to recent searches
-        try { saveRecentSearch(query); } catch (e) {}
-        
+        try { saveRecentSearch(query); } catch (e) { }
+
         // Show search loader
         const searchLoader = document.getElementById('search-loader');
         if (searchLoader) {
             searchLoader.style.display = 'flex';
         }
-        
+
         try {
             const movieResponse = await fetch(
                 `${BASE_URL}/search/movie?api_key=${API_KEY}&language=ru-RU&query=${encodeURIComponent(query)}`
@@ -1409,7 +1559,7 @@ async function fetchHeroContent() {
                     }
                 } else {
                     // mobile: if all empty — show single message in movies row (existing behavior)
-                    if ((!movieData.results || movieData.results.length === 0) && 
+                    if ((!movieData.results || movieData.results.length === 0) &&
                         (!seriesData.results || seriesData.results.length === 0) &&
                         (!actorsData.results || actorsData.results.length === 0)) {
                         searchMoviesRow.innerHTML = '<p>Результаты не найдены</p>';
@@ -1439,7 +1589,7 @@ async function fetchHeroContent() {
         saveWatchSource();
         const tvUrl = `watch/watch.html?TV_ID=${id}`;
         const movieUrl = `watch/watch.html?M_ID=${id}`;
-        
+
         const url = type === 'tv' ? tvUrl : movieUrl;
         console.log('openModal called with URL:', url);
         window.location.href = url;
@@ -1462,4 +1612,215 @@ async function fetchHeroContent() {
     setTimeout(() => {
         // tooltip'ы удалены
     }, 100);
+
+    /* ---- Filter and Infinite Scroll Logic for Movies and Series ---- */
+    (function () {
+        const currentPageUrl = window.location.pathname.split('/').pop() || 'index.html';
+        const isMoviesPage = currentPageUrl === 'movies.html';
+        const isSeriesPage = currentPageUrl === 'series.html';
+
+        if (!isMoviesPage && !isSeriesPage) return;
+
+        let currentType = isMoviesPage ? 'movie' : 'tv';
+        let currentPage = 1;
+        let isLoading = false;
+        let hasMore = true;
+
+        const genreFilter = document.getElementById('genre-filter');
+        const yearFilter = document.getElementById('year-filter');
+        const sortFilter = document.getElementById('sort-filter');
+        const gridContainer = document.getElementById(isMoviesPage ? 'movies-grid' : 'series-grid');
+        const infiniteLoading = document.getElementById('infinite-loading');
+
+        if (!gridContainer) return;
+
+        async function loadGenres() {
+            try {
+                const response = await fetch(`${BASE_URL}/genre/${currentType}/list?api_key=${API_KEY}&language=ru-RU`);
+                const data = await response.json();
+                if (data.genres) {
+                    data.genres.forEach(genre => {
+                        const option = document.createElement('option');
+                        option.value = genre.id;
+                        option.textContent = genre.name;
+                        genreFilter.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading genres:', error);
+            }
+        }
+
+        function populateYears() {
+            const currentYear = new Date().getFullYear();
+            for (let year = currentYear; year >= 1950; year--) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearFilter.appendChild(option);
+            }
+        }
+
+        function appendItems(items) {
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.classList.add('movie-card');
+
+                const posterUrl = item.poster_path ? `${POSTER_URL}${item.poster_path}` : NO_PICTURE_URL;
+                const rating = item.vote_average ? parseFloat(item.vote_average.toFixed(1)) : null;
+                const isInFavorites = isFavorite(item.id, currentType);
+                const title = item.title || item.name;
+
+                let ratingClass = 'movie-card-rating';
+                if (!rating) {
+                    ratingClass += ' dark-red';
+                } else if (rating >= 6.5) {
+                    ratingClass += ' high';
+                } else if (rating < 6.5 && rating >= 5) {
+                    ratingClass += ' low';
+                } else if (rating < 5 && rating >= 4) {
+                    ratingClass += ' very-low';
+                } else {
+                    ratingClass += ' dark-red';
+                }
+
+                card.innerHTML = `
+                    <img src="${posterUrl}" alt="${title}">
+                    <div class="gradient-overlay"></div>
+                    <p>${title}</p>
+                    ${rating ? `<div class="${ratingClass}">${rating}</div>` : ''}
+                    <button class="favorite-btn ${isInFavorites ? 'active' : ''}" data-id="${item.id}" data-type="${currentType}" title="${isInFavorites ? 'Убрать из избранных' : 'Добавить в избранные'}">
+                        <i class="fa-${isInFavorites ? 'solid' : 'regular'} fa-heart"></i>
+                        <span>${isInFavorites ? 'Убрать из избранных' : 'Добавить в избранные'}</span>
+                    </button>
+                `;
+
+                card.dataset.id = item.id;
+                card.dataset.type = currentType;
+
+                const favBtn = card.querySelector('.favorite-btn');
+                favBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const isAdded = await toggleFavorite(item.id, currentType);
+                    const icon = favBtn.querySelector('i');
+                    const textSpan = favBtn.querySelector('span');
+
+                    if (icon) {
+                        icon.classList.add('animate');
+                        setTimeout(() => icon.classList.remove('animate'), 600);
+                    }
+
+                    if (isAdded) {
+                        favBtn.classList.add('active');
+                        if (icon) icon.className = 'fa-solid fa-heart';
+                        favBtn.title = 'Убрать из избранных';
+                        if (textSpan) textSpan.textContent = 'Убрать из избранных';
+                    } else {
+                        favBtn.classList.remove('active');
+                        if (icon) icon.className = 'fa-regular fa-heart';
+                        favBtn.title = 'Добавить в избранные';
+                        if (textSpan) textSpan.textContent = 'Добавить в избранные';
+                    }
+                });
+
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.favorite-btn')) return;
+                    e.preventDefault();
+                    saveWatchSource();
+                    const tvUrl = `watch/watch.html?TV_ID=${item.id}`;
+                    const movieUrl = `watch/watch.html?M_ID=${item.id}`;
+                    window.location.href = currentType === 'tv' ? tvUrl : movieUrl;
+                });
+
+                gridContainer.appendChild(card);
+            });
+        }
+
+        async function loadItems(reset = false) {
+            if (isLoading || (!hasMore && !reset)) return;
+            isLoading = true;
+
+            if (reset) {
+                currentPage = 1;
+                gridContainer.innerHTML = '';
+                hasMore = true;
+            }
+
+            if (infiniteLoading) infiniteLoading.style.display = 'flex';
+
+            const genre = genreFilter.value;
+            const year = yearFilter.value;
+            const sort = sortFilter.value;
+
+            let url = `${BASE_URL}/discover/${currentType}?api_key=${API_KEY}&language=ru-RU&page=${currentPage}&sort_by=${sort}`;
+
+            if (genre) url += `&with_genres=${genre}`;
+
+            if (year) {
+                if (currentType === 'movie') {
+                    url += `&primary_release_year=${year}`;
+                } else {
+                    url += `&first_air_date_year=${year}`;
+                }
+            }
+
+            if (sort.includes('popularity')) {
+                if (!genre && !year) {
+                    if (currentType === 'movie') {
+                        url += '&vote_count.gte=100';
+                    } else {
+                        url += '&vote_count.gte=50';
+                    }
+                }
+            } else if (sort.includes('vote_average')) {
+                if (currentType === 'movie') {
+                    url += '&vote_count.gte=50';
+                } else {
+                    url += '&vote_count.gte=25';
+                }
+            }
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.results && data.results.length > 0) {
+                    appendItems(data.results);
+                    currentPage++;
+                    if (currentPage > data.total_pages) {
+                        hasMore = false;
+                    }
+                } else {
+                    hasMore = false;
+                    if (reset) {
+                        gridContainer.innerHTML = '<p style="color:white; text-align:center; width:100%; grid-column: 1 / -1;">Ничего не найдено</p>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching items:', error);
+            } finally {
+                isLoading = false;
+                if (infiniteLoading) infiniteLoading.style.display = 'none';
+            }
+        }
+
+        const handleFilterChange = () => {
+            loadItems(true);
+        };
+
+        if (genreFilter) genreFilter.addEventListener('change', handleFilterChange);
+        if (yearFilter) yearFilter.addEventListener('change', handleFilterChange);
+        if (sortFilter) sortFilter.addEventListener('change', handleFilterChange);
+
+        window.addEventListener('scroll', () => {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
+                loadItems(false);
+            }
+        });
+
+        loadGenres();
+        populateYears();
+        loadItems(true);
+    })();
 });

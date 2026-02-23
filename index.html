@@ -1,15 +1,29 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кино+  Главная</title>
+    <title>Кино+ Главная</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <style>
         /* Inserted Top 10 carousel styles (mobile-friendly) */
-        .top10-container * { box-sizing: border-box; }
-        .top10-container { background-color: rgba(0,0,0,0); color: #fff; }
-        .top10-container .container { max-width: 100%; margin: 0 auto; padding: 20px 6px; }
+        .top10-container * {
+            box-sizing: border-box;
+        }
+
+        .top10-container {
+            background-color: rgba(0, 0, 0, 0);
+            color: #fff;
+        }
+
+        .top10-container .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px 6px;
+        }
+
         .top10-container h2 {
             font-size: 1.5rem;
             margin: 0 0 10px 20px;
@@ -25,15 +39,34 @@
             z-index: 1;
             position: relative;
         }
-        .carousel-wrapper { position: relative; margin: 0; }
-        .carousel { display:flex; overflow-x:auto; overflow-y:visible; padding:10px 0; scroll-behavior:smooth; -webkit-overflow-scrolling: touch; }
-        .carousel-track { display:flex; gap:12px; padding-left:12px; padding-right:12px; }
-        
+
+        .carousel-wrapper {
+            position: relative;
+            margin: 0;
+        }
+
+        .carousel {
+            display: flex;
+            overflow-x: auto;
+            overflow-y: visible;
+            padding: 10px 0;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .carousel-track {
+            display: flex;
+            gap: 12px;
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+
         .card {
             width: 140px;
             height: 210px;
             position: relative;
-            transform: none; /* начальное положение без искажений */
+            transform: none;
+            /* начальное положение без искажений */
             transform-style: preserve-3d;
             perspective: 900px;
             border-radius: 12px;
@@ -95,12 +128,10 @@
             position: absolute;
             width: 300px;
             height: 300px;
-            background: radial-gradient(
-                circle, 
-                rgba(255, 255, 255, 0.8) 0%, 
-                rgba(255, 255, 255, 0.4) 30%, 
-                rgba(255, 255, 255, 0) 70%
-            );
+            background: radial-gradient(circle,
+                    rgba(255, 255, 255, 0.8) 0%,
+                    rgba(255, 255, 255, 0.4) 30%,
+                    rgba(255, 255, 255, 0) 70%);
             transform: translate(-50%, -50%);
             opacity: 0;
             filter: blur(15px);
@@ -134,17 +165,49 @@
         }
 
         @media (min-width: 768px) {
-            .top10-container .container { padding: 50px 10px; }
-            .carousel-wrapper { margin: 0; }
-            .carousel-track { gap:20px; padding-left:40px; padding-right:40px; }
-            .card { width:220px; height:330px; }
-            .number { font-size: 80px; }
-            .poster-container::before { width: 220px; height: 220px; }
+            .top10-container .container {
+                padding: 50px 10px;
+            }
+
+            .carousel-wrapper {
+                margin: 0;
+            }
+
+            .carousel-track {
+                gap: 20px;
+                padding-left: 40px;
+                padding-right: 40px;
+            }
+
+            .card {
+                width: 220px;
+                height: 330px;
+            }
+
+            .number {
+                font-size: 80px;
+            }
+
+            .poster-container::before {
+                width: 220px;
+                height: 220px;
+            }
         }
-        
+
         /* Hero badge styles (big number in top-left with gradient under it) */
-        .hero { position: relative; overflow: hidden; }
-        .hero-badge { position: absolute; top: 18px; left: 18px; z-index: 60; pointer-events: none; }
+        .hero {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-badge {
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            z-index: 60;
+            pointer-events: none;
+        }
+
         .hero-number {
             font-family: 'buttonbold', sans-serif;
             font-weight: 900;
@@ -153,10 +216,11 @@
             color: #ffffff;
             -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
             mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
-            text-shadow: 0 6px 14px rgba(0,0,0,0.5);
+            text-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
             transform: translateZ(40px);
             will-change: transform;
         }
+
         /* Gradient under hero number (bigger, looks to bottom-right) */
         .hero::before {
             content: '';
@@ -165,24 +229,55 @@
             left: 0;
             width: 300px;
             height: 300px;
-            background: linear-gradient(to bottom right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 40%, transparent 100%);
-            border-top-left-radius: 12px; /* закругление в верхнем левом углу */
+            background: linear-gradient(to bottom right, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 40%, transparent 100%);
+            border-top-left-radius: 12px;
+            /* закругление в верхнем левом углу */
             z-index: 50;
             pointer-events: none;
         }
+
         @media (max-width: 767px) {
-            .hero-badge { top: 12px; left: 12px; }
-            .hero-number { font-size: 80px; transform: translateZ(30px); }
-            .hero::before { width: 160px; height: 160px; }
+            .hero-badge {
+                top: 12px;
+                left: 12px;
+            }
+
+            .hero-number {
+                font-size: 80px;
+                transform: translateZ(30px);
+            }
+
+            .hero::before {
+                width: 160px;
+                height: 160px;
+            }
         }
+
         /* Hero glare overrides (reuse existing .glare-overlay/.glare-light styles but tuned for hero) */
-        .hero .glare-overlay { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: inherit; z-index: 55; pointer-events: none; mix-blend-mode: overlay; overflow: hidden; }
-        .hero .glare-light { width: 420px; height: 420px; filter: blur(24px); transition: opacity .28s ease, left .1s linear, top .1s linear; }
+        .hero .glare-overlay {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            z-index: 55;
+            pointer-events: none;
+            mix-blend-mode: overlay;
+            overflow: hidden;
+        }
+
+        .hero .glare-light {
+            width: 420px;
+            height: 420px;
+            filter: blur(24px);
+            transition: opacity .28s ease, left .1s linear, top .1s linear;
+        }
     </style>
 
 </head>
+
 <body>
-        <!-- Loading Overlay -->
+    <!-- Loading Overlay -->
     <div id="loading-overlay" class="loading-overlay">
         <div class="loader">
             <svg viewBox="0 0 80 80">
@@ -203,55 +298,49 @@
         </div>
     </div>
     <header class="header">
-        <button class="search-trigger" id="search-trigger">
-            <img src="ico/nav_mob/Поиск.svg" alt="Поиск" style="width: 24px; height: 24px;">
-        </button>
+        <a href="search.html" class="search-trigger" id="search-trigger">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </a>
 
         <nav class="nav-tabs">
-    <a href="index.html">
-        <img src="ico/nav_mob/Главная.svg" alt="Главная" style="width:20px; height:20px; margin-right:8px; object-fit:contain;">
-        Главная
-    </a>
-    <a href="movies.html">
-        <img src="ico/nav_mob/Фильмы.svg" alt="Фильмы" style="width:20px; height:20px; margin-right:8px; object-fit:contain;">
-        Фильмы
-    </a>
-    <a href="series.html">
-        <img src="ico/nav_mob/Сериалы.svg" alt="Сериалы" style="width:20px; height:20px; margin-right:8px; object-fit:contain;">
-        Сериалы
-    </a>
-    <a href="favorites.html">
-        <img src="ico/Избранное_добавить.svg" alt="Избранное" style="width:20px; height:20px; margin-right:8px; object-fit:contain;">
-        Избранное
-    </a>
-</nav>
-
-<style>
-.nav-tabs a.active img {
-    filter: brightness(0) invert(0); /* делает иконку черной */
-}
-</style>
-
+            <a href="index.html">
+                <i class="fa-solid fa-house"></i>
+                Главная
+            </a>
+            <a href="movies.html">
+                <i class="fa-solid fa-film"></i>
+                Фильмы
+            </a>
+            <a href="series.html">
+                <i class="fa-solid fa-tv"></i>
+                Сериалы
+            </a>
+            <a href="account.html" class="account-btn" title="Аккаунт">
+                <i class="fa-solid fa-circle-user" style="font-size: 20px; margin-right: 8px;"></i>
+                Аккаунт
+            </a>
+        </nav>
     </header>
-
     <main>
         <section id="hero" class="hero">
             <!-- Hero badge (number + gradient) positioned relative to .hero -->
             <div class="hero-badge" aria-hidden="true">
                 <div class="hero-number">1</div>
             </div>
-                <!-- hero glare element (следует за мышкой) -->
-                <div class="glare-overlay hero-glare" aria-hidden="true"><div class="glare-light"></div></div>
+            <!-- hero glare element (следует за мышкой) -->
+            <div class="glare-overlay hero-glare" aria-hidden="true">
+                <div class="glare-light"></div>
+            </div>
             <div class="hero-content">
                 <img id="hero-logo" class="hero-logo" alt="Логотип">
                 <h1 id="hero-logo-text" class="hero-logo-text"></h1>
                 <p id="hero-description"></p>
                 <div class="hero-buttons">
-                  <button id="hero-watch-btn" class="watch-btn">
-  <img src="ico/Плей.svg" alt="watch icon" 
-       style="width:20px;height:20px;object-fit:contain;margin-right:8px;filter:brightness(0);">
-  Смотреть
-</button>
+                    <button id="hero-watch-btn" class="watch-btn">
+                        <img src="ico/Плей.svg" alt="watch icon"
+                            style="width:20px;height:20px;object-fit:contain;margin-right:8px;filter:brightness(0);">
+                        Смотреть
+                    </button>
                     <button id="hero-info-btn" class="info-btn">Подробнее</button>
                 </div>
             </div>
@@ -269,7 +358,8 @@
                 </div>
             </div>
         </div>
-        <div id="top10-loading" style="display: block; text-align: center; padding: 40px 20px; color: #999;">Загрузка...</div>
+        <div id="top10-loading" style="display: block; text-align: center; padding: 40px 20px; color: #999;">Загрузка...
+        </div>
 
         <section class="category">
             <h2>Новые фильмы </h2>
@@ -287,7 +377,8 @@
                 </div>
             </div>
         </div>
-        <div id="top10-movies-loading" style="display: block; text-align: center; padding: 40px 20px; color: #999;">Загрузка...</div>
+        <div id="top10-movies-loading" style="display: block; text-align: center; padding: 40px 20px; color: #999;">
+            Загрузка...</div>
 
         <section class="category">
             <h2>Новые сериалы </h2>
@@ -305,7 +396,8 @@
                 </div>
             </div>
         </div>
-        <div id="top10-series-loading" style="display: block; text-align: center; padding: 40px 20px; color: #999;">Загрузка...</div>
+        <div id="top10-series-loading" style="display: block; text-align: center; padding: 40px 20px; color: #999;">
+            Загрузка...</div>
 
         <section class="category">
             <h2>Новые мультфильмы </h2>
@@ -323,75 +415,37 @@
         </section>
     </main>
 
-    <!-- Модальные окна -->
-    <div id="search-modal" class="modal mobile-search-modal">
-        <div class="modal-content mobile-search-content">
-            <button class="mobile-search-close" id="search-close">
-                <img src="ico/закрыть.svg" alt="Закрыть" style="width: 24px; height: 24px;">
-            </button>
-            <div id="search-loader" class="search-loader" style="display:none;">
-                <img src="ico/Загрузка.svg" alt="Загрузка" style="width:64px;height:64px;">
-            </div>
-            <div class="mobile-search-header">
-                <h3>Поиск</h3>
-            </div>
-            <div id="search-empty" class="search-empty" style="display:none;">
-                <img src="ico/Поискмд.png" alt="Поиск" style="width:96px;height:96px;margin-bottom:16px;">
-                <p class="search-empty-text">Введите имя фильма, сериала или актера</p>
-            </div>
-            <form class="mobile-search-form" id="search-form">
-                <input type="text" class="mobile-search-input" id="search-input" placeholder="Поиск фильмов, сериалов и актера...">
-                <button type="submit" class="mobile-search-btn">
-                    <img src="ico/nav_mob/Поиск.svg" alt="Поиск" style="width: 24px; height: 24px;">
-                </button>
-            </form>
-            <div id="search-recent" class="search-recent" aria-hidden="true"></div>
-            <div class="mobile-search-results">
-                <div class="search-category">
-                    <h2>Фильмы</h2>
-                    <div id="search-movies" class="movie-row"></div>
-                </div>
-                <div class="search-category">
-                    <h2>Сериалы</h2>
-                    <div id="search-series" class="movie-row"></div>
-                </div>
-                <div class="search-category">
-                    <h2>Актеры</h2>
-                    <div id="search-actors" class="movie-row"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Поиск теперь отдельной страницей: блок модала удален -->
 
     <!-- Mobile Navigation -->
     <nav class="mobile-nav">
-        <a href="index.html" class="mobile-nav-item">
+        <a href="index.html" class="mobile-nav-item active">
             <span class="mobile-nav-icon">
-                <img src="ico/nav_mob/Главная.svg" alt="Главная" style="width: 24px; height: 24px;">
+                <i class="fa-solid fa-house"></i>
             </span>
             <span class="mobile-nav-text">Главная</span>
         </a>
         <a href="movies.html" class="mobile-nav-item">
             <span class="mobile-nav-icon">
-                <img src="ico/nav_mob/Фильмы.svg" alt="Фильмы" style="width: 24px; height: 24px;">
+                <i class="fa-solid fa-film"></i>
             </span>
             <span class="mobile-nav-text">Фильмы</span>
         </a>
         <a href="series.html" class="mobile-nav-item">
             <span class="mobile-nav-icon">
-                <img src="ico/nav_mob/Сериалы.svg" alt="Сериалы" style="width: 24px; height: 24px;">
+                <i class="fa-solid fa-tv"></i>
             </span>
             <span class="mobile-nav-text">Сериалы</span>
         </a>
-        <a href="favorites.html" class="mobile-nav-item">
+        <a href="account.html" class="mobile-nav-item">
             <span class="mobile-nav-icon">
-                <img src="ico/Избранное_добавить.svg" alt="Избранное" style="width: 24px; height: 24px;">
+                <i class="fa-solid fa-circle-user"></i>
             </span>
-            <span class="mobile-nav-text">Избранное</span>
+            <span class="mobile-nav-text">Аккаунт</span>
         </a>
-        <a href="#" class="mobile-nav-item mobile-search-trigger">
+        <a href="search.html" class="mobile-nav-item mobile-search-trigger">
             <span class="mobile-nav-icon">
-                <img src="ico/nav_mob/Поиск.svg" alt="Поиск" style="width: 24px; height: 24px;">
+                <i class="fa-solid fa-magnifying-glass"></i>
             </span>
             <span class="mobile-nav-text">Поиск</span>
         </a>
@@ -403,18 +457,18 @@
             <h2>Кино+</h2>
             <p class="tmdb-disclaimer">
                 Этот продукт использует API TMDB, но не является официально поддерживаемым или сертифицированным TMDB.
-Весь контент на сайте предоставляется исключительно в ознакомительных и развлекательных целях.
-Все права на материалы принадлежат их законным правообладателям.
+                Весь контент на сайте предоставляется исключительно в ознакомительных и развлекательных целях.
+                Все права на материалы принадлежат их законным правообладателям.
             </p>
         </div>
     </footer>
 
     <script>
-        (function(){
+        (function () {
             const API_KEY = '06936145fe8e20be28b02e26b55d3ce6';
             const BASE_URL = 'https://api.themoviedb.org/3';
             const IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
-            
+
             // Общая функция для создания карточек
             function createCards(content, forcedType = null) {
                 return content.map((item, index) => {
@@ -422,6 +476,9 @@
                     const title = item.title || item.name || '';
                     // Используем принудительный тип для списков фильмов/сериалов или определяем из данных
                     const type = forcedType || item.media_type || (item.first_air_date ? 'tv' : 'movie');
+                    // Проверяем, находится ли элемент в избранном
+                    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+                    const isInFavorites = favorites.some(f => f.id == item.id && f.type === type);
                     return `
                         <div class="card top10-card" data-id="${item.id}" data-type="${type}" data-title="${title.replace(/"/g, '&quot;')}">
                             <div class="number">${index + 1}</div>
@@ -431,6 +488,10 @@
                                     <div class="glare-light"></div>
                                 </div>
                             </div>
+                            <button class="favorite-btn ${isInFavorites ? 'active' : ''}" data-id="${item.id}" data-type="${type}" title="${isInFavorites ? 'Убрать из избранных' : 'Добавить в избранные'}">
+                                <i class="fa-${isInFavorites ? 'solid' : 'regular'} fa-heart"></i>
+                                <span>${isInFavorites ? 'Убрать из избранных' : 'Добавить в избранные'}</span>
+                            </button>
                         </div>
                     `;
                 }).join('');
@@ -442,12 +503,12 @@
                     const response = await fetch(url);
                     const data = await response.json();
                     const content = data.results.slice(0, 10);
-                    
+
                     const track = document.getElementById(trackId);
                     if (track) {
                         track.innerHTML = createCards(content);
                     }
-                    
+
                     document.getElementById(loadingId).style.display = 'none';
                     document.getElementById(containerId).style.display = 'block';
                 } catch (error) {
@@ -456,6 +517,52 @@
                     if (ld) ld.innerHTML = 'Ошибка загрузки данных';
                 }
             }
+
+            // Делегированный обработчик для избранного на Top10 карточках
+            document.addEventListener('click', async (e) => {
+                const favBtn = e.target.closest && e.target.closest('.top10-card .favorite-btn');
+                if (!favBtn) return;
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (!localStorage.getItem('tmdb_session_id')) {
+                    window.location.href = 'account.html';
+                    return;
+                }
+
+                const card = favBtn.closest('.top10-card');
+                if (!card) return;
+                const id = card.dataset.id;
+                const type = card.dataset.type || 'movie';
+                if (!id) return;
+
+                // Используем глобальную функцию из main.js, если доступна
+                let isAdded = false;
+                if (typeof toggleFavorite === 'function') {
+                    isAdded = await toggleFavorite(id, type);
+                } else {
+                    return;
+                }
+
+                const icon = favBtn.querySelector('i');
+                const textSpan = favBtn.querySelector('span');
+                if (icon) {
+                    icon.classList.add('animate');
+                    setTimeout(() => icon.classList.remove('animate'), 600);
+                }
+
+                if (isAdded) {
+                    favBtn.classList.add('active');
+                    favBtn.title = 'Убрать из избранных';
+                    if (icon) icon.className = 'fa-solid fa-heart';
+                    if (textSpan) textSpan.textContent = 'Убрать из избранных';
+                } else {
+                    favBtn.classList.remove('active');
+                    favBtn.title = 'Добавить в избранные';
+                    if (icon) icon.className = 'fa-regular fa-heart';
+                    if (textSpan) textSpan.textContent = 'Добавить в избранные';
+                }
+            });
 
             // Загрузка трендов дня для hero
             async function fetchTrendingDay() {
@@ -474,7 +581,7 @@
 
             // Загружаем все карусели
             fetchTrendingDay();
-            
+
             // Top 10 общие тренды недели
             fetchAndRenderContent(
                 `${BASE_URL}/trending/all/week?api_key=${API_KEY}&language=ru-RU`,
@@ -489,12 +596,12 @@
                     const response = await fetch(`${BASE_URL}/movie/popular?api_key=${API_KEY}&language=ru-RU`);
                     const data = await response.json();
                     const content = data.results.slice(0, 10);
-                    
+
                     const track = document.getElementById('moviesCarouselTrack');
                     if (track) {
                         track.innerHTML = createCards(content, 'movie'); // Принудительно указываем тип 'movie'
                     }
-                    
+
                     document.getElementById('top10-movies-loading').style.display = 'none';
                     document.getElementById('top10-movies-app').style.display = 'block';
                 } catch (error) {
@@ -510,12 +617,12 @@
                     const response = await fetch(`${BASE_URL}/tv/popular?api_key=${API_KEY}&language=ru-RU`);
                     const data = await response.json();
                     const content = data.results.slice(0, 10);
-                    
+
                     const track = document.getElementById('seriesCarouselTrack');
                     if (track) {
                         track.innerHTML = createCards(content, 'tv'); // Принудительно указываем тип 'tv'
                     }
-                    
+
                     document.getElementById('top10-series-loading').style.display = 'none';
                     document.getElementById('top10-series-app').style.display = 'block';
                 } catch (error) {
@@ -684,4 +791,5 @@
     <script src="js/player.js"></script>
     <script src="js/main.js"></script>
 </body>
+
 </html>

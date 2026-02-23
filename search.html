@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кино+ Поиск</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+</head>
+
+<body class="page-search">
+    <!-- Кнопка закрыть/назад в правом верхнем углу -->
+    <button class="mobile-search-close" id="search-close" aria-label="Закрыть">
+        <img src="ico/закрыть.svg" alt="Закрыть" style="width: 24px; height: 24px;">
+    </button>
+
+    <main class="container" style="padding-top: 80px; padding-bottom: 120px;">
+        <div class="mobile-search-content"
+            style="padding: 0; background-color: transparent; height: auto; min-height: auto;">
+            <!-- Загрузка -->
+            <div id="search-loader" class="search-loader" style="display:none;">
+                <img src="ico/Загрузка.svg" alt="Загрузка" style="width:64px;height:64px;">
+            </div>
+
+            <!-- Пустое состояние (по умолчанию) -->
+            <div id="search-empty" class="search-empty">
+                <img src="ico/Поискмд.png" alt="Поиск" style="width:96px;height:96px;margin-bottom:16px;">
+                <p class="search-empty-text">Введите имя фильма, сериала или актера</p>
+            </div>
+
+            <!-- Форма поиска -->
+            <form class="mobile-search-form" id="search-form">
+                <input type="text" class="mobile-search-input" id="search-input"
+                    placeholder="Поиск фильмов, сериалов и актера...">
+                <button type="submit" class="mobile-search-btn">
+                    <i class="fa-solid fa-magnifying-glass" style="font-size: 24px; color: white;"></i>
+                </button>
+            </form>
+
+            <!-- Недавние поиски -->
+            <div id="search-recent" class="search-recent" aria-hidden="true"></div>
+
+            <!-- Результаты поиска -->
+            <div class="mobile-search-results">
+                <div class="search-category">
+                    <h2>Фильмы</h2>
+                    <div id="search-movies" class="movie-row"></div>
+                </div>
+                <div class="search-category">
+                    <h2>Сериалы</h2>
+                    <div id="search-series" class="movie-row"></div>
+                </div>
+                <div class="search-category">
+                    <h2>Актеры</h2>
+                    <div id="search-actors" class="movie-row"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Мобильное нижнее меню -->
+    <nav class="mobile-nav">
+        <a href="index.html" class="mobile-nav-item">
+            <span class="mobile-nav-icon">
+                <i class="fa-solid fa-house"></i>
+            </span>
+            <span class="mobile-nav-text">Главная</span>
+        </a>
+        <a href="movies.html" class="mobile-nav-item">
+            <span class="mobile-nav-icon">
+                <i class="fa-solid fa-film"></i>
+            </span>
+            <span class="mobile-nav-text">Фильмы</span>
+        </a>
+        <a href="series.html" class="mobile-nav-item">
+            <span class="mobile-nav-icon">
+                <i class="fa-solid fa-tv"></i>
+            </span>
+            <span class="mobile-nav-text">Сериалы</span>
+        </a>
+        <a href="account.html" class="mobile-nav-item">
+            <span class="mobile-nav-icon">
+                <i class="fa-solid fa-circle-user"></i>
+            </span>
+            <span class="mobile-nav-text">Аккаунт</span>
+        </a>
+        <a href="search.html" class="mobile-nav-item active">
+            <span class="mobile-nav-icon">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+            <span class="mobile-nav-text">Поиск</span>
+        </a>
+    </nav>
+
+    <script src="js/main.js"></script>
+</body>
+
+</html>

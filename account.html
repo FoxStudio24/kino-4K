@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кино+ Избранное</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <style>
+        .profile-tab {
+            background: rgba(32, 32, 32, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--muted, #9aa0a6);
+            padding: 8px 24px;
+            font-size: 16px;
+            font-family: 'textbold', sans-serif;
+            cursor: pointer;
+            border-radius: 5em;
+            transition: all 0.3s ease;
+        }
+
+        .profile-tab.active {
+            color: #d9e8cb;
+            background: linear-gradient(135deg, rgba(64, 73, 54, 0.95) 0%, rgba(64, 73, 54, 0.65) 100%);
+            border-color: transparent;
+        }
+
+        .empty-favorites {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 50vh;
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted, #9aa0a6);
+        }
+
+        .empty-favorites img {
+            width: 120px;
+            height: 120px;
+            opacity: 0.5;
+            margin-bottom: 24px;
+        }
+
+        .empty-favorites h2 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: var(--text, #e6e6ea);
+            font-family: 'textbold', sans-serif;
+        }
+
+        .empty-favorites p {
+            font-size: 16px;
+            max-width: 400px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loader">
+            <svg viewBox="0 0 80 80">
+                <circle r="32" cy="40" cx="40" id="test"></circle>
+            </svg>
+        </div>
+
+        <div class="loader triangle">
+            <svg viewBox="0 0 86 80">
+                <polygon points="43 8 79 72 7 72"></polygon>
+            </svg>
+        </div>
+
+        <div class="loader">
+            <svg viewBox="0 0 80 80">
+                <rect height="64" width="64" y="8" x="8"></rect>
+            </svg>
+        </div>
+    </div>
+
+    <header class="header">
+        <a href="search.html" class="search-trigger" id="search-trigger">
+            <i class="fa-solid fa-magnifying-glass" style="font-size: 24px; color: white;"></i>
+        </a>
+
+        <nav class="nav-tabs">
+            <a href="index.html">
+                <i class="fa-solid fa-house" style="font-size: 20px; margin-right: 8px;"></i>
+                Главная
+            </a>
+            <a href="movies.html">
+                <i class="fa-solid fa-film" style="font-size: 20px; margin-right: 8px;"></i>
+                Фильмы
+            </a>
+            <a href="series.html">
+                <i class="fa-solid fa-tv" style="font-size: 20px; margin-right: 8px;"></i>
+                Сериалы
+            </a>
+            <a href="account.html" class="active account-btn" title="Аккаунт">
+                <i class="fa-solid fa-circle-user" style="font-size: 20px; margin-right: 8px;"></i>
+                Аккаунт
+            </a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="category" id="account-section">
+            <!-- Loading State -->
+            <div id="account-loading" style="text-align:center;padding:40px;color:var(--muted);">
+                <img src="ico/Загрузка.svg" alt="Загрузка" style="width:64px;height:64px;margin:0 auto 16px;">
+                <p>Проверка авторизации...</p>
+            </div>
+
+            <!-- Login View -->
+            <div id="login-view"
+                style="display:none; flex-direction:column; align-items:center; justify-content:center; min-height:50vh; text-align:center; padding:40px 20px;">
+                <i class="fa-solid fa-circle-user"
+                    style="font-size: 64px; color: var(--muted, #9aa0a6); margin-bottom: 24px;"></i>
+                <h2
+                    style="font-size: 24px; margin-bottom: 12px; color: var(--text, #e6e6ea); font-family: 'textbold', sans-serif;">
+                    Вход в аккаунт TMDB</h2>
+                <p
+                    style="font-size: 16px; max-width: 400px; line-height: 1.6; color: var(--muted, #9aa0a6); margin-bottom: 30px;">
+                    Авторизуйтесь через TMDB, чтобы синхронизировать ваше избранное и список отслеживания на всех
+                    устройствах.
+                </p>
+                <button id="tmdb-login-btn"
+                    style="padding: 12px 24px; font-size: 16px; font-family: 'buttonbold', sans-serif; background: linear-gradient(135deg, rgba(64, 73, 54, 0.95) 0%, rgba(64, 73, 54, 0.65) 100%); color: #d9e8cb; border: none; border-radius: 5em; cursor: pointer;">
+                    Войти через TMDB
+                </button>
+            </div>
+
+            <!-- Profile View -->
+            <div id="profile-view" style="display:none;">
+                <div class="profile-header"
+                    style="display:flex; align-items:center; gap: 20px; margin-bottom: 30px; padding: 0 4%;">
+                    <img id="profile-avatar" src="ico/врядли.png" alt="Avatar"
+                        style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255, 255, 255, 0.39);">
+                    <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                        <h2 id="profile-username"
+                            style="font-size: 28px; margin: 0; font-family: 'textbold', sans-serif;">Username</h2>
+                        <button id="tmdb-logout-btn"
+                            style="margin-top: 8px; padding: 6px 24px; font-size: 14px; background-color: transparent; color: var(--muted, #9aa0a6); border: 1px solid rgba(255,255,255,0.2); border-radius: 5em; cursor: pointer; transition: all 0.2s;">
+                            Выйти
+                        </button>
+                    </div>
+                </div>
+
+                <div class="profile-tabs" style="display:flex; gap: 10px; margin-bottom: 20px; padding: 0 4%;">
+                    <button class="profile-tab active" data-tab="favorites">
+                        Избранное
+                    </button>
+                    <button class="profile-tab" data-tab="watchlist">
+                        Список отслеживания
+                    </button>
+                </div>
+
+                <div id="content-loading" style="display:none;text-align:center;padding:40px;color:var(--muted);">
+                    <img src="ico/Загрузка.svg" alt="Загрузка" style="width:64px;height:64px;margin:0 auto 16px;">
+                    <p>Загрузка контента...</p>
+                </div>
+
+                <div id="content-container" class="item-grid">
+                </div>
+
+                <div id="empty-content" class="empty-favorites"
+                    style="display:none; text-align:center; padding: 60px 20px;">
+                    <i class="fa-regular fa-folder-open"
+                        style="font-size: 64px; color: var(--muted, #9aa0a6); margin-bottom: 20px;"></i>
+                    <h2 id="empty-title" style="font-size: 24px; margin-bottom: 10px;">Здесь пока пусто</h2>
+                    <p id="empty-desc" style="color: var(--muted, #9aa0a6);">Добавьте сюда фильмы или сериалы, чтобы они
+                        отображались здесь.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Поиск теперь отдельной страницей: блок модала удален -->
+
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav">
+        <a href="index.html" class="mobile-nav-item">
+            <span class="mobile-nav-icon">
+                <i class="fa-solid fa-house"></i>
+            </span>
+            <span class="mobile-nav-text">Главная</span>
+        </a>
+        <a href="movies.html" class="mobile-nav-item">
+            <span class="mobile-nav-icon">
+                <i class="fa-solid fa-film"></i>
+            </span>
+            <span class="mobile-nav-text">Фильмы</span>
+        </a>
+        <a href="series.html" class="mobile-nav-item">
+            <span class="mobile-nav-icon">
+                <i class="fa-solid fa-tv"></i>
+            </span>
+            <span class="mobile-nav-text">Сериалы</span>
+        </a>
+        <a href="account.html" class="mobile-nav-item active">
+            <span class="mobile-nav-icon">
+                <i class="fa-solid fa-circle-user"></i>
+            </span>
+            <span class="mobile-nav-text">Аккаунт</span>
+        </a>
+        <a href="search.html" class="mobile-nav-item mobile-search-trigger">
+            <span class="mobile-nav-icon">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+            <span class="mobile-nav-text">Поиск</span>
+        </a>
+    </nav>
+
+    <script src="js/player.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        const API_KEY = '06936145fe8e20be28b02e26b55d3ce6';
+        const BASE_URL = 'https://api.themoviedb.org/3';
+        const IMG_URL = 'https://image.tmdb.org/t/p/w500';
+        const NO_PICTURE_URL = 'ico/Нет постера.png';
+        const REDIRECT_URI = window.location.href.split('?')[0];
+
+        const Elements = {
+            accountLoading: document.getElementById('account-loading'),
+            loginView: document.getElementById('login-view'),
+            profileView: document.getElementById('profile-view'),
+            loginBtn: document.getElementById('tmdb-login-btn'),
+            logoutBtn: document.getElementById('tmdb-logout-btn'),
+            profileAvatar: document.getElementById('profile-avatar'),
+            profileUsername: document.getElementById('profile-username'),
+            tabs: document.querySelectorAll('.profile-tab'),
+            contentLoading: document.getElementById('content-loading'),
+            contentContainer: document.getElementById('content-container'),
+            emptyContent: document.getElementById('empty-content'),
+            emptyTitle: document.getElementById('empty-title'),
+            emptyDesc: document.getElementById('empty-desc')
+        };
+
+        let currentTab = 'favorites';
+
+        // Check for approved auth token in URL
+        async function checkAuthCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const requestToken = urlParams.get('request_token');
+            const approved = urlParams.get('approved');
+
+            if (requestToken && approved === 'true') {
+                Elements.accountLoading.style.display = 'block';
+                try {
+                    const response = await fetch(`${BASE_URL}/authentication/session/new?api_key=${API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ request_token: requestToken })
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        localStorage.setItem('tmdb_session_id', data.session_id);
+                        // Clean up URL
+                        window.history.replaceState({}, document.title, REDIRECT_URI);
+                        await fetchAccountDetails(data.session_id);
+                    } else {
+                        throw new Error('Failed to create session');
+                    }
+                } catch (error) {
+                    console.error('Auth Error:', error);
+                    showLogin();
+                }
+            } else {
+                checkExistingSession();
+            }
+        }
+
+        async function checkExistingSession() {
+            const sessionId = localStorage.getItem('tmdb_session_id');
+            if (sessionId) {
+                await fetchAccountDetails(sessionId);
+            } else {
+                showLogin();
+            }
+        }
+
+        async function fetchAccountDetails(sessionId) {
+            try {
+                const response = await fetch(`${BASE_URL}/account?api_key=${API_KEY}&session_id=${sessionId}`);
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('Session expired');
+                    } else {
+                        throw new Error('Network response was not ok');
+                    }
+                }
+
+                const account = await response.json();
+
+                if (account.id) {
+                    localStorage.setItem('tmdb_account_id', account.id);
+                    showProfile(account);
+                    loadContent();
+                } else if (account.success === false) {
+                    throw new Error('Invalid account data');
+                } else {
+                    throw new Error('Network response was not ok');
+                }
+            } catch (error) {
+                console.error('Account Fetch Error:', error);
+                if (error.message === 'Session expired' || error.message === 'Invalid account data') {
+                    localStorage.removeItem('tmdb_session_id');
+                    localStorage.removeItem('tmdb_account_id');
+                    showLogin();
+                } else {
+                    Elements.accountLoading.innerHTML = '<p>Произошла ошибка соединения с сервером. Пожалуйста, проверьте подключение и обновите страницу.</p>';
+                    Elements.accountLoading.style.display = 'block';
+                }
+            }
+        }
+
+        function showLogin() {
+            Elements.accountLoading.style.display = 'none';
+            Elements.profileView.style.display = 'none';
+            Elements.loginView.style.display = 'flex';
+        }
+
+        function showProfile(account) {
+            Elements.accountLoading.style.display = 'none';
+            Elements.loginView.style.display = 'none';
+            Elements.profileView.style.display = 'block';
+
+            Elements.profileUsername.textContent = account.username || account.name || 'Пользователь';
+
+            if (account.avatar && account.avatar.tmdb && account.avatar.tmdb.avatar_path) {
+                Elements.profileAvatar.src = `https://image.tmdb.org/t/p/w500${account.avatar.tmdb.avatar_path}`;
+            } else if (account.avatar && account.avatar.gravatar && account.avatar.gravatar.hash) {
+                Elements.profileAvatar.src = `https://www.gravatar.com/avatar/${account.avatar.gravatar.hash}?s=150`;
+            } else {
+                Elements.profileAvatar.src = 'ico/врядли.png';
+            }
+        }
+
+        async function createRequestTokenAndRedirect() {
+            try {
+                Elements.loginBtn.textContent = 'Загрузка...';
+                Elements.loginBtn.disabled = true;
+
+                const response = await fetch(`${BASE_URL}/authentication/token/new?api_key=${API_KEY}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    window.location.href =
+                        `https://www.themoviedb.org/authenticate/${data.request_token}?redirect_to=${encodeURIComponent(REDIRECT_URI)}`;
+                } else {
+                    throw new Error('Failed to get request token');
+                }
+            } catch (error) {
+                console.error('Login Error:', error);
+                Elements.loginBtn.textContent = 'Ошибка! Попробуйте снова';
+                Elements.loginBtn.disabled = false;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('tmdb_session_id');
+            localStorage.removeItem('tmdb_account_id');
+            showLogin();
+        }
+
+        async function fetchEndpoint(endpoint) {
+            const sessionId = localStorage.getItem('tmdb_session_id');
+            const accountId = localStorage.getItem('tmdb_account_id');
+            if (!sessionId || !accountId) return [];
+
+            const url =
+                `${BASE_URL}/account/${accountId}/${endpoint}?api_key=${API_KEY}&session_id=${sessionId}&language=ru-RU&sort_by=created_at.desc`;
+            const response = await fetch(url);
+            const data = await response.json();
+            return data.results || [];
+        }
+
+        async function loadContent() {
+            Elements.contentContainer.style.display = 'none';
+            Elements.emptyContent.style.display = 'none';
+            Elements.contentLoading.style.display = 'block';
+            Elements.contentContainer.innerHTML = '';
+
+            try {
+                let movies = [];
+                let series = [];
+
+                if (currentTab === 'favorites') {
+                    movies = await fetchEndpoint('favorite/movies');
+                    series = await fetchEndpoint('favorite/tv');
+                } else {
+                    movies = await fetchEndpoint('watchlist/movies');
+                    series = await fetchEndpoint('watchlist/tv');
+                }
+
+                const allItems = [...movies.map(m => ({ ...m, media_type: 'movie' })), ...series.map(s => ({
+                    ...s, media_type: 'tv'
+                }))];
+                // Sort by something if needed, but they are already sorted by TMDB normally. We'll just display them.
+
+                if (allItems.length === 0) {
+                    showEmptyState();
+                } else {
+                    renderCards(allItems);
+                }
+            } catch (error) {
+                console.error('Content Load Error:', error);
+                showEmptyState(true);
+            }
+
+            Elements.contentLoading.style.display = 'none';
+        }
+
+        function showEmptyState(isError = false) {
+            Elements.emptyContent.style.display = 'block';
+            Elements.contentContainer.style.display = 'none';
+
+            if (isError) {
+                Elements.emptyTitle.textContent = 'Ошибка загрузки';
+                Elements.emptyDesc.textContent = 'Не удалось загрузить данные с серверов TMDB.';
+            } else {
+                if (currentTab === 'favorites') {
+                    Elements.emptyTitle.textContent = 'В избранном пусто';
+                    Elements.emptyDesc.textContent = 'Добавляйте фильмы и сериалы в избранное, чтобы легко найти их позже.';
+                } else {
+                    Elements.emptyTitle.textContent = 'Список отслеживания пуст';
+                    Elements.emptyDesc.textContent = 'Добавляйте сюда то, что хотите посмотреть в будущем.';
+                }
+            }
+        }
+
+        function renderCards(items) {
+            Elements.contentContainer.style.display = '';
+
+            items.forEach(item => {
+                const movieCard = document.createElement('div');
+                movieCard.classList.add('movie-card');
+                const posterUrl = item.poster_path ? `${IMG_URL}${item.poster_path}` : NO_PICTURE_URL;
+                const title = item.title || item.name || 'Без названия';
+                const rating = item.vote_average ? parseFloat(item.vote_average.toFixed(1)) : null;
+
+                let ratingClass = 'movie-card-rating';
+                if (!rating) {
+                    ratingClass += ' dark-red';
+                } else if (rating >= 6.5) {
+                    ratingClass += ' high';
+                } else if (rating < 6.5 && rating >= 5) {
+                    ratingClass += ' low';
+                } else if (rating < 5 && rating >= 4) {
+                    ratingClass += ' very-low';
+                } else {
+                    ratingClass += ' dark-red';
+                }
+
+                const actionIcon = currentTab === 'favorites' ? '<i class="fa-solid fa-heart"></i><span>В вашем аккаунте</span>' : '<i class="fa-solid fa-bookmark"></i><span>В вашем аккаунте</span>';
+
+                movieCard.innerHTML = `
+        <img src="${posterUrl}" alt="${title}">
+        <div class="gradient-overlay"></div>
+        <p>${title}</p>
+        ${rating ? `<div class="${ratingClass}">${rating}</div>` : ''}
+        <button class="favorite-btn active" title="В вашем аккаунте">
+            ${actionIcon}
+        </button>
+        `;
+
+                movieCard.addEventListener('click', (e) => {
+                    if (e.target.closest('.favorite-btn')) {
+                        // Optionally implement logic to remove from list here instead of just highlighting
+                        return;
+                    }
+                    e.preventDefault();
+                    const url = item.media_type === 'tv'
+                        ? `watch/watch.html?TV_ID=${item.id}`
+                        : `watch/watch.html?M_ID=${item.id}`;
+                    window.location.href = url;
+                });
+
+                Elements.contentContainer.appendChild(movieCard);
+            });
+        }
+
+        // Event Listeners
+        Elements.loginBtn.addEventListener('click', createRequestTokenAndRedirect);
+        Elements.logoutBtn.addEventListener('click', logout);
+
+        Elements.tabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                Elements.tabs.forEach(t => t.classList.remove('active'));
+
+                const current = e.target;
+                current.classList.add('active');
+
+                currentTab = current.dataset.tab;
+                loadContent();
+            });
+        });
+
+        // Initialize
+        checkAuthCallback();
+
+        setTimeout(() => {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+            }
+        }, 500);
+    </script>
+</body>
+
+</html>
