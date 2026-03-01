@@ -81,8 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Делегированный обработчик кликов для Top10 карточек (открывает общий модал)
     document.addEventListener('click', (e) => {
-        // Если клик по кнопке избранного — игнорируем открытие модала
-        if (e.target.closest && e.target.closest('.favorite-btn')) return;
+        if (e.target.closest && e.target.closest('.poster-card-menu, .poster-card-menu-btn, .poster-card-menu-action')) return;
         const topCard = e.target.closest && e.target.closest('.top10-card');
         if (!topCard) return;
         e.preventDefault();
@@ -391,6 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const heroDescription = document.getElementById('hero-description');
     const heroWatchBtn = document.getElementById('hero-watch-btn');
     const heroInfoBtn = document.getElementById('hero-info-btn');
+    const heroFavBtn = document.getElementById('hero-fav-btn');
     const newMoviesRow = document.getElementById('new-movies');
     const newSeriesRow = document.getElementById('new-series');
     const newAnimationsRow = document.getElementById('new-animations');
@@ -427,6 +427,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 const movieUrl = `watch/watch.html?M_ID=${id}`;
                 const url = type === 'tv' ? tvUrl : movieUrl;
                 window.location.href = url;
+            }
+        });
+    }
+
+    if (heroFavBtn) {
+        heroFavBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = heroFavBtn.dataset.id;
+            const type = heroFavBtn.dataset.type;
+            if (!id || !type) return;
+            if (!localStorage.getItem('tmdb_session_id')) {
+                window.location.href = 'account.html';
+                return;
+            }
+            if (typeof toggleFavorite === 'function') {
+                const isAdded = await toggleFavorite(id, type);
+                const icon = heroFavBtn.querySelector('i');
+                if (isAdded) {
+                    heroFavBtn.classList.add('active');
+                    if (icon) icon.className = 'fa-solid fa-heart';
+                } else {
+                    heroFavBtn.classList.remove('active');
+                    if (icon) icon.className = 'fa-regular fa-heart';
+                }
             }
         });
     }
@@ -499,59 +524,21 @@ document.addEventListener('DOMContentLoaded', () => {
         style.textContent = `
         .hero {
             position: relative;
-            overflow: visible;
         }
-        
-        .hero-ambient {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            transform: scale(1.02);
-            filter: blur(50px);
-            opacity: 1;
-            pointer-events: none;
-            z-index: 0;
-        }
-        
-        .hero-background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            border-radius: 20px;
+
+        .hero::after {
             z-index: 1;
-            transition: opacity 1s ease;
         }
-        
+
         .hero-trailer {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 2;
+            inset: 0;
+            z-index: 0;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.5s ease;
-            border-radius: 20px;
             overflow: hidden;
         }
-            .hero-trailer::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top right, rgba(0, 0, 0, 0.8), transparent);
-    border-radius: inherit;
-    z-index: 3;
-    pointer-events: none;
-}
         
         .hero-trailer.active {
             opacity: 1;
@@ -581,15 +568,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        .hero-content {
+        .hero-content,
+        .hero-content.active {
             position: relative;
             z-index: 3;
-            transform: translateY(0);
-            opacity: 1;
-        }
-        
-        .hero-content.active {
-            transform: translateY(0);
             opacity: 1;
         }
         
@@ -600,10 +582,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         .hero-logo.move-down {
             transform: translateY(70px);
-        }
-        
-        .hero-logo.move-up {
-            transform: translateY(0);
         }
         
         .hero-logo-text {
@@ -628,22 +606,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         @media (min-width: 769px) {
             .trailer-controls {
-                bottom: 30px !important;
-                right: 30px !important;
+                bottom: 20px !important;
+                right: 20px !important;
                 top: auto !important;
             }
         }
         
         @media (max-width: 768px) {
-            .hero {
-                border-radius: 15px;
-            }
-            
-            .hero-background,
-            .hero-trailer {
-                border-radius: 15px;
-            }
-            
             .hero-content {
                 padding: 20px;
             }
@@ -660,15 +629,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         @media (max-width: 480px) {
-            .hero {
-                border-radius: 10px;
-            }
-            
-            .hero-background,
-            .hero-trailer {
-                border-radius: 10px;
-            }
-            
             .hero-logo.move-down {
                 transform: translateY(50px);
             }
@@ -682,15 +642,10 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
         document.head.appendChild(style);
 
-        const ambient = document.createElement('div');
-        ambient.className = 'hero-ambient';
-        ambient.style.backgroundImage = `url(${IMG_URL}${selectedContent.backdrop_path})`;
-        hero.insertBefore(ambient, hero.firstChild);
-
-        const bg = document.createElement('div');
-        bg.className = 'hero-background';
-        bg.style.backgroundImage = `url(${IMG_URL}${selectedContent.backdrop_path})`;
-        hero.insertBefore(bg, hero.firstChild);
+        // Устанавливаем фон напрямую на .hero
+        hero.style.backgroundImage = `url(${IMG_URL}${selectedContent.backdrop_path})`;
+        hero.style.backgroundSize = 'cover';
+        hero.style.backgroundPosition = 'center';
 
         const trailerContainer = document.createElement('div');
         trailerContainer.className = 'hero-trailer';
@@ -699,8 +654,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const controlsContainer = document.createElement('div');
         controlsContainer.className = 'trailer-controls';
         controlsContainer.style.position = 'absolute';
-        controlsContainer.style.bottom = '30px';
-        controlsContainer.style.right = '30px';
+        controlsContainer.style.bottom = '20px';
+        controlsContainer.style.right = '20px';
         controlsContainer.style.zIndex = '10';
         controlsContainer.style.display = 'none';
         controlsContainer.style.gap = '10px';
@@ -708,40 +663,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         controlsContainer.innerHTML = `
         <button id="trailer-sound-btn" style="
-            background: rgba(32, 32, 32, 0.35);
-            border: none;
+            background: rgba(32, 32, 32, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 50%;
-            width: 45px;
-            height: 45px;
+            width: 44px;
+            height: 44px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(5px);
             padding: 0;
             margin: 0;
             flex-shrink: 0;
-            border : 1px solid #ffffff21;
+            color: #fff;
+            font-size: 20px;
         ">
-            <img src="ico/Звук_выкл.png" style="width: 20px; height: 20px; filter: brightness(0) invert(1);">
-        </button>
-        <button id="trailer-exit-btn" style="
-            background: rgba(32, 32, 32, 0.35);
-            border: none;
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(5px);
-            padding: 0;
-            margin: 0;
-            flex-shrink: 0;
-            border : 1px solid #ffffff21;
-        ">
-            <img src="ico/закрыть.svg" style="width: 20px; height: 20px; filter: brightness(0) invert(1);">
+            <i class="fa-solid fa-volume-xmark" aria-hidden="true"></i>
         </button>
     `;
 
@@ -753,10 +690,8 @@ document.addEventListener('DOMContentLoaded', () => {
         hero.appendChild(controlsContainer);
 
         const soundBtn = document.getElementById('trailer-sound-btn');
-        const exitBtn = document.getElementById('trailer-exit-btn');
-
         let isSoundMuted = true;
-        const soundIcon = soundBtn.querySelector('img');
+        const soundIcon = soundBtn.querySelector('i');
 
         soundBtn.addEventListener('click', () => {
             if (!player) return;
@@ -764,18 +699,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (isSoundMuted) {
                     player.unMute();
                     player.setVolume(100);
-                    soundIcon.src = 'ico/Звук_вкл.png';
+                    soundIcon.classList.remove('fa-volume-xmark');
+                    soundIcon.classList.add('fa-volume-high');
                 } else {
                     player.mute();
-                    soundIcon.src = 'ico/Звук_выкл.png';
+                    soundIcon.classList.remove('fa-volume-high');
+                    soundIcon.classList.add('fa-volume-xmark');
                 }
                 isSoundMuted = !isSoundMuted;
             } catch (error) { }
-        });
-
-        exitBtn.addEventListener('click', () => {
-            trailerSuccessfullyPlayed = true;
-            stopTrailer();
         });
 
         async function getAllTrailers(contentId, contentType) {
@@ -1050,6 +982,22 @@ document.addEventListener('DOMContentLoaded', () => {
         heroWatchBtn.dataset.type = selectedContent.type;
         heroInfoBtn.dataset.id = selectedContent.id;
         heroInfoBtn.dataset.type = selectedContent.type;
+        if (heroFavBtn) {
+            heroFavBtn.dataset.id = selectedContent.id;
+            heroFavBtn.dataset.type = selectedContent.type;
+            // Отобразить текущее состояние через isFavorite (учитывает TMDB-кэш)
+            const isFav = typeof window.isFavorite === 'function'
+                ? window.isFavorite(selectedContent.id, selectedContent.type)
+                : false;
+            const icon = heroFavBtn.querySelector('i');
+            if (isFav) {
+                heroFavBtn.classList.add('active');
+                if (icon) icon.className = 'fa-solid fa-heart';
+            } else {
+                heroFavBtn.classList.remove('active');
+                if (icon) icon.className = 'fa-regular fa-heart';
+            }
+        }
 
         const heroContent = document.querySelector('.hero-content');
         if (heroContent) heroContent.classList.add('active');
@@ -1130,7 +1078,90 @@ document.addEventListener('DOMContentLoaded', () => {
         displayMovies(data.results, legendarySeriesRow, 'tv');
     }
 
-    // Отобразить фильмы/сериалы в рядах
+    const TMDB_V4_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIwNjkzNjE0NWZlOGUyMGJlMjhiMDJlMjZiNTVkM2NlNiIsIm5iZiI6MTcyMjQyMTMxNi45MjYsInN1YiI6IjY2YWExMDQ0ZjkyZDAxNDI2NDU5ZGRiNSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.kHML2iaqHKzCchxcY2HzqHbFgC5MCpUXYyugfOLmybs';
+
+    // Извлекаем account_object_id из JWT (sub claim) — нужен для v4 API
+    function getV4AccountId() {
+        try {
+            const payload = TMDB_V4_TOKEN.split('.')[1];
+            const decoded = JSON.parse(atob(payload));
+            return decoded.sub;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // Персональные рекомендации фильмов (v4)
+    async function fetchMovieRecommendations() {
+        const v4AccountId = localStorage.getItem('tmdb_v4_account_id');
+        const v4AccessToken = localStorage.getItem('tmdb_access_token');
+
+        if (!v4AccountId || !v4AccessToken) return;
+
+        try {
+            const container = document.getElementById('rec-movies');
+            const section = document.getElementById('rec-movies-section');
+            if (!container || !section) return;
+
+            const res = await fetch(`https://api.themoviedb.org/4/account/${v4AccountId}/movie/recommendations?page=1&language=ru-RU`, {
+                headers: {
+                    'Authorization': `Bearer ${v4AccessToken}`,
+                    'Content-Type': 'application/json;charset=utf-8'
+                }
+            });
+
+            if (!res.ok) throw new Error('Failed to fetch v4 movie recommendations');
+
+            const data = await res.json();
+            const items = (data.results || []).filter(m => m.poster_path);
+            if (items.length === 0) return;
+
+            const h2 = section.querySelector('h2');
+            if (h2) h2.textContent = `Мои рекомендации — Фильмы`;
+            displayMovies(items, container, 'movie');
+            section.style.display = 'block';
+
+        } catch (e) {
+            console.error('Ошибка загрузки рекомендаций фильмов (v4):', e);
+        }
+    }
+
+    // Персональные рекомендации сериалов (v4)
+    async function fetchSeriesRecommendations() {
+        const v4AccountId = localStorage.getItem('tmdb_v4_account_id');
+        const v4AccessToken = localStorage.getItem('tmdb_access_token');
+
+        if (!v4AccountId || !v4AccessToken) return;
+
+        try {
+            const container = document.getElementById('rec-series');
+            const section = document.getElementById('rec-series-section');
+            if (!container || !section) return;
+
+            const res = await fetch(`https://api.themoviedb.org/4/account/${v4AccountId}/tv/recommendations?page=1&language=ru-RU`, {
+                headers: {
+                    'Authorization': `Bearer ${v4AccessToken}`,
+                    'Content-Type': 'application/json;charset=utf-8'
+                }
+            });
+
+            if (!res.ok) throw new Error('Failed to fetch v4 tv recommendations');
+
+            const data = await res.json();
+            const items = (data.results || []).filter(t => t.poster_path);
+            if (items.length === 0) return;
+
+            const h2 = section.querySelector('h2');
+            if (h2) h2.textContent = `Мои рекомендации — Сериалы`;
+            displayMovies(items, container, 'tv');
+            section.style.display = 'block';
+
+        } catch (e) {
+            console.error('Ошибка загрузки рекомендаций сериалов (v4):', e);
+        }
+    }
+
+
     function displayActors(actors, container) {
         if (!container) return;
         container.innerHTML = '';
@@ -1141,8 +1172,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             actorCard.innerHTML = `
                 <img src="${profileUrl}" alt="${actor.name}">
-                <div class="gradient-overlay"></div>
-                <p>${actor.name}</p>
             `;
 
             actorCard.dataset.id = actor.id;
@@ -1156,8 +1185,404 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Загрузка кэша избранного из TMDB при инициализации для быстрого UI
     let tmdbFavoritesCache = [];
+    let tmdbWatchlistCache = [];
+    let posterMenuScrollLocked = false;
+    let posterActionsContext = null;
+    let posterActionsMetaReqToken = 0;
+
+    function setPosterMenuScrollLock(locked) {
+        posterMenuScrollLocked = !!locked;
+        document.documentElement.classList.toggle('poster-menu-scroll-lock', posterMenuScrollLocked);
+        document.body.classList.toggle('poster-menu-scroll-lock', posterMenuScrollLocked);
+    }
+
+    function closeAllPosterCardMenus() {
+        const modal = document.getElementById('poster-actions-modal');
+        if (modal) {
+            modal.classList.remove('open');
+        }
+        posterActionsContext = null;
+
+        document.querySelectorAll('.poster-card-menu.open').forEach(menu => {
+            menu.classList.remove('open');
+            menu.classList.remove('menu-floating');
+            menu.style.left = '';
+            menu.style.top = '';
+        });
+        document.querySelectorAll('.movie-card.menu-host-open, .top10-card.menu-host-open').forEach(card => {
+            card.classList.remove('menu-host-open');
+        });
+        setPosterMenuScrollLock(false);
+    }
+
+    function ensurePosterActionsModal() {
+        let modal = document.getElementById('poster-actions-modal');
+        if (modal) return modal;
+
+        modal = document.createElement('div');
+        modal.id = 'poster-actions-modal';
+        modal.className = 'poster-actions-modal';
+        modal.innerHTML = `
+            <div class="poster-actions-backdrop" data-close="1"></div>
+            <div class="poster-actions-sheet" role="dialog" aria-modal="true" aria-label="Действия с карточкой">
+                <div class="poster-actions-handle" data-drag-handle="1" aria-hidden="true"></div>
+                <div class="poster-actions-meta">
+                    <img class="poster-actions-meta-image" src="" alt="Постер">
+                    <div class="poster-actions-meta-text">
+                        <div class="poster-actions-meta-title">Загрузка...</div>
+                        <div class="poster-actions-meta-sub">—</div>
+                    </div>
+                </div>
+                <button class="poster-actions-btn" data-action="favorite">
+                    <i class="fa-regular fa-heart"></i>
+                    <span>Добавить в избранное</span>
+                </button>
+                <button class="poster-actions-btn" data-action="watchlist">
+                    <i class="fa-regular fa-bookmark"></i>
+                    <span>Добавить в список</span>
+                </button>
+                <button class="poster-actions-btn" data-action="details">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>Подробнее</span>
+                </button>
+                <button class="poster-actions-btn" data-action="watch">
+                    <i class="fa-solid fa-play"></i>
+                    <span>Смотреть</span>
+                </button>
+            </div>
+        `;
+
+        modal.addEventListener('click', (e) => {
+            const closeTarget = e.target.closest('[data-close="1"]');
+            if (closeTarget) {
+                closeAllPosterCardMenus();
+                return;
+            }
+
+            const actionBtn = e.target.closest('.poster-actions-btn');
+            if (!actionBtn || !posterActionsContext) return;
+
+            const action = actionBtn.dataset.action;
+            handlePosterModalAction(action);
+        });
+
+        const sheet = modal.querySelector('.poster-actions-sheet');
+        const handle = modal.querySelector('[data-drag-handle="1"]');
+        if (sheet) {
+            let dragStartY = null;
+            let dragDeltaY = 0;
+            let dragging = false;
+            let activePointerId = null;
+
+            const onDragMove = (clientY) => {
+                if (!dragging || dragStartY === null) return;
+                const currentY = (typeof clientY === 'number') ? clientY : dragStartY;
+                dragDeltaY = Math.max(0, currentY - dragStartY);
+                sheet.style.transform = `translateY(${Math.round(dragDeltaY)}px)`;
+            };
+
+            const onDragEnd = () => {
+                if (!dragging) return;
+                dragging = false;
+                const shouldClose = dragDeltaY > 80;
+                sheet.style.transform = '';
+                dragStartY = null;
+                dragDeltaY = 0;
+
+                if (shouldClose) {
+                    closeAllPosterCardMenus();
+                }
+
+                window.removeEventListener('pointermove', onPointerMove);
+                window.removeEventListener('pointerup', onPointerEnd);
+                window.removeEventListener('pointercancel', onPointerEnd);
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseEnd);
+                window.removeEventListener('touchmove', onTouchMove);
+                window.removeEventListener('touchend', onTouchEnd);
+                window.removeEventListener('touchcancel', onTouchEnd);
+            };
+
+            const onPointerMove = (e) => onDragMove(e.clientY);
+            const onPointerEnd = () => onDragEnd();
+
+            const onMouseMove = (e) => onDragMove(e.clientY);
+            const onMouseEnd = () => onDragEnd();
+
+            const onTouchMove = (e) => {
+                if (!dragging || !e.touches || e.touches.length === 0) return;
+                onDragMove(e.touches[0].clientY);
+                e.preventDefault();
+            };
+            const onTouchEnd = () => onDragEnd();
+
+            const startDrag = (clientY, pointerId = null) => {
+                if (window.innerWidth > 768) return;
+                dragging = true;
+                dragStartY = clientY;
+                dragDeltaY = 0;
+                activePointerId = pointerId;
+            };
+
+            const shouldIgnoreDragTarget = (target) => {
+                if (!target) return false;
+                return !!target.closest('.poster-actions-btn');
+            };
+
+            const onSheetPointerDown = (e) => {
+                if (shouldIgnoreDragTarget(e.target)) return;
+                startDrag(e.clientY, e.pointerId);
+                try { sheet.setPointerCapture(e.pointerId); } catch (err) { }
+                window.addEventListener('pointermove', onPointerMove, { passive: true });
+                window.addEventListener('pointerup', onPointerEnd, { passive: true });
+                window.addEventListener('pointercancel', onPointerEnd, { passive: true });
+            };
+
+            const onSheetMouseDown = (e) => {
+                if (shouldIgnoreDragTarget(e.target)) return;
+                startDrag(e.clientY);
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseEnd);
+            };
+
+            const onSheetTouchStart = (e) => {
+                if (!e.touches || e.touches.length === 0) return;
+                if (shouldIgnoreDragTarget(e.target)) return;
+                startDrag(e.touches[0].clientY);
+                window.addEventListener('touchmove', onTouchMove, { passive: false });
+                window.addEventListener('touchend', onTouchEnd);
+                window.addEventListener('touchcancel', onTouchEnd);
+            };
+
+            sheet.addEventListener('pointerdown', onSheetPointerDown);
+            sheet.addEventListener('mousedown', onSheetMouseDown);
+            sheet.addEventListener('touchstart', onSheetTouchStart, { passive: true });
+
+            if (handle) {
+                handle.addEventListener('pointerdown', onSheetPointerDown);
+                handle.addEventListener('mousedown', onSheetMouseDown);
+                handle.addEventListener('touchstart', onSheetTouchStart, { passive: true });
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeAllPosterCardMenus();
+            }
+        });
+
+        document.body.appendChild(modal);
+        return modal;
+    }
+
+    function refreshPosterActionsModal() {
+        const modal = document.getElementById('poster-actions-modal');
+        if (!modal || !posterActionsContext) return;
+
+        const { id, type } = posterActionsContext;
+        const isFav = isFavorite(id, type);
+        const isWl = isWatchlist(id, type);
+
+        const favoriteBtn = modal.querySelector('.poster-actions-btn[data-action="favorite"]');
+        const watchlistBtn = modal.querySelector('.poster-actions-btn[data-action="watchlist"]');
+
+        if (favoriteBtn) {
+            favoriteBtn.innerHTML = isFav
+                ? '<i class="fa-solid fa-heart"></i><span>Удалить из избранного</span>'
+                : '<i class="fa-regular fa-heart"></i><span>Добавить в избранное</span>';
+        }
+
+        if (watchlistBtn) {
+            watchlistBtn.innerHTML = isWl
+                ? '<i class="fa-solid fa-bookmark"></i><span>Удалить из списка</span>'
+                : '<i class="fa-regular fa-bookmark"></i><span>Добавить в список</span>';
+        }
+    }
+
+    async function handlePosterModalAction(action) {
+        if (!posterActionsContext) return;
+        const { id, type, card, onUpdate } = posterActionsContext;
+
+        if (action === 'details' || action === 'watch') {
+            closeAllPosterCardMenus();
+            try { saveWatchSource(); } catch (e) { }
+
+            const tvUrl = `watch/watch.html?TV_ID=${id}`;
+            const movieUrl = `watch/watch.html?M_ID=${id}`;
+            const baseUrl = type === 'tv' ? tvUrl : movieUrl;
+            const targetUrl = action === 'watch' ? `${baseUrl}&autoplay=1` : baseUrl;
+            window.location.href = targetUrl;
+            return;
+        }
+
+        if (action === 'favorite') {
+            await toggleFavorite(id, type);
+        } else if (action === 'watchlist') {
+            await toggleWatchlist(id, type);
+        } else {
+            return;
+        }
+
+        const favoriteState = isFavorite(id, type);
+        const watchlistState = isWatchlist(id, type);
+
+        if (typeof onUpdate === 'function') {
+            onUpdate(favoriteState, watchlistState);
+        } else if (card) {
+            updatePosterCardUI(card, favoriteState, watchlistState);
+        }
+
+        closeAllPosterCardMenus();
+    }
+
+    async function populatePosterActionsModalMeta() {
+        const modal = document.getElementById('poster-actions-modal');
+        if (!modal || !posterActionsContext) return;
+
+        const token = ++posterActionsMetaReqToken;
+        const { id, type, card } = posterActionsContext;
+
+        const imageEl = modal.querySelector('.poster-actions-meta-image');
+        const titleEl = modal.querySelector('.poster-actions-meta-title');
+        const subEl = modal.querySelector('.poster-actions-meta-sub');
+        if (!imageEl || !titleEl || !subEl) return;
+
+        const cardImg = card?.querySelector('img');
+        const fallbackTitle = cardImg?.getAttribute('alt') || 'Без названия';
+        const fallbackPoster = cardImg?.getAttribute('src') || NO_PICTURE_URL;
+
+        imageEl.src = fallbackPoster;
+        titleEl.textContent = fallbackTitle;
+        subEl.textContent = 'Загрузка...';
+
+        try {
+            const response = await fetch(`${BASE_URL}/${type}/${id}?api_key=${API_KEY}&language=ru-RU`);
+            const data = await response.json();
+
+            if (token !== posterActionsMetaReqToken) return;
+
+            const title = data.title || data.name || fallbackTitle;
+            const genres = Array.isArray(data.genres) ? data.genres.map(g => g.name).filter(Boolean) : [];
+            const dateRaw = data.release_date || data.first_air_date || '';
+            const year = dateRaw ? String(dateRaw).slice(0, 4) : '';
+            const genresText = genres.length > 0 ? genres.slice(0, 2).join(', ') : 'Жанр не указан';
+            const subText = year ? `${genresText} • ${year}` : genresText;
+
+            titleEl.textContent = title;
+            subEl.textContent = subText;
+
+            if (data.poster_path) {
+                imageEl.src = `${POSTER_URL}${data.poster_path}`;
+            }
+        } catch (e) {
+            if (token !== posterActionsMetaReqToken) return;
+            subEl.textContent = 'Жанр не указан';
+        }
+    }
+
+    function openPosterActionsModal(context) {
+        if (!context || !context.id || !context.type) return;
+        closeAllPosterCardMenus();
+
+        posterActionsContext = {
+            id: String(context.id),
+            type: context.type,
+            card: context.card || null,
+            onUpdate: typeof context.onUpdate === 'function' ? context.onUpdate : null
+        };
+
+        const modal = ensurePosterActionsModal();
+        refreshPosterActionsModal();
+        modal.classList.add('open');
+        setPosterMenuScrollLock(true);
+        populatePosterActionsModalMeta();
+    }
+
+    function positionPosterCardMenu(card, menu) {
+        if (!card || !menu) return;
+
+        const menuBtn = card.querySelector('.poster-card-menu-btn');
+        if (!menuBtn) return;
+
+        menu.classList.remove('menu-align-left', 'menu-align-right', 'menu-above', 'menu-below');
+        menu.classList.add('menu-floating');
+
+        const previousDisplay = menu.style.display;
+        const wasOpen = menu.classList.contains('open');
+        if (!wasOpen) {
+            menu.style.display = 'flex';
+        }
+
+        menu.style.left = '-9999px';
+        menu.style.top = '-9999px';
+
+        const menuRect = menu.getBoundingClientRect();
+        const btnRect = menuBtn.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const gap = 8;
+
+        let left = btnRect.right - menuRect.width;
+        if (left < gap) left = gap;
+        if (left + menuRect.width > viewportWidth - gap) {
+            left = viewportWidth - menuRect.width - gap;
+        }
+
+        let top = btnRect.top - menuRect.height - gap;
+        if (top < gap) {
+            top = btnRect.bottom + gap;
+        }
+        if (top + menuRect.height > viewportHeight - gap) {
+            top = Math.max(gap, viewportHeight - menuRect.height - gap);
+        }
+
+        menu.style.left = `${Math.round(left)}px`;
+        menu.style.top = `${Math.round(top)}px`;
+
+        if (!wasOpen) {
+            menu.style.display = previousDisplay;
+        }
+    }
+
+    function updatePosterCardUI(card, favoriteState, watchlistState) {
+        if (!card) return;
+
+        const favoriteDot = card.querySelector('.status-favorite');
+        const watchlistDot = card.querySelector('.status-watchlist');
+
+        if (favoriteDot) {
+            favoriteDot.classList.toggle('is-hidden', !favoriteState);
+        }
+        if (watchlistDot) {
+            watchlistDot.classList.toggle('is-hidden', !watchlistState);
+        }
+
+        const favoriteAction = card.querySelector('.poster-card-menu-action[data-action="favorite"]');
+        const watchlistAction = card.querySelector('.poster-card-menu-action[data-action="watchlist"]');
+
+        if (favoriteAction) {
+            favoriteAction.innerHTML = favoriteState
+                ? '<i class="fa-solid fa-heart"></i><span>Удалить из избранного</span>'
+                : '<i class="fa-regular fa-heart"></i><span>Добавить в избранное</span>';
+        }
+
+        if (watchlistAction) {
+            watchlistAction.innerHTML = watchlistState
+                ? '<i class="fa-solid fa-bookmark"></i><span>Удалить из списка</span>'
+                : '<i class="fa-regular fa-bookmark"></i><span>Добавить в список</span>';
+        }
+    }
+
+    function refreshAllPosterCardUI() {
+        document.querySelectorAll('.movie-card[data-id][data-type], .top10-card[data-id][data-type]').forEach(card => {
+            const id = card.dataset.id;
+            const type = card.dataset.type;
+            if (!id || !type) return;
+            updatePosterCardUI(card, isFavorite(id, type), isWatchlist(id, type));
+        });
+    }
+
     async function loadTMDBFavoritesCache() {
         const sessionId = localStorage.getItem('tmdb_session_id');
         const accountId = localStorage.getItem('tmdb_account_id');
@@ -1174,115 +1599,179 @@ document.addEventListener('DOMContentLoaded', () => {
             const tFavs = (tData.results || []).map(t => ({ id: t.id, type: 'tv' }));
 
             tmdbFavoritesCache = [...mFavs, ...tFavs];
-            // Сохраняем в localStorage как кэш для быстрой работы UI до загрузки
             localStorage.setItem('tmdb_favorites_cache', JSON.stringify(tmdbFavoritesCache));
-
-            // Обновляем UI всех кнопок на странице
-            document.querySelectorAll('.favorite-btn').forEach(btn => {
-                const card = btn.closest('.movie-card, .top10-card');
-                if (!card) return;
-                const id = card.dataset.id;
-                // Для разных мест может понадобиться по-разному получать тип
-                let type = 'movie'; // по умолчанию
-                if (window.location.pathname.includes('series.html')) type = 'tv';
-                if (card.dataset.type) type = card.dataset.type;
-
-                const icon = btn.querySelector('i');
-                const textSpan = btn.querySelector('span');
-
-                if (isFavorite(id, type)) {
-                    btn.classList.add('active');
-                    btn.title = 'Убрать из избранных';
-                    if (icon) icon.className = 'fa-solid fa-heart';
-                    if (textSpan) textSpan.textContent = 'Убрать из избранных';
-                } else {
-                    btn.classList.remove('active');
-                    btn.title = 'Добавить в избранные';
-                    if (icon) icon.className = 'fa-regular fa-heart';
-                    if (textSpan) textSpan.textContent = 'Добавить в избранные';
-                }
-            });
+            refreshAllPosterCardUI();
         } catch (e) {
             console.error('Ошибка загрузки кэша избранного', e);
         }
     }
 
-    // Запускаем загрузку кэша если авторизованы
-    if (localStorage.getItem('tmdb_session_id')) {
-        // Восстанавливаем из кэша сразу
+    async function loadTMDBWatchlistCache() {
+        const sessionId = localStorage.getItem('tmdb_session_id');
+        const accountId = localStorage.getItem('tmdb_account_id');
+        if (!sessionId || !accountId) return;
+
         try {
-            const cached = localStorage.getItem('tmdb_favorites_cache');
-            if (cached) tmdbFavoritesCache = JSON.parse(cached);
-        } catch (e) { }
-        loadTMDBFavoritesCache();
+            const moviesRes = await fetch(`${BASE_URL}/account/${accountId}/watchlist/movies?api_key=${API_KEY}&session_id=${sessionId}`);
+            const tvRes = await fetch(`${BASE_URL}/account/${accountId}/watchlist/tv?api_key=${API_KEY}&session_id=${sessionId}`);
+
+            const mData = await moviesRes.json();
+            const tData = await tvRes.json();
+
+            const mItems = (mData.results || []).map(m => ({ id: m.id, type: 'movie' }));
+            const tItems = (tData.results || []).map(t => ({ id: t.id, type: 'tv' }));
+
+            tmdbWatchlistCache = [...mItems, ...tItems];
+            localStorage.setItem('tmdb_watchlist_cache', JSON.stringify(tmdbWatchlistCache));
+            refreshAllPosterCardUI();
+        } catch (e) {
+            console.error('Ошибка загрузки кэша списка', e);
+        }
     }
 
-    // Функции управления избранным
+    if (localStorage.getItem('tmdb_session_id')) {
+        try {
+            const cachedFav = localStorage.getItem('tmdb_favorites_cache');
+            if (cachedFav) tmdbFavoritesCache = JSON.parse(cachedFav);
+        } catch (e) { }
+        try {
+            const cachedWatch = localStorage.getItem('tmdb_watchlist_cache');
+            if (cachedWatch) tmdbWatchlistCache = JSON.parse(cachedWatch);
+        } catch (e) { }
+
+        loadTMDBFavoritesCache();
+        loadTMDBWatchlistCache();
+    }
+
     function isFavorite(id, type) {
         if (localStorage.getItem('tmdb_session_id')) {
             return tmdbFavoritesCache.some(item => item.id == id && item.type === type);
-        } else {
-            return false;
         }
+        return false;
+    }
+
+    function isWatchlist(id, type) {
+        if (localStorage.getItem('tmdb_session_id')) {
+            return tmdbWatchlistCache.some(item => item.id == id && item.type === type);
+        }
+        return false;
     }
 
     async function toggleFavorite(id, type) {
         const sessionId = localStorage.getItem('tmdb_session_id');
         const accountId = localStorage.getItem('tmdb_account_id');
 
-        if (sessionId && accountId) {
-            // Работаем через TMDB API
-            const isFavNow = isFavorite(id, type);
-            const newState = !isFavNow;
-
-            // Оптимистичное обновление UI (кэша)
-            if (newState) {
-                tmdbFavoritesCache.push({ id: parseInt(id), type });
-            } else {
-                const idx = tmdbFavoritesCache.findIndex(item => item.id == id && item.type === type);
-                if (idx > -1) tmdbFavoritesCache.splice(idx, 1);
-            }
-            localStorage.setItem('tmdb_favorites_cache', JSON.stringify(tmdbFavoritesCache));
-
-            try {
-                const res = await fetch(`${BASE_URL}/account/${accountId}/favorite?api_key=${API_KEY}&session_id=${sessionId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json;charset=utf-8'
-                    },
-                    body: JSON.stringify({
-                        media_type: type,
-                        media_id: parseInt(id),
-                        favorite: newState
-                    })
-                });
-                const data = await res.json();
-                if (!data.success && data.status_code !== 1 && data.status_code !== 12 && data.status_code !== 13) {
-                    console.error('Ошибка при добавлении в избранное TMDB', data);
-                    // Откат при ошибке
-                    if (!newState) {
-                        tmdbFavoritesCache.push({ id: parseInt(id), type });
-                    } else {
-                        const idx = tmdbFavoritesCache.findIndex(item => item.id == id && item.type === type);
-                        if (idx > -1) tmdbFavoritesCache.splice(idx, 1);
-                    }
-                    localStorage.setItem('tmdb_favorites_cache', JSON.stringify(tmdbFavoritesCache));
-                    return isFavNow; // возвращаем старое состояние, так как произошла ошибка
-                }
-            } catch (e) {
-                console.error('Network error toggleFavorite', e);
-            }
-
-            return newState;
-        } else {
+        if (!sessionId || !accountId) {
             window.location.href = 'account.html';
             return false;
         }
+
+        const isFavNow = isFavorite(id, type);
+        const newState = !isFavNow;
+
+        if (newState) {
+            tmdbFavoritesCache.push({ id: parseInt(id), type });
+        } else {
+            const idx = tmdbFavoritesCache.findIndex(item => item.id == id && item.type === type);
+            if (idx > -1) tmdbFavoritesCache.splice(idx, 1);
+        }
+        localStorage.setItem('tmdb_favorites_cache', JSON.stringify(tmdbFavoritesCache));
+
+        try {
+            const res = await fetch(`${BASE_URL}/account/${accountId}/favorite?api_key=${API_KEY}&session_id=${sessionId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8'
+                },
+                body: JSON.stringify({
+                    media_type: type,
+                    media_id: parseInt(id),
+                    favorite: newState
+                })
+            });
+            const data = await res.json();
+            if (!data.success && data.status_code !== 1 && data.status_code !== 12 && data.status_code !== 13) {
+                if (!newState) {
+                    tmdbFavoritesCache.push({ id: parseInt(id), type });
+                } else {
+                    const idx = tmdbFavoritesCache.findIndex(item => item.id == id && item.type === type);
+                    if (idx > -1) tmdbFavoritesCache.splice(idx, 1);
+                }
+                localStorage.setItem('tmdb_favorites_cache', JSON.stringify(tmdbFavoritesCache));
+                return isFavNow;
+            }
+        } catch (e) {
+            console.error('Network error toggleFavorite', e);
+        }
+
+        return newState;
     }
 
-    // Делаем функции доступными глобально
+    async function toggleWatchlist(id, type) {
+        const sessionId = localStorage.getItem('tmdb_session_id');
+        const accountId = localStorage.getItem('tmdb_account_id');
+
+        if (!sessionId || !accountId) {
+            window.location.href = 'account.html';
+            return false;
+        }
+
+        const isInWatchlistNow = isWatchlist(id, type);
+        const newState = !isInWatchlistNow;
+
+        if (newState) {
+            tmdbWatchlistCache.push({ id: parseInt(id), type });
+        } else {
+            const idx = tmdbWatchlistCache.findIndex(item => item.id == id && item.type === type);
+            if (idx > -1) tmdbWatchlistCache.splice(idx, 1);
+        }
+        localStorage.setItem('tmdb_watchlist_cache', JSON.stringify(tmdbWatchlistCache));
+
+        try {
+            const res = await fetch(`${BASE_URL}/account/${accountId}/watchlist?api_key=${API_KEY}&session_id=${sessionId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8'
+                },
+                body: JSON.stringify({
+                    media_type: type,
+                    media_id: parseInt(id),
+                    watchlist: newState
+                })
+            });
+            const data = await res.json();
+            if (!data.success && data.status_code !== 1 && data.status_code !== 12 && data.status_code !== 13) {
+                if (!newState) {
+                    tmdbWatchlistCache.push({ id: parseInt(id), type });
+                } else {
+                    const idx = tmdbWatchlistCache.findIndex(item => item.id == id && item.type === type);
+                    if (idx > -1) tmdbWatchlistCache.splice(idx, 1);
+                }
+                localStorage.setItem('tmdb_watchlist_cache', JSON.stringify(tmdbWatchlistCache));
+                return isInWatchlistNow;
+            }
+        } catch (e) {
+            console.error('Network error toggleWatchlist', e);
+        }
+
+        return newState;
+    }
+
     window.toggleFavorite = toggleFavorite;
     window.isFavorite = isFavorite;
+    window.toggleWatchlist = toggleWatchlist;
+    window.isWatchlist = isWatchlist;
+    window.refreshAllPosterCardUI = refreshAllPosterCardUI;
+    window.positionPosterCardMenu = positionPosterCardMenu;
+    window.closeAllPosterCardMenus = closeAllPosterCardMenus;
+    window.setPosterMenuScrollLock = setPosterMenuScrollLock;
+    window.openPosterActionsModal = openPosterActionsModal;
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.poster-card-menu') && !e.target.closest('.poster-card-menu-btn')) {
+            closeAllPosterCardMenus();
+        }
+    });
 
     function displayMovies(movies, container, type) {
         if (!container) return;
@@ -1293,6 +1782,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const posterUrl = movie.poster_path ? `${POSTER_URL}${movie.poster_path}` : NO_PICTURE_URL;
             const rating = movie.vote_average ? parseFloat(movie.vote_average.toFixed(1)) : null;
             const isInFavorites = isFavorite(movie.id, type);
+            const isInWatchlist = isWatchlist(movie.id, type);
 
             let ratingClass = 'movie-card-rating';
             if (!rating) {
@@ -1309,45 +1799,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
             movieCard.innerHTML = `
                 <img src="${posterUrl}" alt="${movie.title || movie.name}">
-                <div class="gradient-overlay"></div>
-                <p>${movie.title || movie.name}</p>
                 ${rating ? `<div class="${ratingClass}">${rating}</div>` : ''}
-                <button class="favorite-btn ${isInFavorites ? 'active' : ''}" data-id="${movie.id}" data-type="${type}" title="${isInFavorites ? 'Убрать из избранных' : 'Добавить в избранные'}">
-                    <i class="fa-${isInFavorites ? 'solid' : 'regular'} fa-heart"></i>
-                    <span>${isInFavorites ? 'Убрать из избранных' : 'Добавить в избранные'}</span>
+                <div class="card-status-stack">
+                    <span class="status-dot status-favorite ${isInFavorites ? '' : 'is-hidden'}"><i class="fa-solid fa-heart"></i></span>
+                    <span class="status-dot status-watchlist ${isInWatchlist ? '' : 'is-hidden'}"><i class="fa-solid fa-bookmark"></i></span>
+                </div>
+                <button class="poster-card-menu-btn" aria-label="Меню">
+                    <i class="fa-solid fa-ellipsis"></i>
                 </button>
+                <div class="poster-card-menu">
+                    <button class="poster-card-menu-action" data-action="favorite">
+                        <i class="fa-${isInFavorites ? 'solid' : 'regular'} fa-heart"></i>
+                        <span>${isInFavorites ? 'Удалить из избранного' : 'Добавить в избранное'}</span>
+                    </button>
+                    <button class="poster-card-menu-action" data-action="watchlist">
+                        <i class="fa-${isInWatchlist ? 'solid' : 'regular'} fa-bookmark"></i>
+                        <span>${isInWatchlist ? 'Удалить из списка' : 'Добавить в список'}</span>
+                    </button>
+                </div>
             `;
 
             movieCard.dataset.id = movie.id;
             movieCard.dataset.type = type;
 
-            const favoriteBtn = movieCard.querySelector('.favorite-btn');
-            favoriteBtn.addEventListener('click', async (e) => {
+            const menuBtn = movieCard.querySelector('.poster-card-menu-btn');
+
+            menuBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                const isAdded = await toggleFavorite(movie.id, type);
-                const icon = favoriteBtn.querySelector('i');
-                const textSpan = favoriteBtn.querySelector('span');
-
-                // Запускаем анимацию
-                icon.classList.add('animate');
-                setTimeout(() => icon.classList.remove('animate'), 600);
-
-                if (isAdded) {
-                    favoriteBtn.classList.add('active');
-                    icon.className = 'fa-solid fa-heart';
-                    favoriteBtn.title = 'Убрать из избранных';
-                    if (textSpan) textSpan.textContent = 'Убрать из избранных';
-                } else {
-                    favoriteBtn.classList.remove('active');
-                    icon.className = 'fa-regular fa-heart';
-                    favoriteBtn.title = 'Добавить в избранные';
-                    if (textSpan) textSpan.textContent = 'Добавить в избранные';
-                }
+                openPosterActionsModal({
+                    id: movie.id,
+                    type,
+                    card: movieCard
+                });
             });
 
             movieCard.addEventListener('click', (e) => {
-                if (e.target.closest('.favorite-btn')) {
+                if (e.target.closest('.poster-card-menu, .poster-card-menu-btn, .poster-card-menu-action')) {
                     return;
                 }
                 e.preventDefault();
@@ -1605,6 +2093,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (trendingSeriesRow) fetchTrendingSeries();
     if (legendarySeriesRow) fetchLegendarySeries();
 
+    // Персональные рекомендации (только для авторизованных, секции скрыты по умолчанию)
+    fetchMovieRecommendations();
+    fetchSeriesRecommendations();
+
     // Добавляем tooltips для кнопок управления плеером
     // Они будут добавлены динамически когда плеер инициализируется в player.js
 
@@ -1669,6 +2161,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const posterUrl = item.poster_path ? `${POSTER_URL}${item.poster_path}` : NO_PICTURE_URL;
                 const rating = item.vote_average ? parseFloat(item.vote_average.toFixed(1)) : null;
                 const isInFavorites = isFavorite(item.id, currentType);
+                const isInWatchlist = isWatchlist(item.id, currentType);
                 const title = item.title || item.name;
 
                 let ratingClass = 'movie-card-rating';
@@ -1686,46 +2179,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 card.innerHTML = `
                     <img src="${posterUrl}" alt="${title}">
-                    <div class="gradient-overlay"></div>
-                    <p>${title}</p>
                     ${rating ? `<div class="${ratingClass}">${rating}</div>` : ''}
-                    <button class="favorite-btn ${isInFavorites ? 'active' : ''}" data-id="${item.id}" data-type="${currentType}" title="${isInFavorites ? 'Убрать из избранных' : 'Добавить в избранные'}">
-                        <i class="fa-${isInFavorites ? 'solid' : 'regular'} fa-heart"></i>
-                        <span>${isInFavorites ? 'Убрать из избранных' : 'Добавить в избранные'}</span>
+                    <div class="card-status-stack">
+                        <span class="status-dot status-favorite ${isInFavorites ? '' : 'is-hidden'}"><i class="fa-solid fa-heart"></i></span>
+                        <span class="status-dot status-watchlist ${isInWatchlist ? '' : 'is-hidden'}"><i class="fa-solid fa-bookmark"></i></span>
+                    </div>
+                    <button class="poster-card-menu-btn" aria-label="Меню">
+                        <i class="fa-solid fa-ellipsis"></i>
                     </button>
+                    <div class="poster-card-menu">
+                        <button class="poster-card-menu-action" data-action="favorite">
+                            <i class="fa-${isInFavorites ? 'solid' : 'regular'} fa-heart"></i>
+                            <span>${isInFavorites ? 'Удалить из избранного' : 'Добавить в избранное'}</span>
+                        </button>
+                        <button class="poster-card-menu-action" data-action="watchlist">
+                            <i class="fa-${isInWatchlist ? 'solid' : 'regular'} fa-bookmark"></i>
+                            <span>${isInWatchlist ? 'Удалить из списка' : 'Добавить в список'}</span>
+                        </button>
+                    </div>
                 `;
 
                 card.dataset.id = item.id;
                 card.dataset.type = currentType;
 
-                const favBtn = card.querySelector('.favorite-btn');
-                favBtn.addEventListener('click', async (e) => {
+                const menuBtn = card.querySelector('.poster-card-menu-btn');
+
+                menuBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    const isAdded = await toggleFavorite(item.id, currentType);
-                    const icon = favBtn.querySelector('i');
-                    const textSpan = favBtn.querySelector('span');
-
-                    if (icon) {
-                        icon.classList.add('animate');
-                        setTimeout(() => icon.classList.remove('animate'), 600);
-                    }
-
-                    if (isAdded) {
-                        favBtn.classList.add('active');
-                        if (icon) icon.className = 'fa-solid fa-heart';
-                        favBtn.title = 'Убрать из избранных';
-                        if (textSpan) textSpan.textContent = 'Убрать из избранных';
-                    } else {
-                        favBtn.classList.remove('active');
-                        if (icon) icon.className = 'fa-regular fa-heart';
-                        favBtn.title = 'Добавить в избранные';
-                        if (textSpan) textSpan.textContent = 'Добавить в избранные';
-                    }
+                    openPosterActionsModal({
+                        id: item.id,
+                        type: currentType,
+                        card
+                    });
                 });
 
                 card.addEventListener('click', (e) => {
-                    if (e.target.closest('.favorite-btn')) return;
+                    if (e.target.closest('.poster-card-menu, .poster-card-menu-btn, .poster-card-menu-action')) return;
                     e.preventDefault();
                     saveWatchSource();
                     const tvUrl = `watch/watch.html?TV_ID=${item.id}`;

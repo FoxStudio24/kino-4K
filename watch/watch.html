@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Смотреть</title>
   <meta name="color-scheme" content="dark" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.2.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
 
   <style>
     @font-face {
@@ -418,6 +418,12 @@
       filter: brightness(0) invert(1);
     }
 
+    .trailer-controls button i {
+      color: #fff;
+      font-size: 20px;
+      line-height: 1;
+    }
+
     .wrap {
       position: relative;
       z-index: 2;
@@ -562,6 +568,7 @@
       gap: 14px;
       flex-wrap: wrap;
       justify-content: center;
+      align-items: center;
     }
 
     .btn {
@@ -570,10 +577,10 @@
       color: #000;
       border: none;
       width: 200px;
-      height: 40px;
+      height: 48px;
       font-size: 1rem;
       cursor: pointer;
-      border-radius: 25px;
+      border-radius: 24px;
       font-family: 'buttonbold', sans-serif;
       display: flex;
       align-items: center;
@@ -596,10 +603,10 @@
       position: relative;
       background-color: #141414ea;
       border: none;
-      width: 55px;
-      height: 40px;
+      width: 48px;
+      height: 48px;
       cursor: pointer;
-      border-radius: 25px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -659,9 +666,147 @@
 
     @media (max-width: 768px) {
       .btn-favorite {
-        width: 40px;
-        height: 40px;
+        width: 44px;
+        height: 44px;
       }
+    }
+
+    /* ---------- КНОПКА ОЦЕНКИ ---------- */
+    .btn-rate {
+      gap: 4px;
+      transition: background-color 0.2s ease;
+      font-family: 'buttonbold', sans-serif;
+      color: #fff;
+      padding: 0;
+    }
+
+    .btn-rate.rated {
+      width: auto;
+      min-width: 60px;
+      padding: 0 14px;
+      border-radius: 24px;
+    }
+
+    .btn-rate .rate-btn-star {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .btn-rate .rate-btn-val {
+      font-size: 13px;
+    }
+
+    .btn-rate:hover {
+      opacity: 0.85;
+    }
+
+    .btn-rate:active {
+      transform: scale(0.97);
+    }
+
+    .btn-rate.rated {
+      background-color: rgba(255, 200, 0, 0.22);
+      color: #ffd700;
+    }
+
+    /* Звёздный попап оценки */
+    .rate-popup {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(18, 18, 18, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 14px 18px 10px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      white-space: nowrap;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+      min-width: 260px;
+    }
+
+    .rate-popup.open {
+      display: flex;
+    }
+
+    .rate-popup-title {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'textregular', sans-serif;
+      margin-bottom: 2px;
+    }
+
+    .rate-stars {
+      display: flex;
+      gap: 4px;
+    }
+
+    .rate-star {
+      font-size: 24px;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.25);
+      transition: color 0.15s ease, transform 0.15s ease;
+      line-height: 1;
+      user-select: none;
+    }
+
+    .rate-star:hover,
+    .rate-star.hovered,
+    .rate-star.selected {
+      color: #ffd700;
+      transform: scale(1.15);
+    }
+
+    .rate-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .rate-submit-btn {
+      padding: 6px 18px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, rgba(64, 73, 54, 0.95), rgba(64, 73, 54, 0.65));
+      color: #d9e8cb;
+      font-family: 'buttonbold', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .rate-submit-btn:hover {
+      opacity: 0.85;
+    }
+
+    .rate-delete-btn {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: transparent;
+      color: var(--muted);
+      font-family: 'textregular', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .rate-delete-btn:hover {
+      opacity: 0.75;
+    }
+
+    /* Чип пользовательской оценки в info-row */
+    #user-rating-chip {
+      background-color: rgba(255, 200, 0, 0.18) !important;
+      border-color: rgba(255, 200, 0, 0.4);
+      color: #ffd700;
+      font-family: 'buttonbold', sans-serif;
+      cursor: pointer;
     }
 
     .close-btn {
@@ -1854,9 +1999,14 @@
         flex: 1
       }
 
-      .btn-favorite {
+      .btn-favorite,
+      .btn-rate {
         width: 40px;
-        height: 40px
+        height: 40px;
+      }
+
+      .btn-rate.rated {
+        height: 40px;
       }
 
       .episode-card {
@@ -2006,10 +2156,7 @@
 
     <div class="trailer-controls" id="trailerControls">
       <button id="trailer-sound-btn">
-        <img src="../ico/Звук_выкл.png" alt="Звук">
-      </button>
-      <button id="trailer-exit-btn">
-        <img src="../ico/закрыть.svg" alt="Закрыть">
+        <i class="fa-solid fa-volume-xmark" aria-hidden="true"></i>
       </button>
     </div>
 
@@ -2034,6 +2181,26 @@
           <button id="favoriteBtn" class="btn-favorite" title="Добавить в избранное">
             <img alt="Избранное" src="../ico/Избранное_добавить.svg">
           </button>
+          <!-- Кнопка оценки (только для авторизованных) -->
+          <div style="position:relative;" id="rateWrapper">
+            <button id="rateBtn" class="btn-favorite btn-rate" title="Оценить" style="display:none;">
+              <span class="rate-btn-star"><i class="fa-solid fa-star"></i></span>
+              <span class="rate-btn-val" id="rateBtnVal"></span>
+            </button>
+            <div class="rate-popup" id="ratePopup">
+              <div class="rate-popup-title">Ваша оценка</div>
+              <div class="rate-stars" id="rateStars">
+                <span class="rate-star" data-value="2">&#9733;</span>
+                <span class="rate-star" data-value="4">&#9733;</span>
+                <span class="rate-star" data-value="6">&#9733;</span>
+                <span class="rate-star" data-value="8">&#9733;</span>
+                <span class="rate-star" data-value="10">&#9733;</span>
+              </div>
+              <div class="rate-actions">
+                <button class="rate-delete-btn" id="rateDeleteBtn">Убрать оценку</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -2268,6 +2435,156 @@
       // Инициализируем кнопку с небольшой задержкой, чтобы кэш успел загрузиться
       setTimeout(updateFavoriteButton, 500);
     }
+
+    // -------- РЕЙТИНГ (только для авторизованных) --------
+    const sessionId = localStorage.getItem('tmdb_session_id');
+    const accountId = localStorage.getItem('tmdb_account_id');
+    const rateBtn = $('#rateBtn');
+    const rateBtnVal = $('#rateBtnVal');
+    const ratePopup = $('#ratePopup');
+    const rateStars = document.querySelectorAll('.rate-star');
+    const rateDeleteBtn = $('#rateDeleteBtn');
+
+    let currentUserRating = 0;
+    let selectedRating = 0;
+
+    function updateRatingUI(rating) {
+      currentUserRating = rating || 0;
+      selectedRating = currentUserRating;
+
+      // Обновляем текст на самой кнопке
+      if (rateBtn) {
+        if (currentUserRating > 0) {
+          rateBtn.classList.add('rated');
+          rateBtn.title = `Ваша оценка: ${currentUserRating}/10`;
+          if (rateBtnVal) rateBtnVal.textContent = currentUserRating;
+        } else {
+          rateBtn.classList.remove('rated');
+          rateBtn.title = 'Оценить';
+          if (rateBtnVal) rateBtnVal.textContent = '';
+        }
+      }
+
+      // Звёзды в попапе
+      rateStars.forEach(star => {
+        const val = parseInt(star.dataset.value);
+        star.classList.toggle('selected', val <= currentUserRating);
+      });
+    }
+
+    // Вспомогательная: отправить оценку на TMDB
+    async function submitRating(value) {
+      try {
+        const res = await fetch(
+          `${API}/${contentType}/${contentId}/rating?api_key=${API_KEY}&session_id=${sessionId}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json;charset=utf-8' },
+            body: JSON.stringify({ value })
+          }
+        );
+        const data = await res.json();
+        if (data.success || data.status_code === 1 || data.status_code === 12) {
+          updateRatingUI(value);
+          ratePopup.classList.remove('open');
+        }
+      } catch (e) {
+        console.error('Ошибка отправки оценки:', e);
+      }
+    }
+
+    // Загружаем существующую оценку
+    async function loadUserRating() {
+      if (!sessionId || !accountId) return;
+      try {
+        const endpoint = contentType === 'tv'
+          ? `${API}/account/${accountId}/rated/tv?api_key=${API_KEY}&session_id=${sessionId}&page=1`
+          : `${API}/account/${accountId}/rated/movies?api_key=${API_KEY}&session_id=${sessionId}&page=1`;
+        const res = await fetch(endpoint);
+        const data = await res.json();
+        const match = (data.results || []).find(item => item.id == contentId);
+        updateRatingUI(match ? match.rating : 0);
+      } catch (e) {
+        console.error('Ошибка загрузки оценки:', e);
+      }
+    }
+
+    // Показываем кнопку только авторизованным
+    if (sessionId && accountId && rateBtn) {
+      rateBtn.style.display = 'flex';
+      loadUserRating();
+    }
+
+    // Открыть/закрыть попап
+    if (rateBtn) {
+      rateBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        ratePopup.classList.toggle('open');
+        selectedRating = currentUserRating;
+        updateStarHighlight(selectedRating);
+      });
+    }
+
+    // Закрыть попап кликом вне
+    document.addEventListener('click', (e) => {
+      if (ratePopup && ratePopup.classList.contains('open')) {
+        const wrapper = document.getElementById('rateWrapper');
+        if (wrapper && !wrapper.contains(e.target)) {
+          ratePopup.classList.remove('open');
+        }
+      }
+    });
+
+    function updateStarHighlight(upTo) {
+      rateStars.forEach(star => {
+        const val = parseInt(star.dataset.value);
+        star.classList.toggle('hovered', val <= upTo);
+        star.classList.toggle('selected', false);
+      });
+    }
+
+    // Hover и клик по звёздам — клик сразу отправляет оценку
+    rateStars.forEach(star => {
+      star.addEventListener('mouseenter', () => {
+        updateStarHighlight(parseInt(star.dataset.value));
+      });
+      star.addEventListener('mouseleave', () => {
+        updateStarHighlight(selectedRating);
+      });
+      star.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const val = parseInt(star.dataset.value);
+        selectedRating = val;
+        submitRating(val);
+        updateStarHighlight(selectedRating);
+      });
+    });
+
+    // Удалить оценку
+    if (rateDeleteBtn) {
+      rateDeleteBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (!currentUserRating) { ratePopup.classList.remove('open'); return; }
+        try {
+          rateDeleteBtn.textContent = '...';
+          const res = await fetch(
+            `${API}/${contentType}/${contentId}/rating?api_key=${API_KEY}&session_id=${sessionId}`,
+            { method: 'DELETE', headers: { 'Content-Type': 'application/json;charset=utf-8' } }
+          );
+          const data = await res.json();
+          if (data.success || data.status_code === 13) {
+            updateRatingUI(0);
+            selectedRating = 0;
+            ratePopup.classList.remove('open');
+          }
+        } catch (e) {
+          console.error('Ошибка удаления оценки:', e);
+        } finally {
+          rateDeleteBtn.textContent = 'Убрать оценку';
+        }
+      });
+    }
+    // -------- КОНЕЦ РЕЙТИНГА --------
 
     let player;
     let isMuted = true;
@@ -2552,18 +2869,14 @@
       if (isMuted) {
         player.unMute();
         player.setVolume(100);
-        $('#trailer-sound-btn img').src = '../ico/Звук_вкл.png';
+        $('#trailer-sound-btn i').classList.remove('fa-volume-xmark');
+        $('#trailer-sound-btn i').classList.add('fa-volume-high');
       } else {
         player.mute();
-        $('#trailer-sound-btn img').src = '../ico/Звук_выкл.png';
+        $('#trailer-sound-btn i').classList.remove('fa-volume-high');
+        $('#trailer-sound-btn i').classList.add('fa-volume-xmark');
       }
       isMuted = !isMuted;
-    });
-
-    $('#trailer-exit-btn').addEventListener('click', () => {
-      stopTrailer();
-      if (trailerTimeout) clearTimeout(trailerTimeout);
-      animateEpisodeThumbsBack();
     });
 
     // Клик по кнопке "Смотреть"
@@ -2609,6 +2922,7 @@
         window.history.back();
       }, 300);
     });
+
 
     // Делегирование клика по episode-thumb-wrapper
     document.addEventListener('click', (e) => {

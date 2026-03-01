@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Header Design</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-image: url("https://image.tmdb.org/t/p/original/hHDNOlATHhre4eZ7aYz5cdyJLik.jpg");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: white;
+        }
+
+        /* Хедер */
+        .site-header {
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0) 100%);
+        }
+
+        .active-style {
+            background-color: #404936 !important;
+            color: #d9e8cb !important;
+        }
+
+        .nav-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        #nav-slider {
+            position: absolute;
+            height: 42px;
+            background-color: #404936;
+            border-radius: 9999px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .header-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 42px;
+            border-radius: 9999px;
+            transition: color 0.3s ease, background-color 0.3s ease;
+            white-space: nowrap;
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav-button {
+            color: rgba(255, 255, 255, 0.7);
+            padding: 0 24px;
+        }
+        
+        .nav-button:hover:not(.active) {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-button.active {
+            color: #d9e8cb;
+        }
+
+        .search-button {
+            width: 42px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .search-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .login-button {
+            padding: 0 28px;
+            font-weight: 700;
+        }
+
+        /* Стили для новых кнопок по запросу */
+        .btn {
+            position: relative;
+            background-color: #fff;
+            color: #000;
+            border: none;
+            width: 200px;
+            height: 40px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 25px;
+            font-family: 'Inter', sans-serif; /* Заглушка вместо buttonbold */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.2s ease;
+            font-weight: 700;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Профиль */
+        .profile-button {
+            padding: 0 16px 0 6px; 
+            font-weight: 600;
+            max-width: 220px;
+        }
+
+        .nickname-truncate {
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Стили таблицы/сетки */
+        .design-table {
+            width: 100%;
+            max-width: 800px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .table-row {
+            display: flex;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .table-label {
+            width: 120px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+        }
+
+        .table-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="site-header fixed top-0 left-0 w-full z-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex items-center justify-between h-24">
+                <div class="nav-container">
+                    <div id="nav-slider"></div>
+                    <nav id="main-nav" class="flex items-center space-x-1">
+                        <a href="#" class="header-btn nav-button active text-sm font-semibold">Главная</a>
+                        <a href="#" class="header-btn nav-button text-sm font-medium">Фильмы</a>
+                        <a href="#" class="header-btn nav-button text-sm font-medium">Сериалы</a>
+                    </nav>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <button class="header-btn search-button focus:outline-none">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <a href="#" class="header-btn login-button active-style text-sm flex items-center space-x-2">
+                        <i class="fas fa-user-circle text-lg"></i>
+                        <span>Войти</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-32 pb-20 px-10 flex flex-col items-center">
+        
+        <div class="design-table">
+            <!-- Пункт 1: Акк -->
+            <div class="table-row">
+                <div class="table-label">Акк</div>
+                <div class="table-content">
+                    <!-- Стандартная -->
+                    <a href="#" class="header-btn login-button active-style text-sm flex items-center space-x-2">
+                        <i class="fas fa-user-circle text-lg"></i>
+                        <span>Войти</span>
+                    </a>
+                    <!-- Профиль -->
+                    <a href="#" class="header-btn profile-button active-style text-sm flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full overflow-hidden border border-white/20 bg-white">
+                            <img src="https://media.istockphoto.com/id/666542906/ru/%D0%B2%D0%B5%D0%BA%D1%82%D0%BE%D1%80%D0%BD%D0%B0%D1%8F/%D0%B7%D0%BD%D0%B0%D1%87%D0%BE%D0%BA-%D0%BF%D1%80%D0%BE%D1%84%D0%B8%D0%BB%D1%8F-%D0%B7%D0%B0%D0%BF%D0%BE%D0%BB%D0%BD%D0%B8%D1%82%D0%B5%D0%BB%D1%8F-%D0%BF%D0%BE-%D1%83%D0%BC%D0%BE%D0%BB%D1%87%D0%B0%D0%BD%D0%B8%D1%8E.jpg?s=612x612&w=0&k=20&c=s6AeGX6gLG7f7uV0kDVAZpeJqOwTFpwiZb-0DXl_UUI=" alt="Avatar" class="w-full h-full object-cover">
+                        </div>
+                        <span class="nickname-truncate">Александр</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Пункт 2: Кнопки (.btn) -->
+            <div class="table-row">
+                <div class="table-label">Кнопки</div>
+                <div class="table-content">
+                    <button class="btn">
+                        <i class="fas fa-play"></i>
+                        Смотреть
+                    </button>
+                    <button class="btn">
+                        <i class="fas fa-plus"></i>
+                        В избранное
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const navLinks = document.querySelectorAll('.nav-button');
+        const slider = document.getElementById('nav-slider');
+
+        function moveSlider(element) {
+            slider.style.width = `${element.offsetWidth}px`;
+            slider.style.left = `${element.offsetLeft}px`;
+        }
+
+        window.addEventListener('load', () => {
+            const activeLink = document.querySelector('.nav-button.active');
+            if (activeLink) moveSlider(activeLink);
+        });
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                navLinks.forEach(l => {
+                    l.classList.remove('active', 'font-semibold');
+                    l.classList.add('font-medium');
+                });
+                link.classList.add('active', 'font-semibold');
+                link.classList.remove('font-medium');
+                moveSlider(link);
+            });
+        });
+
+        window.addEventListener('resize', () => {
+            const activeLink = document.querySelector('.nav-button.active');
+            if (activeLink) moveSlider(activeLink);
+        });
+    </script>
+
+</body>
+</html>

@@ -90,184 +90,16 @@ body {
     padding-bottom: 80px;
 }
 
-/* Блокировка прокрутки основной страницы при открытом модальном окне */
-html.no-scroll {
-    overflow: hidden !important;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
+
+@media (min-width: 769px) {
+
+    /* Контент на страницах без hero начинается под хедером */
+    .filters-section,
+    #account-section {
+        padding-top: 96px;
+    }
 }
 
-html.no-scroll::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-}
-
-body.no-scroll {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    overflow: hidden !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-}
-
-/* Скрытие скролл бара при блокировке скролла */
-body.no-scroll::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-}
-
-body.loading {
-    overflow: hidden;
-}
-
-/* Image Styles */
-img {
-    -webkit-user-drag: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    pointer-events: none;
-}
-
-/* Header Styles */
-.header {
-    width: 100%;
-    padding: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: fixed;
-    top: 0;
-    z-index: 100;
-    gap: 10px;
-    /* Чтобы псевдоэлемент был под контентом */
-    position: fixed;
-    overflow: hidden;
-}
-
-.header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 50px;
-    /* можно больше, если надо */
-    pointer-events: none;
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
-    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
-}
-
-
-
-/* Search Trigger Button */
-.search-trigger {
-    position: relative;
-    background: rgba(0, 0, 0, 0.637);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: 101;
-    text-decoration: none !important;
-    font-size: 20px !important;
-}
-
-
-/* Navigation Tabs */
-.nav-tabs {
-    display: flex;
-    gap: 20px;
-    position: relative;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    align-items: center;
-    font-family: 'buttonbold', sans-serif;
-    background: rgba(0, 0, 0, 0.637);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 25px;
-    padding: 5px 5px;
-    border: none;
-    z-index: 0;
-}
-
-.nav-tabs::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    /* толщина обводки */
-    background: linear-gradient(135deg,
-            rgba(255, 255, 255, 0.35),
-            rgba(200, 200, 200, 0.15),
-            rgba(255, 255, 255, 0.25),
-            rgba(120, 120, 120, 0.1));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: add, add;
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-    z-index: -1;
-}
-
-.nav-tabs a {
-    color: white;
-    text-decoration: none;
-    font-size: 1rem;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    height: 20px;
-    line-height: 1;
-    padding: 7px 7px;
-}
-
-.nav-tabs a i {
-    font-size: 20px;
-    margin-right: 8px;
-    color: white;
-}
-
-
-
-.nav-tabs a.active {
-    position: relative;
-    isolation: isolate;
-    border-radius: 28px;
-    z-index: 1;
-    background: linear-gradient(135deg, rgba(64, 73, 54, 0.95) 0%, rgba(64, 73, 54, 0.65) 100%);
-    border: none;
-    color: #d9e8cb;
-}
-
-.nav-tabs a.active img {
-    filter: none;
-}
-
-.nav-tabs a.active i {
-    color: #d9e8cb !important;
-}
 
 
 /* Mobile Navigation - Material Design */
@@ -279,14 +111,14 @@ img {
     right: 0px;
     z-index: 1000;
     border: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    background: #12140fdb;
-    padding: 4px 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.041);
+    background: #060606d9;
+    padding: 2px 4px;
     margin: 0;
     align-items: center;
     justify-content: space-around;
     height: 64px;
-    backdrop-filter: blur(25px);
+    backdrop-filter: blur(5px);
 }
 
 @media (max-width: 768px) {
@@ -347,6 +179,11 @@ img {
     margin-top: 2px;
 }
 
+html.poster-menu-scroll-lock,
+body.poster-menu-scroll-lock {
+    overflow: hidden !important;
+}
+
 
 /* Hero Section */
 .hero {
@@ -357,52 +194,33 @@ img {
     display: flex;
     align-items: flex-end;
     padding: 20px;
-}
-
-.hero {
-    position: relative;
-    margin: 24px;
-    padding: 24px;
-    border-radius: 20px;
-}
-
-/* 1. Градиент-оверлей через псевдоэлемент: чёрный в левом нижнем углу → прозрачность вправо/вверх */
-.hero {
-    /* основной блок — фон (картинка ставится инлайново скриптом или через дочерние элементы) */
-    position: relative;
     overflow: hidden;
+    /* Без margin и border-radius — hero на всю ширину */
+    margin: 0;
+    border-radius: 0;
 }
 
-/* Псевдоэлемент поверх фоновых слоёв, под контентом */
+/* Градиент-оверлей: чёрный внизу-слева → прозрачность вверх/вправо */
 .hero::after {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 1;
-    /* ниже .hero-content (z-index:2), выше фоновых слоёв (z-index:0) */
-    border-radius: inherit;
-    /* черный внизу (левый-низ) -> прозрачность вверх/вправо */
-    background: linear-gradient(to top right, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 60%);
+    background: linear-gradient(to top, rgb(6, 6, 6) 0%, rgb(6, 6, 6) 15%, rgba(6, 6, 6, 0.85) 30%, rgba(6, 6, 6, 0.5) 45%, rgba(6, 6, 6, 0) 60%)
+;
 }
 
-/* Фоновые дочерние элементы (если используются) должны оставаться под оверлеем */
-.hero-background,
-.hero-ambient,
+/* Трейлер внутри hero */
 .hero-trailer {
     position: absolute;
     inset: 0;
     background-size: cover;
     background-position: center;
     z-index: 0;
+    border-radius: 0;
 }
 
-/* Мобильный вариант: градиент по центру снизу вверх (чёрный внизу, прозрачный сверху) */
-@media (max-width: 768px) {
-    .hero::after {
-        background: radial-gradient(circle at center bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0) 60%);
-    }
-}
 
 
 
@@ -410,7 +228,7 @@ img {
 .hero-content {
     max-width: 50%;
     position: relative;
-    z-index: 2;
+    z-index: 5;
 }
 
 .hero-logo {
@@ -429,84 +247,92 @@ img {
     font-family: 'textbold', sans-serif;
 }
 
+
 .hero-content p {
     font-size: 1.2rem;
     margin-bottom: 20px;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     line-clamp: 3;
-    line-clamp: 3;
-    box-orient: vertical;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: 400;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .hero-buttons {
     display: flex;
-    gap: 10px;
+    align-items: center;
+    gap: 12px;
 }
 
+/* Общие стили hero-кнопок */
 .watch-btn,
-.info-btn {
-    width: 150px;
-    height: 40px;
-    font-size: 1rem;
+.hero-icon-btn {
     cursor: pointer;
-    border-radius: 99px;
-    font-family: 'buttonbold', sans-serif;
-    font-weight: 500;
+    border: none;
+    outline: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s ease, background-color 0.3s ease;
-    ;
+    transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
+    flex-shrink: 0;
 }
 
+.watch-btn:active,
+.hero-icon-btn:active {
+    transform: scale(0.95);
+}
+
+/* Кнопка "Смотреть" */
 .watch-btn {
+    height: 44px;
+    padding: 0 24px;
+    gap: 10px;
+    border-radius: 99px;
+    font-size: 1rem;
+    font-family: 'buttonbold', sans-serif;
+    font-weight: 500;
     background: linear-gradient(to top, #d9d9d9 12%, #ffffff 100%);
     color: black;
 }
 
-
-
-.watch-btn:active {
-    transform: scale(0.97);
+.watch-btn i {
+    font-size: 14px;
 }
 
-.info-btn {
+/* Круглые кнопки (info, fav) */
+.hero-icon-btn {
     position: relative;
-    background-color: rgba(32, 32, 32, 0.35);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: rgba(32, 32, 32, 0.45);
     color: #fff;
-    z-index: 0;
+    font-size: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.info-btn::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(135deg,
-            rgba(255, 255, 255, 0.35),
-            rgba(200, 200, 200, 0.15),
-            rgba(255, 255, 255, 0.25),
-            rgba(120, 120, 120, 0.1));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: add, add;
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-    z-index: -1;
+/* Активное состояние кнопки избранного */
+#hero-fav-btn.active i {
+    font-weight: 900;
+    color: #e5091e;
 }
 
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+    .watch-btn {
+        height: 40px;
+        padding: 0 20px;
+        font-size: 0.9rem;
+    }
 
-.info-btn:active {
-    transform: scale(0.97);
+    .hero-icon-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 15px;
+    }
 }
 
 /* Category Section */
@@ -544,9 +370,9 @@ img {
 .movie-row {
     display: flex;
     overflow-x: auto;
+    overflow-y: hidden;
     gap: 10px;
     padding-bottom: 10px;
-    border-radius: 8px;
 }
 
 .movie-row::-webkit-scrollbar {
@@ -567,14 +393,9 @@ img {
     text-align: center;
     cursor: pointer;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: none;
     overflow: hidden;
     position: relative;
-    transition: transform 0.15s ease;
-}
-
-.movie-card:active {
-    transform: scale(0.94);
 }
 
 .movie-card img {
@@ -583,11 +404,366 @@ img {
     object-fit: cover;
     border: none;
     outline: none;
-    transition: transform 0.3s ease;
     position: relative;
     z-index: 1;
     image-rendering: optimizeQuality;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    filter: none;
+    border-radius: 0;
+}
+
+.movie-card .card-status-stack,
+.top10-card .card-status-stack {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    gap: 8px;
+    z-index: 12;
+    pointer-events: none;
+}
+
+.movie-card .status-dot,
+.top10-card .status-dot {
+    box-sizing: border-box;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.movie-card .status-dot i,
+.top10-card .status-dot i {
+    font-size: 12px;
+}
+
+.movie-card .status-dot.is-hidden,
+.top10-card .status-dot.is-hidden {
+    display: none;
+}
+
+.movie-card .status-dot.status-favorite {
+    color: #ff0010;
+}
+
+.movie-card .status-dot.status-watchlist {
+    color: #0082ff;
+}
+
+.top10-card .status-dot.status-favorite {
+    color: #ff5d67;
+}
+
+.top10-card .status-dot.status-watchlist {
+    color: #9fd0ff;
+}
+
+.movie-card .poster-card-menu-btn,
+.top10-card .poster-card-menu-btn {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 12;
+    padding: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    transition: none;
+    opacity: 0;
+    pointer-events: none;
+}
+
+@media (hover: hover) {
+    .movie-card:hover .poster-card-menu-btn,
+    .top10-card:hover .poster-card-menu-btn,
+    .movie-card:focus-within .poster-card-menu-btn,
+    .top10-card:focus-within .poster-card-menu-btn,
+    .movie-card.menu-host-open .poster-card-menu-btn,
+    .top10-card.menu-host-open .poster-card-menu-btn {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .movie-card .poster-card-menu-btn,
+    .top10-card .poster-card-menu-btn {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+.movie-card .poster-card-menu-btn:active,
+.top10-card .poster-card-menu-btn:active {
+    transform: none;
+}
+
+.movie-card .poster-card-menu-btn i,
+.top10-card .poster-card-menu-btn i {
+    font-size: 14px;
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.movie-card .poster-card-menu,
+.top10-card .poster-card-menu {
+    position: absolute;
+    right: 0;
+    left: auto;
+    bottom: calc(100% + 8px);
+    top: auto;
+    min-width: 220px;
+    background: rgba(10, 10, 10, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
+    padding: 8px;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 5001;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.movie-card.menu-host-open,
+.top10-card.menu-host-open {
+    z-index: 5000;
+}
+
+.movie-card .poster-card-menu.menu-align-left,
+.top10-card .poster-card-menu.menu-align-left {
+    left: 0;
+    right: auto;
+}
+
+.movie-card .poster-card-menu.menu-align-right,
+.top10-card .poster-card-menu.menu-align-right {
+    right: 0;
+    left: auto;
+}
+
+.movie-card .poster-card-menu.menu-below,
+.top10-card .poster-card-menu.menu-below {
+    top: calc(100% + 8px);
+    bottom: auto;
+}
+
+.movie-card .poster-card-menu.menu-above,
+.top10-card .poster-card-menu.menu-above {
+    bottom: calc(100% + 8px);
+    top: auto;
+}
+
+.movie-card .poster-card-menu.open,
+.top10-card .poster-card-menu.open {
+    display: flex;
+}
+
+.movie-card .poster-card-menu.menu-floating,
+.top10-card .poster-card-menu.menu-floating {
+    position: fixed !important;
+    left: 0;
+    top: 0;
+    right: auto;
+    bottom: auto;
+    z-index: 10050;
+}
+
+.poster-actions-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 11000;
+    display: none;
+}
+
+.poster-actions-modal.open {
+    display: block;
+}
+
+.poster-actions-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+
+.poster-actions-sheet {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(92vw, 360px);
+    background: rgb(13, 13, 13);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.poster-actions-handle {
+    display: none;
+}
+
+.poster-actions-meta {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px 13px;
+}
+
+.poster-actions-meta-image {
+    width: 44px;
+    height: 66px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.poster-actions-meta-text {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.poster-actions-meta-title {
+    font-family: 'textbold', sans-serif;
+    font-size: 14px;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.poster-actions-meta-sub {
+    font-family: 'text', sans-serif;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.72);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.poster-actions-meta::after {
+    content: '';
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 0;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.14);
+    pointer-events: none;
+}
+
+.poster-actions-btn {
+    width: 100%;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    font-family: 'buttonbold', sans-serif;
+    font-size: 14px;
+    position: relative;
+}
+
+.poster-actions-btn i {
+    width: 16px;
+}
+
+.poster-actions-btn + .poster-actions-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 14px;
+    right: 14px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.14);
+    pointer-events: none;
+}
+
+@media (hover: hover) {
+    .poster-actions-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+}
+
+@media (max-width: 768px) {
+    .poster-actions-sheet {
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;
+        transform: none;
+        width: auto;
+        box-sizing: border-box;
+        border-radius: 16px 16px 0 0;
+        border: none;
+        padding: 10px;
+    }
+
+    .poster-actions-handle {
+        display: block;
+        width: 42px;
+        height: 5px;
+        border-radius: 999px;
+        margin: 2px auto 10px;
+        background: rgba(255, 255, 255, 0.32);
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+}
+
+.movie-card .poster-card-menu-action,
+.top10-card .poster-card-menu-action {
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    font-family: 'buttonbold', sans-serif;
+    font-size: 13px;
+}
+
+.movie-card .poster-card-menu-action i,
+.top10-card .poster-card-menu-action i {
+    width: 14px;
+}
+
+@media (hover: hover) {
+    .movie-card .poster-card-menu-action:hover,
+    .top10-card .poster-card-menu-action:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
 }
 
 /* Кнопка избранного */
@@ -689,20 +865,21 @@ img {
 }
 
 .movie-card .gradient-overlay {
+    display: none !important;
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background: linear-gradient(to bottom, transparent, black);
-    opacity: 0;
-    transition: opacity 0.3s ease, transform 0.2s ease;
+    opacity: 0.7;
     border-radius: 10px;
     z-index: 2;
 
 }
 
 .movie-card p {
+    display: none !important;
     position: absolute;
     bottom: 10px;
     left: 10px;
@@ -712,41 +889,28 @@ img {
     font-size: 0.9rem;
     font-weight: 500;
     color: white;
-    opacity: 0;
-    transform: translateY(10px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 1;
+    transform: translateY(0);
     z-index: 3;
     text-align: center;
     font-family: 'textbold', sans-serif;
-}
-
-/* Все :hover эффекты — только для устройств с hover */
-@media (hover: hover) {
-    .movie-card:hover img {
-        transform: scale(1.05);
-    }
-
-    .movie-card:hover .gradient-overlay {
-        opacity: 0.7;
-    }
-
-    .movie-card:hover p {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 .movie-card-rating {
     position: absolute;
     top: 10px;
     right: 10px;
-    padding: 3px 15px;
-    border-radius: 15px;
-    font-size: 0.9rem;
+    padding: 0 12px;
+    height: 28px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    line-height: 1;
     color: white;
     font-weight: 500;
-    opacity: 0;
-    transition: opacity 0.3s ease;
+    opacity: 1;
     z-index: 3;
     font-family: 'textbold', sans-serif;
 }
@@ -768,13 +932,6 @@ img {
     mask-composite: exclude;
     pointer-events: none;
     z-index: -1;
-}
-
-
-@media (hover: hover) {
-    .movie-card:hover .movie-card-rating {
-        opacity: 1;
-    }
 }
 
 .movie-card-rating.high {
@@ -2246,23 +2403,21 @@ img {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
         text-align: center;
-        padding: 20px;
+        padding-bottom: 4px;
     }
 
     .hero-buttons {
-        align-items: flex-start;
-        justify-content: flex-start;
-        text-align: left;
-        width: 100%;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 10px;
     }
 
-    .watch-btn,
-    .info-btn {
-        align-self: flex-start;
-        text-align: left;
+    .watch-btn {
+        flex-shrink: 0;
     }
+
 
     .hero-logo {
         max-width: 250px;
@@ -2282,11 +2437,7 @@ img {
         gap: 8px;
     }
 
-    .watch-btn,
-    .info-btn {
-        width: 100%;
-        max-width: 90%;
-    }
+
 
     .category {
         padding: 15px;
@@ -3044,12 +3195,10 @@ img {
             font-size: 1.5rem;
         }
 
-        #trailer-exit-btn,
         #trailer-sound-btn {
             transition: transform 0.1s ease;
         }
 
-        #trailer-exit-btn:active,
         #trailer-sound-btn:active {
             transform: scale(0.9);
         }

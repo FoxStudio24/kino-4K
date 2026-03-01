@@ -26,7 +26,7 @@ async function loadTMDBFavoritesCache() {
             const card = btn.closest('.movie-card, .top10-card');
             if (!card) return;
             const id = card.dataset.id;
-            let type = 'movie'; // по умолчанию
+            let type = 'movie';
             if (window.location.pathname.includes('series.html')) type = 'tv';
             if (card.dataset.type) type = card.dataset.type;
 
@@ -47,6 +47,21 @@ async function loadTMDBFavoritesCache() {
                 }
             }
         });
+
+        // Обновляем hero-fav-btn
+        const heroFavBtn = document.getElementById('hero-fav-btn');
+        if (heroFavBtn && heroFavBtn.dataset.id) {
+            const hId = heroFavBtn.dataset.id;
+            const hType = heroFavBtn.dataset.type || 'movie';
+            const icon = heroFavBtn.querySelector('i');
+            if (window.isFavorite(hId, hType)) {
+                heroFavBtn.classList.add('active');
+                if (icon) icon.className = 'fa-solid fa-heart';
+            } else {
+                heroFavBtn.classList.remove('active');
+                if (icon) icon.className = 'fa-regular fa-heart';
+            }
+        }
     } catch (e) {
         console.error('Ошибка загрузки кэша избранного', e);
     }

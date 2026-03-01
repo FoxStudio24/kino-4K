@@ -1,0 +1,168 @@
+<style>
+    /* =============================================
+   HEADER STYLES — редактируй здесь, применится везде
+   ============================================= */
+
+    /* Основной блок хедера */
+    .site-header {
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0) 100%);
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 100;
+    }
+
+    .site-header .header-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 24px;
+    }
+
+    .site-header .header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 88px;
+    }
+
+    /* Контейнер навигации со скользящим индикатором */
+    .nav-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    #nav-slider {
+        position: absolute;
+        height: 42px;
+        background-color: #404936;
+        border-radius: 9999px;
+        z-index: 0;
+        pointer-events: none;
+        transition: left 0.3s ease, width 0.3s ease;
+    }
+
+    #main-nav {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Базовая кнопка хедера */
+    .header-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 42px;
+        border-radius: 9999px;
+        transition: color 0.3s ease, background-color 0.3s ease;
+        white-space: nowrap;
+        position: relative;
+        z-index: 10;
+        text-decoration: none;
+        cursor: pointer;
+        background: none;
+        border: none;
+        color: inherit;
+    }
+
+    /* Кнопки навигации */
+    .nav-button {
+        color: rgba(255, 255, 255, 0.7);
+        padding: 0 24px;
+        font-family: 'buttonbold', sans-serif;
+        font-size: 0.9rem;
+    }
+
+    .nav-button:hover:not(.active) {
+        color: #ffffff;
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-button.active {
+        color: #d9e8cb;
+    }
+
+    /* Кнопка поиска */
+    .search-button {
+        width: 42px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 18px;
+    }
+
+    .search-button:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+    }
+
+    /* Кнопка «Войти» */
+    .login-button {
+        padding: 0 22px;
+        font-family: 'buttonbold', sans-serif;
+        font-size: 0.9rem;
+        gap: 8px;
+        background-color: #404936;
+        color: #d9e8cb;
+    }
+
+    .login-button:hover {
+        background-color: #4f5a44;
+    }
+
+    /* Кнопка профиля (залогинен) */
+    .profile-button {
+        padding: 0 16px 0 6px;
+        font-family: 'buttonbold', sans-serif;
+        font-size: 0.9rem;
+        gap: 10px;
+        max-width: 220px;
+        background-color: #404936;
+        color: #d9e8cb;
+    }
+
+    .nickname-truncate {
+        max-width: 120px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Правый блок хедера */
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* На мобильных хедер скрыт — за это отвечает mobile-nav */
+    @media (max-width: 768px) {
+        .site-header {
+            display: none;
+        }
+    }
+</style>
+
+<header class="site-header" id="site-header">
+    <div class="header-inner">
+        <div class="header-row">
+            <div class="nav-container">
+                <div id="nav-slider"></div>
+                <nav id="main-nav">
+                    <a href="index.html" class="header-btn nav-button" data-page="index">Главная</a>
+                    <a href="movies.html" class="header-btn nav-button" data-page="movies">Фильмы</a>
+                    <a href="series.html" class="header-btn nav-button" data-page="series">Сериалы</a>
+                </nav>
+            </div>
+            <div class="header-right">
+                <a href="search.html" class="header-btn search-button">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </a>
+                <a href="account.html" id="header-account-btn" class="header-btn login-button">
+                    <i class="fa-solid fa-circle-user" style="font-size:18px;"></i>
+                    <span id="header-account-label">Войти</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
